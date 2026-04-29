@@ -6,7 +6,14 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ element }: ProtectedRouteProps) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (!authManager.isAuthenticated()) {
+    localStorage.removeItem("token");
     return <Navigate to="/login" replace />;
   }
 

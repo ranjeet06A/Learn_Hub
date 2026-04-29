@@ -1,3 +1,4 @@
+// ================= TYPES =================
 export interface Course {
   id: number;
   title: string;
@@ -17,160 +18,115 @@ export interface Quiz {
   answer: string;
 }
 
+// ================= STORAGE KEYS =================
 const COURSES_STORAGE_KEY = "learn_hub_courses";
-const QUIZZES_STORAGE_KEY = "learn_hub_quizzes";
+const QUIZ_STORAGE_KEY = "learn_hub_quizzes";
 
-// Default courses if none exist
+// ================= DEFAULT DATA =================
 const DEFAULT_COURSES: Course[] = [
   {
     id: 1,
     title: "Mathematics Fundamentals",
     description: "Master basic to advanced math concepts",
     lessons: [
-      { id: 1, title: "Addition", content: "Addition means adding numbers like 2 + 2 = 4" },
-      { id: 2, title: "Subtraction", content: "Subtraction means removing numbers like 5 - 2 = 3" },
-    ],
-  },
-  {
-    id: 2,
-    title: "Physics Essentials",
-    description: "Explore the laws of motion and energy",
-    lessons: [
-      { id: 1, title: "Physics Intro", content: "Physics is the study of motion, force, and energy." },
-      { id: 2, title: "Chemistry Intro", content: "Chemistry is the study of matter and reactions." },
+      { id: 1, title: "Addition", content: "2 + 2 = 4" },
+      { id: 2, title: "Subtraction", content: "5 - 2 = 3" },
     ],
   },
 ];
 
-const DEFAULT_QUIZZES: Record<number, Quiz[]> = {
-  1: [
-    { question: "2 + 2 = ?", options: ["3", "4", "5", "6"], answer: "4" },
-    { question: "5 - 2 = ?", options: ["2", "3", "4", "5"], answer: "3" },
-  ],
+const DEFAULT_QUIZ = {
+  1: {
+    1: [
+      { question: "2 + 2 = ?", options: ["3", "4", "5", "6"], answer: "4" },
+    ],
+  },
 };
 
+// ================= COURSE MANAGER =================
 export const courseManager = {
-  // Get all courses
   getAllCourses: (): Course[] => {
     const stored = localStorage.getItem(COURSES_STORAGE_KEY);
     if (!stored) {
-      courseManager.initializeCourses();
+      localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(DEFAULT_COURSES));
       return DEFAULT_COURSES;
     }
     return JSON.parse(stored);
   },
 
-  // Initialize with default courses
-  initializeCourses: () => {
-    localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(DEFAULT_COURSES));
-  },
-
-  // Add a new course
-  addCourse: (course: Course): Course => {
+  addCourse: (course: Course) => {
     const courses = courseManager.getAllCourses();
-    const newCourse = { ...course, id: Math.max(...courses.map((c) => c.id), 0) + 1 };
+    const newCourse = {
+      ...course,
+      id: Date.now(),
+    };
     courses.push(newCourse);
     localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(courses));
-    return newCourse;
   },
 
-  // Update course
-  updateCourse: (id: number, updatedCourse: Partial<Course>): Course | null => {
+  getCourseById: (id: number) => {
+    return courseManager.getAllCourses().find((c) => c.id === id);
+  },
+
+  addLessonToCourse: (courseId: number, lesson: Lesson) => {
     const courses = courseManager.getAllCourses();
-    const index = courses.findIndex((c) => c.id === id);
-    if (index === -1) return null;
-    courses[index] = { ...courses[index], ...updatedCourse };
-    localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(courses));
-    return courses[index];
-  },
+    const course = courses.find((c) => c.id === courseId);
 
-  // Delete course
-  deleteCourse: (id: number): boolean => {
-    const courses = courseManager.getAllCourses();
-    const filtered = courses.filter((c) => c.id !== id);
-    if (filtered.length === courses.length) return false;
-    localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(filtered));
-    return true;
-  },
+    if (!course) return;
 
-  // Get course by ID
-  getCourseById: (id: number): Course | null => {
-    const courses = courseManager.getAllCourses();
-    return courses.find((c) => c.id === id) || null;
-  },
+    const newLesson = {
+      ...lesson,
+      id: Date.now(),
+    };
 
-  // Add lesson to course
-  addLessonToCourse: (courseId: number, lesson: Lesson): boolean => {
-    const course = courseManager.getCourseById(courseId);
-    if (!course) return false;
-    const newLesson = { ...lesson, id: Math.max(...course.lessons.map((l) => l.id), 0) + 1 };
     course.lessons.push(newLesson);
-    courseManager.updateCourse(courseId, course);
-    return true;
-  },
 
-  // Delete lesson from course
-  deleteLessonFromCourse: (courseId: number, lessonId: number): boolean => {
-    const course = courseManager.getCourseById(courseId);
-    if (!course) return false;
-    course.lessons = course.lessons.filter((l) => l.id !== lessonId);
-    courseManager.updateCourse(courseId, course);
-    return true;
+    localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(courses));
   },
 };
 
+// ================= QUIZ MANAGER (🔥 FIXED) =================
 export const quizManager = {
-  // Get all quizzes
-  getAllQuizzes: (): Record<number, Quiz[]> => {
-    const stored = localStorage.getItem(QUIZZES_STORAGE_KEY);
-    if (!stored) {
-      quizManager.initializeQuizzes();
-      return DEFAULT_QUIZZES;
+  getAll: (): any => {
+    const stored = localStorage.getItem(QUIZ_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  },
+
+  save: (data: any) => {
+    localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(data));
+  },
+
+  // ✅ GET quiz by course + lesson
+  getQuiz: (courseId: string, lessonId: string): Quiz[] => {
+    const data = quizManager.getAll();
+    return data?.[courseId]?.[lessonId] || [];
+  },
+
+  // ✅ ADD quiz properly
+  addQuiz: (courseId: string, lessonId: string, questions: Quiz[]) => {
+    const data = quizManager.getAll();
+
+    if (!data[courseId]) {
+      data[courseId] = {};
     }
-    return JSON.parse(stored);
-  },
 
-  // Initialize with default quizzes
-  initializeQuizzes: () => {
-    localStorage.setItem(QUIZZES_STORAGE_KEY, JSON.stringify(DEFAULT_QUIZZES));
-  },
-
-  // Get quiz for course
-  getQuizByCourse: (courseId: number): Quiz[] => {
-    const quizzes = quizManager.getAllQuizzes();
-    return quizzes[courseId] || [];
-  },
-
-  // Add quiz question to course
-  addQuizToCourse: (courseId: number, quiz: Quiz): void => {
-    const quizzes = quizManager.getAllQuizzes();
-    if (!quizzes[courseId]) {
-      quizzes[courseId] = [];
+    if (!data[courseId][lessonId]) {
+      data[courseId][lessonId] = [];
     }
-    quizzes[courseId].push(quiz);
-    localStorage.setItem(QUIZZES_STORAGE_KEY, JSON.stringify(quizzes));
+
+    data[courseId][lessonId].push(...questions);
+
+    quizManager.save(data);
+
+    console.log("✅ Quiz saved:", data);
   },
 
-  // Update quiz question
-  updateQuiz: (courseId: number, index: number, updatedQuiz: Quiz): void => {
-    const quizzes = quizManager.getAllQuizzes();
-    if (quizzes[courseId] && quizzes[courseId][index]) {
-      quizzes[courseId][index] = updatedQuiz;
-      localStorage.setItem(QUIZZES_STORAGE_KEY, JSON.stringify(quizzes));
+  deleteQuiz: (courseId: number, lessonId: number, index: number) => {
+    const data = quizManager.getAll();
+
+    if (data?.[courseId]?.[lessonId]) {
+      data[courseId][lessonId].splice(index, 1);
+      quizManager.save(data);
     }
-  },
-
-  // Delete quiz question
-  deleteQuiz: (courseId: number, index: number): void => {
-    const quizzes = quizManager.getAllQuizzes();
-    if (quizzes[courseId]) {
-      quizzes[courseId].splice(index, 1);
-      localStorage.setItem(QUIZZES_STORAGE_KEY, JSON.stringify(quizzes));
-    }
-  },
-
-  // Reset quizzes to default
-  resetQuizzes: () => {
-    quizManager.initializeQuizzes();
   },
 };

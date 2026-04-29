@@ -10,30 +10,34 @@ export default function CourseDetail() {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [currentUser, setCurrentUser] = useState(authManager.getCurrentUser());
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Initialize currentUser once on mount
+  // Initialize userId once on mount
   useEffect(() => {
-    setCurrentUser(authManager.getCurrentUser());
+    const user = authManager.getCurrentUser();
+    setUserId(user?.id || null);
   }, []);
 
-  // Fetch course and check enrollment when id changes
+  // Fetch course immediately when id changes (don't wait for userId)
   useEffect(() => {
     if (id) {
       const fetchedCourse = courseManager.getCourseById(Number(id));
       setCourse(fetchedCourse);
-      
-      if (currentUser) {
-        const enrolled = enrollmentManager.isEnrolled(currentUser.id, Number(id));
-        setIsEnrolled(enrolled);
-      }
     }
-  }, [id, currentUser]);
+  }, [id]);
+
+  // Check enrollment status when userId or course changes
+  useEffect(() => {
+    if (userId && course) {
+      const enrolled = enrollmentManager.isEnrolled(userId, course.id);
+      setIsEnrolled(enrolled);
+    }
+  }, [userId, course?.id]);
 
   const handleEnroll = () => {
-    if (!currentUser) return;
+    if (!userId) return;
     
-    const result = enrollmentManager.enrollCourse(currentUser.id, Number(id));
+    const result = enrollmentManager.enrollCourse(userId, Number(id));
     if (result.success) {
       setIsEnrolled(true);
     }

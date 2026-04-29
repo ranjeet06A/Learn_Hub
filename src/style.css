@@ -294,3 +294,79 @@ code {
     border-right-color: var(--border);
   }
 }
+/* 🌍 GLOBAL RESET */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* 📱 RESPONSIVE FONT SIZE */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 18px; /* bigger text on mobile */
+  }
+}
+
+/* 📦 CONTAINER */
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 16px;
+}
+
+/* 🧠 HEADINGS */
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.3rem; }
+
+/* 📄 PARAGRAPH */
+p {
+  font-size: 1rem;
+}
+
+/* 🔘 BUTTONS */
+button {
+  font-size: 1rem;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 📱 MOBILE BUTTON IMPROVEMENT */
+@media (max-width: 768px) {
+  button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* 📚 LESSON CONTENT */
+.lesson-content {
+  font-size: 1rem;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+/* 🧠 QUIZ BOX */
+.quiz-box {
+  padding: 16px;
+}
+
+/* 🔢 NAV PANEL BUTTON */
+.nav-btn {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 768px) {
+  .nav-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 0.8rem;
+  }
+}

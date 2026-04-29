@@ -1,22 +1,29 @@
+import { jwtDecode } from "jwt-decode";
+
 export interface User {
   id: string;
   username: string;
   email: string;
-  password: string; // In production, use hashing
+  password: string;
   createdAt: string;
 }
 
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
+interface DecodedToken {
+  exp: number;
 }
 
 const USERS_STORAGE_KEY = "learn_hub_users";
 const CURRENT_USER_KEY = "learn_hub_current_user";
 
 export const authManager = {
-  // Register a new user
-  register: (username: string, email: string, password: string): { success: boolean; message: string; user?: User } => {
+  // ======================
+  // REGISTER
+  // ======================
+  register: (
+    username: string,
+    email: string,
+    password: string
+  ): { success: boolean; message: string; user?: User } => {
     if (!username.trim() || !email.trim() || !password.trim()) {
       return { success: false, message: "All fields are required" };
     }
@@ -26,6 +33,7 @@ export const authManager = {
     }
 
     const users = authManager.getAllUsers();
+
     if (users.find((u) => u.username === username)) {
       return { success: false, message: "Username already exists" };
     }
@@ -38,7 +46,7 @@ export const authManager = {
       id: `user_${Date.now()}`,
       username,
       email,
-      password, // In production, hash this
+      password,
       createdAt: new Date().toISOString(),
     };
 
@@ -48,8 +56,13 @@ export const authManager = {
     return { success: true, message: "Registration successful", user: newUser };
   },
 
-  // Login user
-  login: (username: string, password: string): { success: boolean; message: string; user?: User } => {
+  // ======================
+  // LOGIN (LOCAL)
+  // ======================
+  login: (
+    username: string,
+    password: string
+  ): { success: boolean; message: string; user?: User } => {
     const users = authManager.getAllUsers();
     const user = users.find((u) => u.username === username);
 
@@ -61,51 +74,82 @@ export const authManager = {
       return { success: false, message: "Incorrect password" };
     }
 
-    // Set current user session
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
     return { success: true, message: "Login successful", user };
   },
 
-  // Get current logged-in user
+  // ======================
+  // GET CURRENT USER
+  // ======================
   getCurrentUser: (): User | null => {
     const stored = localStorage.getItem(CURRENT_USER_KEY);
     return stored ? JSON.parse(stored) : null;
   },
 
-  // Logout user
+  // ======================
+  // LOGOUT (FULL CLEANUP)
+  // ======================
   logout: () => {
     localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem("token"); // ✅ IMPORTANT
   },
 
-  // Get all users (admin only)
+  // ======================
+  // USERS
+  // ======================
   getAllUsers: (): User[] => {
     const stored = localStorage.getItem(USERS_STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   },
 
-  // Check if authenticated
-  isAuthenticated: (): boolean => {
-    return authManager.getCurrentUser() !== null;
-  },
-
-  // Get user by ID
   getUserById: (id: string): User | null => {
     const users = authManager.getAllUsers();
     return users.find((u) => u.id === id) || null;
   },
 
-  // Delete user (admin only)
   deleteUser: (id: string): boolean => {
     const users = authManager.getAllUsers();
     const filtered = users.filter((u) => u.id !== id);
+
     if (filtered.length === users.length) return false;
+
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(filtered));
     return true;
   },
 
-  // Create default admin user
+  // ======================
+  // AUTH CHECK (🔥 FIXED)
+  // ======================
+  isAuthenticated: (): boolean => {
+    const token = localStorage.getItem("token");
+
+    // ❌ No token
+    if (!token) return false;
+
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+
+      // ❌ Invalid token
+      if (!decoded.exp) return false;
+
+      // ❌ Expired token
+      if (decoded.exp * 1000 < Date.now()) {
+        authManager.logout(); // cleanup
+        return false;
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  // ======================
+  // ADMIN INIT
+  // ======================
   initializeAdmin: () => {
     const users = authManager.getAllUsers();
+
     if (users.length === 0) {
       const adminUser: User = {
         id: "admin_1",
@@ -114,11 +158,12 @@ export const authManager = {
         password: "admin123",
         createdAt: new Date().toISOString(),
       };
+
       users.push(adminUser);
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
     }
   },
 };
 
-// Initialize admin user on first load
+// initialize admin
 authManager.initializeAdmin();
