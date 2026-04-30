@@ -8,14 +8,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET = "MY_SECRET_KEY";
+// ======================
+// ENV VARIABLES
+// ======================
+const PORT = process.env.PORT || 5000;
+const SECRET = process.env.JWT_SECRET || "MY_SECRET_KEY";
+const MONGO_URI = process.env.MONGO_URI;
 
 // ======================
-// MONGODB CONNECT
+// MONGODB CONNECT (FIXED)
 // ======================
+if (!MONGO_URI) {
+  console.log("❌ MONGO_URI is missing in environment variables");
+  process.exit(1);
+}
+
 mongoose
-  .connect("mongodb://127.0.0.1:27017/learnhub")
-  .then(() => console.log("✅ MongoDB Connected to learnhub"))
+  .connect(MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected (Atlas)"))
   .catch((err) => console.log("❌ Mongo Error:", err));
 
 mongoose.connection.once("open", () => {
@@ -214,13 +224,12 @@ app.delete("/clear-results", auth, async (req, res) => {
 });
 
 // ======================
-// COURSES (FIXED HERE)
+// COURSES
 // ======================
 app.get("/courses", auth, async (req, res) => {
   try {
     let courses = await Course.find();
 
-    // 🔥 AUTO CREATE DEFAULT COURSE IF EMPTY
     if (courses.length === 0) {
       console.log("⚠ No courses found. Creating default course...");
 
@@ -237,7 +246,6 @@ app.get("/courses", auth, async (req, res) => {
       });
 
       await defaultCourse.save();
-
       courses = await Course.find();
     }
 
@@ -266,6 +274,11 @@ app.post("/courses", auth, async (req, res) => {
 });
 
 // ======================
-app.listen(5000, () =>
-  console.log("🚀 Server running on port 5000")
+// SERVER START
+// ======================
+app.get("/", (req, res) => {
+  res.send("🚀 Learn Hub Backend is Running Successfully!");
+});
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on port ${PORT}`)
 );
