@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";        // ✅ NO .tsx extension
+import App from "./App";       // ✅ NO .tsx extension
 import "./style.css";           // ✅ MUST match actual file name
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
