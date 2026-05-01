@@ -22,7 +22,7 @@ export default function CourseDetail() {
   useEffect(() => {
     if (id) {
       const fetchedCourse = courseManager.getCourseById(Number(id));
-      setCourse(fetchedCourse);
+      setCourse(fetchedCourse || null);
     }
   }, [id]);
 

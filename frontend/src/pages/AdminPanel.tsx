@@ -34,13 +34,15 @@ export default function AdminPanel() {
 
   // ================= LOAD =================
   useEffect(() => {
-    const data = JSON.parselocalStorage.getItem("learn_hub_courses") || "[]");
+    const data = JSON.parse(
+      localStorage.getItem("learn_hub_courses") || "[]"
+    );
     setCourses(data);
   }, []);
 
   const saveCourses = (updated: Course[]) => {
     setCourses(updated);
-    localStorage.setItem("courses", JSON.stringify(updated));
+    localStorage.setItem("learn_hub_courses", JSON.stringify(updated));
   };
 
   // ================= ADD COURSE =================
@@ -82,7 +84,7 @@ export default function AdminPanel() {
     setNewLesson("");
   };
 
-  // ================= DOCX UPLOAD (FIXED) =================
+  // ================= DOCX UPLOAD =================
   const handleDocxUpload = async (file: File) => {
     if (!selectedCourse || !selectedLesson) {
       alert("Select course & lesson first");
@@ -90,8 +92,6 @@ export default function AdminPanel() {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-
-    // ✅ IMPORTANT FIX: Convert DOCX → HTML
     const result = await mammoth.convertToHtml({ arrayBuffer });
     const html = result.value;
 
@@ -108,7 +108,7 @@ export default function AdminPanel() {
     });
 
     saveCourses(updated);
-    alert("Lesson uploaded with formatting!");
+    alert("Lesson uploaded!");
   };
 
   // ================= QUIZ PARSER =================
@@ -131,7 +131,6 @@ export default function AdminPanel() {
       let correctIndex = 0;
 
       lines.forEach((line) => {
-        // QUESTION + STATEMENTS
         if (
           line.startsWith("Q") ||
           line.startsWith("With") ||
@@ -139,21 +138,11 @@ export default function AdminPanel() {
           line.startsWith("Which")
         ) {
           questionText += line + " ";
-        }
-
-        // A B C D statements
-        else if (/^[A-D]\./.test(line)) {
+        } else if (/^[A-D]\./.test(line)) {
           questionText += line + " ";
-        }
-
-        // OPTIONS
-        else if (/^\([IVX]+\)/.test(line)) {
-          const clean = line.replace(/^\([IVX]+\)\s*/, "");
-          options.push(clean);
-        }
-
-        // CORRECT ANSWER
-        else if (line.toLowerCase().includes("correct answer")) {
+        } else if (/^\([IVX]+\)/.test(line)) {
+          options.push(line.replace(/^\([IVX]+\)\s*/, ""));
+        } else if (line.toLowerCase().includes("correct answer")) {
           const match = line.match(/\((I|II|III|IV)\)/);
           if (match) {
             correctIndex = romanMap.indexOf(match[1]);
@@ -190,7 +179,7 @@ export default function AdminPanel() {
 
     localStorage.setItem("learn_hub_quizzes", JSON.stringify(existing));
 
-    alert("Quiz saved successfully!");
+    alert("Quiz saved!");
   };
 
   // ================= UI =================
@@ -198,7 +187,6 @@ export default function AdminPanel() {
     <div style={{ padding: 20 }}>
       <h2>Admin Panel</h2>
 
-      {/* ADD COURSE */}
       <input
         value={newCourse}
         onChange={(e) => setNewCourse(e.target.value)}
@@ -206,7 +194,6 @@ export default function AdminPanel() {
       />
       <button onClick={addCourse}>Add Course</button>
 
-      {/* SELECT COURSE */}
       <div>
         <select
           value={selectedCourse}
@@ -224,7 +211,6 @@ export default function AdminPanel() {
         </select>
       </div>
 
-      {/* ADD LESSON */}
       <input
         value={newLesson}
         onChange={(e) => setNewLesson(e.target.value)}
@@ -232,7 +218,6 @@ export default function AdminPanel() {
       />
       <button onClick={addLesson}>Add Lesson</button>
 
-      {/* SELECT LESSON */}
       <select
         value={selectedLesson}
         onChange={(e) => setSelectedLesson(e.target.value)}
@@ -247,7 +232,6 @@ export default function AdminPanel() {
           ))}
       </select>
 
-      {/* DOCX UPLOAD */}
       <div style={{ marginTop: 10 }}>
         <input
           type="file"
@@ -260,7 +244,6 @@ export default function AdminPanel() {
         />
       </div>
 
-      {/* QUIZ INPUT */}
       <textarea
         rows={10}
         style={{ width: "100%", marginTop: 10 }}

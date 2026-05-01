@@ -3,7 +3,12 @@
  * Manages quiz data for lessons
  */
 
-import type { QuizQuestion }
+// ✅ FIX: Define QuizQuestion properly (instead of broken import)
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  answer: string;
+}
 
 export interface QuizDataStructure {
   [lessonId: number]: QuizQuestion[];

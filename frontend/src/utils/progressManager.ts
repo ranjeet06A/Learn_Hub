@@ -56,17 +56,17 @@ export const progressManager = {
   // Get overall stats
   getStats: (userId: string): StudentStats => {
     const allProgress = progressManager.getAllProgress(userId);
-    const progressByCourseLegion: Record<
+    const progressBycourse: Record<
       number,
       { completed: number; score: number }
     > = {};
 
     allProgress.forEach((p) => {
-      if (!progressByCourseLegion[p.courseId]) {
-        progressByCourseLegion[p.courseId] = { completed: 0, score: 0 };
+      if (!progressBycourse[p.courseId]) {
+        progressBycourse[p.courseId] = { completed: 0, score: 0 };
       }
-      progressByCourseLegion[p.courseId].completed += 1;
-      progressByCourseLegion[p.courseId].score += p.score;
+      progressBycourse[p.courseId].completed += 1;
+      progressBycourse[p.courseId].score += p.score;
     });
 
     const averageScore =
@@ -81,7 +81,7 @@ export const progressManager = {
       totalLessonsCompleted: allProgress.length,
       averageScore: Math.round(averageScore),
       totalTimeSpent,
-      progressByCourseLegion,
+      progressBycourse,
     };
   },
 

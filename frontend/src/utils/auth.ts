@@ -33,3 +33,18 @@ export function login(email: string, password: string) {
 export function logout() {
   localStorage.removeItem(CURRENT_USER);
 }
+export function isAdmin() {
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  return user?.role === "admin";
+}
+
+export function changePassword(email: string, newPassword: string) {
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  const updated = users.map((u: any) =>
+    u.email === email ? { ...u, password: newPassword } : u
+  );
+
+  localStorage.setItem("users", JSON.stringify(updated));
+  return true;
+}

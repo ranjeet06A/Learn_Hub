@@ -1,0 +1,1 @@
+export function convertToQuizJSON(data: any): any;

@@ -1,19 +1,32 @@
 import React, { useState } from "react";
 import { lessonsData } from "../data/lessons";
 
-export const QuizBuilder = ({ onAddQuiz }) => {
+// ✅ TYPE FOR QUESTIONS
+type ParsedQuestion = {
+  question: string;
+  statements: string[];
+  options: string[];
+  answer: string;
+};
+
+// ✅ PROPS TYPE
+type Props = {
+  onAddQuiz?: (lessonId: number, questions: ParsedQuestion[]) => void;
+};
+
+export const QuizBuilder: React.FC<Props> = ({ onAddQuiz }) => {
   const [pastedContent, setPastedContent] = useState("");
   const [selectedLesson, setSelectedLesson] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
-  const [parsedQuestions, setParsedQuestions] = useState([]);
-  const [errors, setErrors] = useState([]);
+  const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
-  const [mode, setMode] = useState("input");
+  const [mode, setMode] = useState<"input" | "preview">("input");
 
   const roman = ["I", "II", "III", "IV"];
 
-  // ✅ NEW PARSER (FIXED)
-  const parseQuiz = (text) => {
+  // ✅ PARSER (TYPED)
+  const parseQuiz = (text: string): ParsedQuestion[] => {
     const blocks = text.split(/Q\d+\./).filter(Boolean);
 
     return blocks.map((block) => {
@@ -23,26 +36,19 @@ export const QuizBuilder = ({ onAddQuiz }) => {
         .filter(Boolean);
 
       let question = "";
-      let statements = [];
-      let options = [];
+      let statements: string[] = [];
+      let options: string[] = [];
       let answer = "";
 
-      lines.forEach((line) => {
-        // A-D
+      lines.forEach((line: string) => {
         if (/^[A-D]\./.test(line)) {
           statements.push(line);
-        }
-        // Options
-        else if (/^\((I{1,3}|IV)\)/.test(line)) {
+        } else if (/^\((I{1,3}|IV)\)/.test(line)) {
           options.push(line.replace(/^\((I{1,3}|IV)\)\s*/, ""));
-        }
-        // Answer
-        else if (/Correct Answer/i.test(line)) {
+        } else if (/Correct Answer/i.test(line)) {
           const match = line.match(/\((.*?)\)/);
           answer = match ? match[1] : "";
-        }
-        // Question
-        else {
+        } else {
           question += line + " ";
         }
       });
@@ -161,7 +167,7 @@ export const QuizBuilder = ({ onAddQuiz }) => {
             >
               <option value="">Select Lesson</option>
               {selectedCourse &&
-                lessonsData[Number(selectedCourse)]?.map((l) => (
+                lessonsData[Number(selectedCourse)]?.map((l: any) => (
                   <option key={l.id} value={l.id}>
                     {l.title}
                   </option>
@@ -189,7 +195,7 @@ export const QuizBuilder = ({ onAddQuiz }) => {
                   Q{idx + 1}. {q.question}
                 </strong>
 
-                {/* ✅ STATEMENTS */}
+                {/* STATEMENTS */}
                 <div style={{ marginTop: "10px" }}>
                   {q.statements.map((s, i) => (
                     <div key={i}>{s}</div>
@@ -198,7 +204,7 @@ export const QuizBuilder = ({ onAddQuiz }) => {
 
                 <br />
 
-                {/* ✅ OPTIONS */}
+                {/* OPTIONS */}
                 {q.options.map((opt, i) => (
                   <div key={i}>
                     ({roman[i]}) {opt}
@@ -207,7 +213,7 @@ export const QuizBuilder = ({ onAddQuiz }) => {
 
                 <br />
 
-                {/* ✅ ANSWER */}
+                {/* ANSWER */}
                 {correctIndex !== -1 && (
                   <div style={{ fontWeight: "bold", color: "green" }}>
                     Correct Answer: ({roman[correctIndex]})
