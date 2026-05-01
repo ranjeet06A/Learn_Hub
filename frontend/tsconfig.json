@@ -25,7 +25,9 @@
 
     "jsx": "react-jsx",
 
-    "types": ["vite/client"]   // ✅ FIX ADDED
+    "types": ["vite/client"],
+
+    "allowImportingTsExtensions": true   // ✅ CRITICAL FIX
   },
   "include": ["src"]
 }
