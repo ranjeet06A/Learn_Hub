@@ -1,14 +1,25 @@
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-require("dotenv").config(); // ✅ IMPORTANT
+require("dotenv").config();
 
 const app = express();
-app.use(cors());
+
+// ✅ FIXED CORS (IMPORTANT)
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+// ✅ FIXED PREFLIGHT (VERY IMPORTANT)
+app.options("*", cors());
+
 app.use(express.json());
 
 // ======================
@@ -19,7 +30,7 @@ const SECRET = process.env.JWT_SECRET || "MY_SECRET_KEY";
 const MONGO_URI = process.env.MONGO_URI;
 
 // ======================
-// SAFETY CHECK (FIXED)
+// SAFETY CHECK
 // ======================
 if (!MONGO_URI) {
   console.error("❌ ERROR: MONGO_URI missing");
@@ -27,9 +38,9 @@ if (!MONGO_URI) {
 }
 
 // ======================
-// MONGODB CONNECT (FIXED)
+// MONGODB CONNECT
 // ======================
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => {
     console.error("❌ MongoDB Error:", err.message);
@@ -37,7 +48,7 @@ mongoose.connect(process.env.MONGO_URI)
   });
 
 // ======================
-// MODELS (FIXED SCHEMA STYLE)
+// MODELS
 // ======================
 const userSchema = new mongoose.Schema({
   email: String,
@@ -96,21 +107,7 @@ const auth = (req, res, next) => {
     });
   }
 };
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors"); // ✅ ADD THIS
-require("dotenv").config();
 
-const app = express();
-
-// ✅ FIX: enable CORS
-app.use(cors({
-  origin: "*", // OR "http://localhost:5173"
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-
-app.use(express.json());
 // ======================
 // ROUTES
 // ======================
@@ -210,7 +207,7 @@ app.get("/courses", async (req, res) => {
 });
 
 // ======================
-// SERVER START (FIXED)
+// SERVER START
 // ======================
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
