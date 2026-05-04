@@ -13,13 +13,15 @@ const app = express();
 // ✅ FINAL FIXED CORS (IMPORTANT)
 app.use(cors({
   origin: [
-    "http://localhost:5173",   // ✅ local frontend
-    "https://your-frontend-url.onrender.com" // (optional future deploy)
+    "http://localhost:5173",
+    "http://localhost:5174"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
+  credentials: true
 }));
+
+app.options("*", cors());
 
 // ✅ PREFLIGHT (keep it)
 app.options("*", cors());
