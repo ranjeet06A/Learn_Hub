@@ -10,14 +10,18 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ FIXED CORS (IMPORTANT)
+// ✅ FINAL FIXED CORS (IMPORTANT)
 app.use(cors({
-  origin: "*",
+  origin: [
+    "http://localhost:5173",   // ✅ local frontend
+    "https://your-frontend-url.onrender.com" // (optional future deploy)
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 }));
 
-// ✅ FIXED PREFLIGHT (VERY IMPORTANT)
+// ✅ PREFLIGHT (keep it)
 app.options("*", cors());
 
 app.use(express.json());
