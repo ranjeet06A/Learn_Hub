@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import Dashboard from "./pages/Dashboard";
@@ -18,7 +18,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 export default function App() {
   const [isAuth, setIsAuth] = useState(false);
 
-  // ✅ realtime auth sync
   useEffect(() => {
     const checkAuth = () => {
       setIsAuth(!!localStorage.getItem("token"));
@@ -36,7 +35,7 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <>
       {isAuth && <Navbar />}
 
       <Routes>
@@ -120,6 +119,6 @@ export default function App() {
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
