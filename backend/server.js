@@ -260,3 +260,26 @@ app.get("/courses", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+app.get("/seed", async (req, res) => {
+  await Course.deleteMany();
+
+  await Course.create([
+    {
+      title: "Physics Basics",
+      examId: "NEET",
+      lessons: [
+        { id: "l1", name: "Motion", content: "Introduction to motion" },
+        { id: "l2", name: "Force", content: "Introduction to force" }
+      ]
+    },
+    {
+      title: "Chemistry Basics",
+      examId: "NEET",
+      lessons: [
+        { id: "l1", name: "Atoms", content: "Atomic structure" }
+      ]
+    }
+  ]);
+
+  res.json({ success: true, message: "Courses added" });
+});
