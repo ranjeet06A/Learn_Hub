@@ -15,7 +15,7 @@ import Navbar from "./components/Navbar";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
-export default function App() {
+export default function AppRoutes() {
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
