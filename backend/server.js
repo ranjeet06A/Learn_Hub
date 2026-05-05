@@ -10,20 +10,24 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ FINAL FIXED CORS (IMPORTANT)
+// ✅ FIXED CORS (UPDATED)
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5174"
-  ],
+  origin: function (origin, callback) {
+    if (
+      !origin ||
+      origin.includes("vercel.app") ||
+      origin.includes("localhost")
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
-app.options("*", cors());
-
-// ✅ PREFLIGHT (keep it)
 app.options("*", cors());
 
 app.use(express.json());
