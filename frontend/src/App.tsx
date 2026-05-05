@@ -1,10 +1,10 @@
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./AppRoutes";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<div>Home</div>} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
