@@ -10,7 +10,7 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ FIXED CORS (UPDATED)
+// ✅ CORS
 app.use(cors({
   origin: function (origin, callback) {
     if (
@@ -122,7 +122,7 @@ const auth = (req, res, next) => {
 // ROUTES
 // ======================
 app.get("/", (req, res) => {
-  res.send("🚀 Backend Running Successfully");
+  res.json({ success: true, message: "Backend running" });
 });
 
 // REGISTER
@@ -134,11 +134,19 @@ app.post("/register", async (req, res) => {
     password = password?.trim();
 
     if (!email || !password) {
-      return res.status(400).send("Missing fields");
+      return res.status(400).json({
+        success: false,
+        message: "Missing fields"
+      });
     }
 
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).send("User exists");
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists"
+      });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
 
@@ -149,10 +157,18 @@ app.post("/register", async (req, res) => {
     });
 
     await user.save();
-    res.send("User created");
+
+    res.json({
+      success: true,
+      message: "User created"
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 });
 
@@ -165,10 +181,22 @@ app.post("/login", async (req, res) => {
     password = password?.trim();
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ success: false });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found"
+      });
+    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ success: false });
+
+    if (!match) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password"
+      });
+    }
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -176,9 +204,17 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({ success: true, token, role: user.role });
+    res.json({
+      success: true,
+      token,
+      role: user.role
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 });
 
@@ -191,7 +227,9 @@ app.post("/results", auth, async (req, res) => {
     });
 
     await result.save();
+
     res.json({ success: true });
+
   } catch {
     res.status(500).json({ success: false });
   }
