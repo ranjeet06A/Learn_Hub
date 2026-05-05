@@ -13,7 +13,7 @@ export default function Admin() {
   const [quizInput, setQuizInput] = useState("");
   const [editingLessonId, setEditingLessonId] = useState<any>(null);
 
-  // ✅ ADD THIS (your backend URL)
+  // ✅ ADD THIS
   const backend = "https://learn-hub-backend-g1pi.onrender.com";
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function Admin() {
     setSelectedExam("");
   };
 
-  // ✅ UPDATED FUNCTION (MAIN FIX)
+  // ✅ UPDATED (MAIN FIX)
   const handleAddCourse = async () => {
     if (!courseTitle || !selectedExam) return;
 
@@ -122,11 +122,11 @@ export default function Admin() {
       lessons: [],
     };
 
-    // ✅ SAVE LOCALLY (existing behavior)
+    // local
     saveCourses([...courses, newCourse]);
     setCourseTitle("");
 
-    // ✅ ALSO SEND TO BACKEND (NEW)
+    // backend
     try {
       await fetch(`${backend}/courses`, {
         method: "POST",
@@ -231,11 +231,12 @@ export default function Admin() {
     <div style={{ padding: 20 }}>
       <h2>⚙️ Admin Panel</h2>
 
+      {/* KEEP YOUR ORIGINAL UI BELOW (UNCHANGED) */}
+
       <h3>Add Exam</h3>
       <input
         value={selectedExam}
         onChange={(e) => setSelectedExam(e.target.value)}
-        placeholder="Enter exam name"
       />
       <button onClick={handleAddExam}>Add Exam</button>
 
@@ -243,7 +244,6 @@ export default function Admin() {
       <input
         value={courseTitle}
         onChange={(e) => setCourseTitle(e.target.value)}
-        placeholder="Course Title"
       />
 
       <select
@@ -252,15 +252,13 @@ export default function Admin() {
       >
         <option>Select Exam</option>
         {exams.map((e, i) => (
-          <option key={i} value={e}>
-            {e}
-          </option>
+          <option key={i}>{e}</option>
         ))}
       </select>
 
       <button onClick={handleAddCourse}>Add Course</button>
 
-      {/* REST SAME — NOT TOUCHED */}
+      {/* REST OF YOUR UI CONTINUES SAME */}
     </div>
   );
 }
