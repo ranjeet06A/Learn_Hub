@@ -1,7 +1,6 @@
+import api from "../utils/api"; // ✅ FIXED
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-// ❌ remove this (not needed anymore)
-// import { signup } from "../utils/auth";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -15,21 +14,15 @@ export default function Signup() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+      // ✅ USING API HELPER
+      const data = await api.post("/register", {
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
       });
 
-      const data = await res.text();
-
-      if (!res.ok) {
-        throw new Error(data);
+      // Backend returns text, but api helper already handles response
+      if (!data) {
+        throw new Error("Signup failed");
       }
 
       alert("Signup successful! Please login.");

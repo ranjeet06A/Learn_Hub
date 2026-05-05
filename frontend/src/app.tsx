@@ -13,12 +13,12 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import Navbar from "./components/Navbar";
 
-import ProtectedRoute from "./components/ProtectedRoute"; // ✅ NEW
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(false);
 
-  // ✅ FIX: use token instead of learn_hub_user
+  // ✅ realtime auth sync
   useEffect(() => {
     const checkAuth = () => {
       setIsAuth(!!localStorage.getItem("token"));
@@ -27,13 +27,16 @@ export default function App() {
     checkAuth();
 
     window.addEventListener("storage", checkAuth);
+    window.addEventListener("focus", checkAuth);
 
-    return () => window.removeEventListener("storage", checkAuth);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("focus", checkAuth);
+    };
   }, []);
 
   return (
     <BrowserRouter>
-      {/* ✅ Navbar controlled by token */}
       {isAuth && <Navbar />}
 
       <Routes>
@@ -44,54 +47,78 @@ export default function App() {
         {/* PROTECTED */}
         <Route
           path="/"
-          element={<ProtectedRoute element={<Dashboard />} />}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/courses"
-          element={<ProtectedRoute element={<Courses />} />}
+          element={
+            <ProtectedRoute>
+              <Courses />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/course/:courseId"
-          element={<ProtectedRoute element={<CourseView />} />}
+          element={
+            <ProtectedRoute>
+              <CourseView />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/course/:courseId/lesson/:lessonId"
-          element={<ProtectedRoute element={<LessonView />} />}
+          element={
+            <ProtectedRoute>
+              <LessonView />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/results"
-          element={<ProtectedRoute element={<Results />} />}
+          element={
+            <ProtectedRoute>
+              <Results />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/progress"
-          element={<ProtectedRoute element={<Progress />} />}
-        />
-
-        {/* ✅ ADMIN PROTECTION */}
-        <Route
-          path="/admin"
           element={
-            <ProtectedRoute
-              element={
-                JSON.parse(localStorage.getItem("learn_hub_user") || "{}")
-                  ?.role === "admin" ? (
-                  <Admin />
-                ) : (
-                  <Navigate to="/" />
-                )
-              }
-            />
+            <ProtectedRoute>
+              <Progress />
+            </ProtectedRoute>
           }
         />
 
+        {/* ADMIN */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              {JSON.parse(localStorage.getItem("learn_hub_user") || "{}")
+                ?.role === "admin" ? (
+                <Admin />
+              ) : (
+                <Navigate to="/" />
+              )}
+            </ProtectedRoute>
+          }
+        />
+
+        {/* EXTRA */}
+        <Route path="/select-exam" element={<SelectExam />} />
+
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" />} />
-        <Route path="/select-exam" element={<SelectExam />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,3 +1,4 @@
+import api from "../utils/api"; // ✅ NEW
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,35 +12,21 @@ export default function Courses() {
 
       // 🔥 TRY BACKEND FIRST
       if (token) {
-        const res = await fetch("http://localhost:5000/courses", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const data = await api.get("/courses"); // ✅ FIXED
 
-        // 🔥 AUTO LOGOUT FIX
-        if (res.status === 401) {
-          alert("Session expired. Please login again.");
-          localStorage.removeItem("token");
-          navigate("/login");
-          return;
+        console.log("RAW BACKEND DATA:", data);
+
+        let finalData = data;
+
+        // ✅ FORCE ARRAY
+        if (!Array.isArray(finalData)) {
+          finalData = finalData?.courses || [];
         }
 
-        if (res.ok) {
-          let data = await res.json();
+        console.log("FINAL COURSES ARRAY:", finalData);
 
-          console.log("RAW BACKEND DATA:", data);
-
-          // ✅ FORCE ARRAY (VERY IMPORTANT FIX)
-          if (!Array.isArray(data)) {
-            data = data?.courses || [];
-          }
-
-          console.log("FINAL COURSES ARRAY:", data);
-
-          setCourses(data); // ✅ NO FILTER AT ALL
-          return;
-        }
+        setCourses(finalData);
+        return;
       }
     } catch (err) {
       console.log("Backend failed, using localStorage");
@@ -52,12 +39,11 @@ export default function Courses() {
 
     console.log("RAW LOCAL DATA:", stored);
 
-    // ✅ FORCE ARRAY
     if (!Array.isArray(stored)) {
       stored = [];
     }
 
-    setCourses(stored); // ✅ NO FILTER
+    setCourses(stored);
   };
 
   // 🔥 ENROLL FUNCTION (UNCHANGED)
@@ -100,7 +86,6 @@ export default function Courses() {
     return () => window.removeEventListener("focus", loadCourses);
   }, []);
 
-  // 🔥 DEBUG VIEW
   console.log("COURSES STATE:", courses);
 
   if (!courses || courses.length === 0) {

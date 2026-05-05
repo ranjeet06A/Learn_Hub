@@ -1,3 +1,4 @@
+import api from "../utils/api"; // ✅ FIXED (use api helper)
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -22,39 +23,29 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password: password.trim(),
-        }),
+      // ✅ USING API HELPER
+      const data = await api.post("/login", {
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
       });
-
-      const data = await res.json();
 
       console.log("LOGIN RESPONSE:", data);
 
-      if (!res.ok) {
-        setError(data.message || "Login failed");
+      if (!data || !data.success) {
+        setError(data?.message || "Login failed");
         return;
       }
 
-      // ✅ FIXED: STORE CORRECT USER DATA
       localStorage.setItem(
         "learn_hub_user",
         JSON.stringify({
-          email: email.trim().toLowerCase(), // ✅ IMPORTANT FIX
+          email: email.trim().toLowerCase(),
           role: data.role,
         })
       );
 
-      // ✅ OPTIONAL BUT GOOD (for future auth)
       localStorage.setItem("token", data.token);
 
-      // 🔥 trigger UI update instantly
       window.dispatchEvent(new Event("storage"));
 
       navigate("/");
@@ -124,8 +115,7 @@ export default function Login() {
   );
 }
 
-// ================= STYLES =================
-
+// STYLES (UNCHANGED)
 const container = {
   display: "flex",
   justifyContent: "center",

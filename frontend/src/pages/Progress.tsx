@@ -1,41 +1,70 @@
+import api from "../utils/api"; // ✅ FIXED
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Progress() {
+  const navigate = useNavigate();
   const [data, setData] = useState<any[]>([]);
   const [myCourses, setMyCourses] = useState<any[]>([]);
-  const [courses, setCourses] = useState<any[]>([]); // ✅ FIX
+  const [courses, setCourses] = useState<any[]>([]);
 
   useEffect(() => {
-    const stored = JSON.parse(
-      localStorage.getItem("learn_hub_progress") || "[]"
-    );
-    setData(stored);
+    const loadData = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-    const user = JSON.parse(
-      localStorage.getItem("learn_hub_user") || "{}"
-    );
+        // 🔐 NOT LOGGED IN
+        if (!token) {
+          navigate("/login");
+          return;
+        }
 
-    const enrollments = JSON.parse(
-      localStorage.getItem("enrollments") || "[]"
-    );
+        // ✅ USING API HELPER
+        const backendData = await api.get("/results");
 
-    const allCourses = JSON.parse(
-      localStorage.getItem("learn_hub_courses") || "[]"
-    );
+        if (Array.isArray(backendData)) {
+          setData(backendData);
+        }
+      } catch (err) {
+        console.log("Backend failed, using localStorage");
+      }
 
-    setCourses(allCourses); // ✅ FIX
+      // 🔥 FALLBACK (UNCHANGED)
+      const stored = JSON.parse(
+        localStorage.getItem("learn_hub_progress") || "[]"
+      );
+      setData(Array.isArray(stored) ? stored : []);
 
-    const enrolledCourses = enrollments
-      .filter((e: any) => e.user === user.email)
-      .map((e: any) =>
-        allCourses.find((c: any) => c.id === e.courseId)
-      )
-      .filter(Boolean);
+      const user = JSON.parse(
+        localStorage.getItem("learn_hub_user") || "{}"
+      );
 
-    setMyCourses(enrolledCourses);
-  }, []);
+      const enrollments = JSON.parse(
+        localStorage.getItem("enrollments") || "[]"
+      );
 
-  // ✅ FIX: now dynamic
+      const allCourses = JSON.parse(
+        localStorage.getItem("learn_hub_courses") || "[]"
+      );
+
+      setCourses(allCourses);
+
+      const enrolledCourses = enrollments
+        .filter((e: any) => e.user === user.email)
+        .map((e: any) =>
+          allCourses.find((c: any) => c.id === e.courseId)
+        )
+        .filter(Boolean);
+
+      setMyCourses(enrolledCourses);
+    };
+
+    loadData();
+  }, [navigate]);
+
+  // ======================
+  // HELPERS (UNCHANGED)
+  // ======================
   const getCourseName = (courseId: string) => {
     const c = courses.find((c: any) => String(c.id) === String(courseId));
     return c?.title || c?.name;
@@ -48,17 +77,12 @@ export default function Progress() {
   };
 
   // ======================
-  // SUMMARY
+  // SUMMARY (UNCHANGED)
   // ======================
   const totalLessons = data.length;
-
   const totalScore = data.reduce((sum, d) => sum + (d.score || 0), 0);
   const avgScore = totalScore / (totalLessons || 1);
-
-  const totalTime = data.reduce(
-    (sum, d) => sum + (d.timeSpent || 0),
-    0
-  );
+  const totalTime = data.reduce((sum, d) => sum + (d.timeSpent || 0), 0);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -67,7 +91,7 @@ export default function Progress() {
   };
 
   // ======================
-  // GROUPING
+  // GROUPING (UNCHANGED)
   // ======================
   const grouped: any = {};
 
@@ -169,47 +193,6 @@ export default function Progress() {
           <p>{formatTime(totalTime)}</p>
         </div>
       </div>
-
-      {/* TABLE */}
-      <table style={{ width: "100%", marginTop: 20 }}>
-        <thead>
-          <tr>
-            <th>Lesson</th>
-            <th>Score</th>
-            <th>Correct</th>
-            <th>Wrong</th>
-            <th>Time</th>
-            <th>Attempt</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {data.map((p, i) => {
-            const correct = p.correct || 0;
-            const wrong = p.wrong || 0;
-            const score = p.score || 0;
-
-            return (
-              <tr key={i}>
-                <td>
-                  {getCourseName(p.courseId) || "Unknown"} →{" "}
-                  {getLessonName(p.courseId, p.lessonId) || p.lessonId}
-                </td>
-
-                <td>{score.toFixed(2)}</td>
-                <td>{correct}</td>
-                <td>{wrong}</td>
-                <td>{formatTime(p.timeSpent || 0)}</td>
-
-                <td>
-                  📅 {p.attemptDate || "-"} <br />
-                  🕒 {p.attemptTime || "-"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import api from "../utils/api"; // ✅ FIXED
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,33 +32,12 @@ export default function Results() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/results", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-// 🔥 AUTO LOGOUT IF TOKEN EXPIRED
-if (res.status === 401) {
-  alert("Session expired. Please login again.");
-  localStorage.removeItem("token");
-  navigate("/login");
-  return;
-}
-        // ✅ 🔥 CRITICAL FIX (AUTO LOGOUT)
-        if (res.status === 401) {
-          alert("Session expired. Please login again.");
-          localStorage.removeItem("token");
-          navigate("/login");
+        // ✅ USING API HELPER
+        const data = await api.get("/results");
+
+        if (data && data.length > 0) {
+          setResults(data);
           return;
-        }
-
-        if (res.ok) {
-          const data = await res.json();
-
-          if (data.length > 0) {
-            setResults(data);
-            return;
-          }
         }
       } catch (err) {
         console.log("Backend failed, using localStorage");
@@ -134,20 +114,6 @@ if (res.status === 401) {
                       const percentage =
                         total > 0 ? (score / total) * 100 : 0;
 
-                      const attemptDate = r.attemptDate || "N/A";
-                      const attemptTime = r.attemptTime || "N/A";
-
-                      const timeSpent =
-                        typeof r.timeSpent === "number"
-                          ? r.timeSpent
-                          : 0;
-
-                      const formatTime = (sec: number) => {
-                        const m = Math.floor(sec / 60);
-                        const s = sec % 60;
-                        return `${m}m ${s}s`;
-                      };
-
                       return (
                         <div
                           key={index}
@@ -160,30 +126,12 @@ if (res.status === 401) {
                         >
                           <strong>Attempt {index + 1}</strong>
 
-                          <p>📅 Date: {attemptDate}</p>
-                          <p>🕒 Time: {attemptTime}</p>
-                          <p>⏱ Duration: {formatTime(timeSpent)}</p>
-
                           <p>Score: {score}</p>
                           <p>Correct: {correct}</p>
                           <p>Wrong: {wrong}</p>
 
                           <p>
                             Percentage: {percentage.toFixed(2)}%
-                          </p>
-
-                          <p
-                            style={{
-                              fontWeight: "bold",
-                              color:
-                                percentage >= 40
-                                  ? "green"
-                                  : "red",
-                            }}
-                          >
-                            {percentage >= 40
-                              ? "✅ Passed"
-                              : "❌ Failed"}
                           </p>
                         </div>
                       );
