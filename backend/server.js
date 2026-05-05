@@ -171,6 +171,38 @@ app.post("/register", async (req, res) => {
     });
   }
 });
+// ADD COURSE (ADMIN)
+app.post("/courses", async (req, res) => {
+  try {
+    const { title, examId, lessons } = req.body;
+
+    if (!title || !examId) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and examId required"
+      });
+    }
+
+    const course = new Course({
+      title,
+      examId,
+      lessons: lessons || []
+    });
+
+    await course.save();
+
+    res.json({
+      success: true,
+      message: "Course created",
+      course
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
 
 // LOGIN
 app.post("/login", async (req, res) => {
