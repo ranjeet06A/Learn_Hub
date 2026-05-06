@@ -13,7 +13,7 @@ export default function Admin() {
   const [quizInput, setQuizInput] = useState("");
   const [editingLessonId, setEditingLessonId] = useState<any>(null);
 
-  // ✅ ADD THIS
+  // ✅ backend added (only new thing)
   const backend = "https://learn-hub-backend-g1pi.onrender.com";
 
   useEffect(() => {
@@ -107,11 +107,10 @@ export default function Admin() {
     saveExams(updated);
 
     localStorage.setItem("selected_exam", selectedExam);
-
     setSelectedExam("");
   };
 
-  // ✅ UPDATED (MAIN FIX)
+  // ✅ MERGED FUNCTION (local + backend)
   const handleAddCourse = async () => {
     if (!courseTitle || !selectedExam) return;
 
@@ -122,11 +121,11 @@ export default function Admin() {
       lessons: [],
     };
 
-    // local
+    // local save
     saveCourses([...courses, newCourse]);
     setCourseTitle("");
 
-    // backend
+    // backend save
     try {
       await fetch(`${backend}/courses`, {
         method: "POST",
@@ -139,8 +138,8 @@ export default function Admin() {
           lessons: [],
         }),
       });
-    } catch (err) {
-      console.log("Backend not reachable");
+    } catch {
+      console.log("Backend not available");
     }
   };
 
@@ -193,7 +192,7 @@ export default function Admin() {
     if (!quizInput || !selectedCourseId) return;
 
     if (!selectedLessonId) {
-      alert("Please select a lesson");
+      alert("Select lesson");
       return;
     }
 
@@ -231,8 +230,6 @@ export default function Admin() {
     <div style={{ padding: 20 }}>
       <h2>⚙️ Admin Panel</h2>
 
-      {/* KEEP YOUR ORIGINAL UI BELOW (UNCHANGED) */}
-
       <h3>Add Exam</h3>
       <input
         value={selectedExam}
@@ -245,20 +242,86 @@ export default function Admin() {
         value={courseTitle}
         onChange={(e) => setCourseTitle(e.target.value)}
       />
-
-      <select
-        value={selectedExam}
-        onChange={(e) => setSelectedExam(e.target.value)}
-      >
+      <select onChange={(e) => setSelectedExam(e.target.value)}>
         <option>Select Exam</option>
         {exams.map((e, i) => (
           <option key={i}>{e}</option>
         ))}
       </select>
-
       <button onClick={handleAddCourse}>Add Course</button>
 
-      {/* REST OF YOUR UI CONTINUES SAME */}
+      <h3>Add Lesson</h3>
+      <select onChange={(e) => setSelectedCourseId(e.target.value)}>
+        <option>Select Course</option>
+        {courses.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.title}
+          </option>
+        ))}
+      </select>
+
+      <input
+        value={lessonTitle}
+        onChange={(e) => setLessonTitle(e.target.value)}
+      />
+
+      <textarea
+        value={lessonContent}
+        onChange={(e) => setLessonContent(e.target.value)}
+      />
+
+      <input type="file" accept=".docx" onChange={handleDocxUpload} />
+
+      <button onClick={handleAddLesson}>
+        {editingLessonId ? "Update Lesson" : "Add Lesson"}
+      </button>
+
+      <h3>Add Quiz</h3>
+      <select onChange={(e) => setSelectedLessonId(e.target.value)}>
+        <option>Select Lesson</option>
+        {courses
+          .find((c) => String(c.id) === String(selectedCourseId))
+          ?.lessons?.map((l: any) => (
+            <option key={l.id} value={l.id}>
+              {l.title}
+            </option>
+          ))}
+      </select>
+
+      <textarea
+        value={quizInput}
+        onChange={(e) => setQuizInput(e.target.value)}
+      />
+
+      <button onClick={handleAddQuiz}>Add Quiz</button>
+
+      <h3>All Courses</h3>
+
+      {courses.map((c) => (
+        <div key={c.id}>
+          <b>{c.title}</b>
+          <button onClick={() => handleDeleteCourse(c.id)}>Delete</button>
+
+          {String(c.id) === String(selectedCourseId) &&
+            c.lessons?.map((l: any) => (
+              <div key={l.id}>
+                {l.title}
+                <button onClick={() => handleDeleteLesson(l.id)}>
+                  Delete
+                </button>
+                <button
+                  onClick={() => {
+                    setLessonTitle(l.title);
+                    setLessonContent(l.content);
+                    setEditingLessonId(l.id);
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
+            ))}
+        </div>
+      ))}
     </div>
   );
 }
