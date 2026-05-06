@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 // helper data
 const courses = JSON.parse(
-  
+  localStorage.getItem("learn_hub_courses") || "[]"
 );
+  
+
 
 const getCourseName = (courseId: string) => {
   const c = courses.find((c: any) => String(c.id) === String(courseId));

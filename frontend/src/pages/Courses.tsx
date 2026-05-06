@@ -34,23 +34,22 @@ export default function Courses() {
 
     // 🔥 FALLBACK (localStorage)
     let stored = JSON.parse(
-      localStorage.getItem("learn_hub_courses") || "[]"
-    );
+  localStorage.getItem("learn_hub_courses") || "[]"
+);
 
-    console.log("RAW LOCAL DATA:", stored);
-
-    if (!Array.isArray(stored)) {
-      stored = [];
-    }
-
+if (!Array.isArray(stored)) {
+  stored = [];
+}
     
   };
 
   // 🔥 ENROLL FUNCTION (UNCHANGED)
   const enrollCourse = (courseId: string) => {
-    const user = JSON.parse(
+   const user = JSON.parse(
+  localStorage.getItem("learn_hub_user") || "null"
+);
       
-    );
+    
 
     const enrollments = JSON.parse(
       localStorage.getItem("enrollments") || "[]"

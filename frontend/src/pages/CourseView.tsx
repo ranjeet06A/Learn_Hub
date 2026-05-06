@@ -16,36 +16,63 @@ type Course = {
 };
 
 export default function CourseView() {
-  const { courseId } = useParams(); // ✅ FIXED
+  const { courseId } = useParams();
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
 
   useEffect(() => {
-    
-    const courses: Course[] = stored ? JSON.parse(stored) : [];
+    try {
+      // ✅ Load courses safely from localStorage
+      const courses: Course[] = JSON.parse(
+        localStorage.getItem("learn_hub_courses") || "[]"
+      );
 
-    console.log("📚 COURSES:", courses);
-    console.log("🌐 URL courseId:", courseId);
+      console.log("📚 COURSES:", courses);
+      console.log("🌐 URL courseId:", courseId);
 
-    const found = courses.find(
-      (c) => String(c.id) === String(courseId) // ✅ FIXED
-    );
+      // ✅ Find matching course
+      const found = courses.find(
+        (c) => String(c.id) === String(courseId)
+      );
 
-    if (!found) {
-      console.log("❌ Course not found");
-      return;
+      if (!found) {
+        console.log("❌ Course not found");
+        return;
+      }
+
+      console.log("✅ FOUND COURSE:", found);
+
+      // ✅ Ensure lessons always exists
+      setCourse({
+        ...found,
+        lessons: Array.isArray(found.lessons)
+          ? found.lessons
+          : [],
+      });
+    } catch (error) {
+      console.error("❌ Failed to load course:", error);
     }
-
-    console.log("✅ FOUND COURSE:", found);
-    setCourse(found);
   }, [courseId]);
 
+  // ✅ Loading / Not found state
   if (!course) {
     return (
       <div style={{ padding: 30 }}>
         <h2>Course not found</h2>
-        <button onClick={() => navigate("/courses")}>
+
+        <button
+          onClick={() => navigate("/courses")}
+          style={{
+            padding: "10px 14px",
+            background: "#667eea",
+            color: "white",
+            border: "none",
+            borderRadius: 5,
+            cursor: "pointer",
+            marginTop: 10,
+          }}
+        >
           Back to Courses
         </button>
       </div>
@@ -56,7 +83,7 @@ export default function CourseView() {
     <div style={{ padding: 30 }}>
       <h1>{course.title || course.name}</h1>
 
-      <p>📘 Lessons: {course.lessons?.length || 0}</p>
+      <p>📘 Lessons: {course.lessons.length}</p>
 
       {course.lessons.length === 0 && (
         <p>No lessons available</p>
@@ -76,7 +103,9 @@ export default function CourseView() {
 
           <button
             onClick={() =>
-              navigate(`/course/${courseId}/lesson/${lesson.id}`) // ✅ FIXED
+              navigate(
+                `/course/${courseId}/lesson/${lesson.id}`
+              )
             }
             style={{
               padding: "8px 12px",

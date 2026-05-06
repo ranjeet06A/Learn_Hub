@@ -9,59 +9,67 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // LOAD COURSES
-    
+    // ✅ LOAD COURSES SAFELY
+    const courseData = JSON.parse(
+      localStorage.getItem("learn_hub_courses") || "[]"
+    );
 
-    // CREATE EXAMS FROM COURSES
+    // ✅ ENSURE ARRAY
+    const finalData = Array.isArray(courseData)
+      ? courseData
+      : [];
+
+    // ✅ CREATE EXAMS FROM COURSES
     const extractedExams = Array.from(
-  new Set(
-    courseData
-      .map((course: any) =>
-        String(course.examId || "").trim()
+      new Set(
+        finalData
+          .map((course: any) =>
+            String(course.examId || "").trim()
+          )
+          .filter(
+            (exam: string) => exam.length > 0
+          )
       )
-      .filter(
-        (exam: string) => exam.length > 0
-      )
-  )
-) as string[];
-    // SAVED EXAM
+    ) as string[];
+
+    // ✅ SAVED EXAM
     const savedExam =
       localStorage.getItem("selected_exam") || "";
 
-    // VALIDATE SAVED EXAM
+    // ✅ VALIDATE SAVED EXAM
     const validExam = extractedExams.includes(savedExam)
       ? savedExam
       : "";
 
-    // REMOVE INVALID CACHE
+    // ✅ REMOVE INVALID CACHE
     if (!extractedExams.includes(savedExam)) {
       localStorage.removeItem("selected_exam");
     }
 
-    setCourses(courseData);
+    setCourses(finalData);
     setExams(extractedExams);
     setSelectedExam(validExam);
 
-    console.log("📚 COURSES:", courseData);
+    console.log("📚 COURSES:", finalData);
     console.log("📝 EXAMS:", extractedExams);
     console.log("🎯 SELECTED:", validExam);
   }, []);
 
-  // FILTER COURSES
+  // ✅ FILTER COURSES
   const filteredCourses = selectedExam
-  ? courses.filter((c: any) => {
-      const examValue =
-        c.examId ||
-        c.exam ||
-        c.examName ||
-        "";
+    ? courses.filter((c: any) => {
+        const examValue =
+          c.examId ||
+          c.exam ||
+          c.examName ||
+          "";
 
-      return (
-        String(examValue).trim() ===
-        String(selectedExam).trim()
-      );
-    })
-  : courses;
+        return (
+          String(examValue).trim() ===
+          String(selectedExam).trim()
+        );
+      })
+    : courses;
 
   return (
     <div
@@ -181,7 +189,10 @@ export default function Dashboard() {
                 color: "#64748b",
               }}
             >
-              🎯 Exam: {course.examId || course.exam || course.examName}
+              🎯 Exam:{" "}
+              {course.examId ||
+                course.exam ||
+                course.examName}
             </p>
 
             <div
