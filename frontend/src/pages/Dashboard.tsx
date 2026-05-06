@@ -27,12 +27,12 @@ export default function Dashboard() {
 
     // NORMALIZE EXAMS
     const examData = rawExamData
-      .map((exam: any) =>
-        typeof exam === "string"
-          ? exam
-          : exam.name || exam.title || ""
-      )
-      .filter(Boolean);
+  .map((exam: any) =>
+    typeof exam === "string"
+      ? exam
+      : exam.name || exam.title || ""
+  )
+  .filter(Boolean);
 
     // SAVED EXAM
     const savedExam =
