@@ -27,7 +27,6 @@ export default function Dashboard() {
       .filter(Boolean)
   ),
 ];
-
     // SAVED EXAM
     const savedExam =
       localStorage.getItem("selected_exam") || "";
