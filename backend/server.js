@@ -6,70 +6,91 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+
 require("dotenv").config();
 
 const app = express();
 
-// ✅ CORS
-app.use(cors({
-  origin: function (origin, callback) {
-    if (
-      !origin ||
-      origin.includes("vercel.app") ||
-      origin.includes("localhost")
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
+// ======================
+// CORS
+// ======================
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        origin.includes("vercel.app") ||
+        origin.includes("localhost")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 app.options("*", cors());
 
 app.use(express.json());
 
 // ======================
-// ENV VARIABLES
+// ENV
 // ======================
 const PORT = process.env.PORT || 10000;
 const SECRET = process.env.JWT_SECRET || "MY_SECRET_KEY";
 const MONGO_URI = process.env.MONGO_URI;
 
 // ======================
-// SAFETY CHECK
+// SAFETY
 // ======================
 if (!MONGO_URI) {
-  console.error("❌ ERROR: MONGO_URI missing");
+  console.error("❌ MONGO_URI missing");
   process.exit(1);
 }
 
 // ======================
-// MONGODB CONNECT
+// MONGODB
 // ======================
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => {
-    console.error("❌ MongoDB Error:", err.message);
+mongoose
+  .connect(MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch((err) => {
+    console.log("❌ Mongo Error:", err.message);
     process.exit(1);
   });
 
 // ======================
-// MODELS
+// SCHEMAS
 // ======================
-const userSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-  role: String,
+
+const quizSchema = new mongoose.Schema({
+  question: String,
+  options: [String],
+  answer: String,
+});
+
+const lessonSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  quizzes: [quizSchema],
 });
 
 const courseSchema = new mongoose.Schema({
   title: String,
   examId: String,
-  lessons: Array,
+  lessons: [lessonSchema],
+});
+
+const userSchema = new mongoose.Schema({
+  email: String,
+  password: String,
+  role: String,
 });
 
 const resultSchema = new mongoose.Schema({
@@ -87,18 +108,24 @@ const resultSchema = new mongoose.Schema({
   timeSpent: Number,
 });
 
-const User = mongoose.model("User", userSchema);
+// ======================
+// MODELS
+// ======================
 const Course = mongoose.model("Course", courseSchema);
+const User = mongoose.model("User", userSchema);
 const Result = mongoose.model("Result", resultSchema);
 
 // ======================
-// AUTH MIDDLEWARE
+// AUTH
 // ======================
 const auth = (req, res, next) => {
   let token = req.headers.authorization;
 
   if (!token) {
-    return res.status(401).json({ success: false, message: "No token" });
+    return res.status(401).json({
+      success: false,
+      message: "No token",
+    });
   }
 
   try {
@@ -107,25 +134,31 @@ const auth = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, SECRET);
+
     req.user = decoded;
 
     next();
   } catch (err) {
     return res.status(401).json({
       success: false,
-      message: "Token invalid",
+      message: "Invalid token",
     });
   }
 };
 
 // ======================
-// ROUTES
+// ROOT
 // ======================
 app.get("/", (req, res) => {
-  res.json({ success: true, message: "Backend running" });
+  res.json({
+    success: true,
+    message: "Backend running",
+  });
 });
 
+// ======================
 // REGISTER
+// ======================
 app.post("/register", async (req, res) => {
   try {
     let { email, password } = req.body;
@@ -136,15 +169,16 @@ app.post("/register", async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Missing fields"
+        message: "Missing fields",
       });
     }
 
     const existing = await User.findOne({ email });
+
     if (existing) {
       return res.status(400).json({
         success: false,
-        message: "User already exists"
+        message: "User already exists",
       });
     }
 
@@ -160,51 +194,21 @@ app.post("/register", async (req, res) => {
 
     res.json({
       success: true,
-      message: "User created"
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
-  }
-});
-// ADD COURSE (ADMIN)
-app.post("/courses", async (req, res) => {
-  try {
-    const { title, examId, lessons } = req.body;
-
-    if (!title || !examId) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and examId required"
-      });
-    }
-
-    const course = new Course({
-      title,
-      examId,
-      lessons: lessons || []
-    });
-
-    await course.save();
-
-    res.json({
-      success: true,
-      message: "Course created",
-      course
+      message: "User created",
     });
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({
       success: false,
-      error: err.message
+      message: "Server error",
     });
   }
 });
 
+// ======================
 // LOGIN
+// ======================
 app.post("/login", async (req, res) => {
   try {
     let { email, password } = req.body;
@@ -217,7 +221,7 @@ app.post("/login", async (req, res) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
@@ -226,31 +230,204 @@ app.post("/login", async (req, res) => {
     if (!match) {
       return res.status(400).json({
         success: false,
-        message: "Invalid password"
+        message: "Invalid password",
       });
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      {
+        id: user._id,
+        role: user.role,
+      },
       SECRET,
-      { expiresIn: "1h" }
+      {
+        expiresIn: "1h",
+      }
     );
 
     res.json({
       success: true,
       token,
-      role: user.role
+      role: user.role,
     });
-
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
 
+// ======================
+// COURSES
+// ======================
+
+// GET ALL COURSES
+app.get("/courses", async (req, res) => {
+  try {
+    const courses = await Course.find();
+
+    res.json(courses);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json([]);
+  }
+});
+
+// GET SINGLE COURSE
+app.get("/courses/:id", async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    res.json(course);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+    });
+  }
+});
+
+// ADD COURSE
+app.post("/courses", async (req, res) => {
+  try {
+    const { title, examId } = req.body;
+
+    if (!title || !examId) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and examId required",
+      });
+    }
+
+    const course = new Course({
+      title,
+      examId,
+      lessons: [],
+    });
+
+    await course.save();
+
+    res.json({
+      success: true,
+      course,
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+});
+
+// ======================
+// ADD LESSON
+// ======================
+app.post("/courses/:courseId/lessons", async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const { title, content } = req.body;
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    course.lessons.push({
+      title,
+      content,
+      quizzes: [],
+    });
+
+    await course.save();
+
+    res.json({
+      success: true,
+      lessons: course.lessons,
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to add lesson",
+    });
+  }
+});
+
+// ======================
+// ADD QUIZ
+// ======================
+app.post(
+  "/courses/:courseId/lessons/:lessonId/quizzes",
+  async (req, res) => {
+    try {
+      const { courseId, lessonId } = req.params;
+
+      const { question, options, answer } = req.body;
+
+      const course = await Course.findById(courseId);
+
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: "Course not found",
+        });
+      }
+
+      const lesson = course.lessons.id(lessonId);
+
+      if (!lesson) {
+        return res.status(404).json({
+          success: false,
+          message: "Lesson not found",
+        });
+      }
+
+      lesson.quizzes.push({
+        question,
+        options,
+        answer,
+      });
+
+      await course.save();
+
+      res.json({
+        success: true,
+        quizzes: lesson.quizzes,
+      });
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to add quiz",
+      });
+    }
+  }
+);
+
+// ======================
 // RESULTS
+// ======================
 app.post("/results", auth, async (req, res) => {
   try {
     const result = new Result({
@@ -260,34 +437,36 @@ app.post("/results", auth, async (req, res) => {
 
     await result.save();
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.log(err);
 
-  } catch {
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success: false,
+    });
   }
 });
 
 app.get("/results", auth, async (req, res) => {
   try {
-    const results = await Result.find({ userId: req.user.id });
-    res.json(results);
-  } catch {
-    res.status(500).json({ success: false });
-  }
-});
+    const results = await Result.find({
+      userId: req.user.id,
+    });
 
-// COURSES
-app.get("/courses", async (req, res) => {
-  try {
-    const courses = await Course.find();
-    res.json(courses);
-  } catch {
-    res.status(500).json([]);
+    res.json(results);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+    });
   }
 });
 
 // ======================
-// SERVER START
+// SEED
 // ======================
 app.get("/seed", async (req, res) => {
   try {
@@ -298,47 +477,48 @@ app.get("/seed", async (req, res) => {
         title: "Physics Basics",
         examId: "NEET",
         lessons: [
-          { id: "l1", name: "Motion", content: "Introduction to motion" },
-          { id: "l2", name: "Force", content: "Introduction to force" }
-        ]
+          {
+            title: "Motion",
+            content: "Introduction to motion",
+            quizzes: [],
+          },
+          {
+            title: "Force",
+            content: "Introduction to force",
+            quizzes: [],
+          },
+        ],
       },
       {
         title: "Chemistry Basics",
         examId: "NEET",
         lessons: [
-          { id: "l1", name: "Atoms", content: "Atomic structure" }
-        ]
-      }
+          {
+            title: "Atoms",
+            content: "Atomic structure",
+            quizzes: [],
+          },
+        ],
+      },
     ]);
 
-    res.json({ success: true, message: "Courses added" });
+    res.json({
+      success: true,
+      message: "Courses added",
+    });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 });
+
+// ======================
+// START
+// ======================
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-});
-app.get("/seed", async (req, res) => {
-  await Course.deleteMany();
-
-  await Course.create([
-    {
-      title: "Physics Basics",
-      examId: "NEET",
-      lessons: [
-        { id: "l1", name: "Motion", content: "Introduction to motion" },
-        { id: "l2", name: "Force", content: "Introduction to force" }
-      ]
-    },
-    {
-      title: "Chemistry Basics",
-      examId: "NEET",
-      lessons: [
-        { id: "l1", name: "Atoms", content: "Atomic structure" }
-      ]
-    }
-  ]);
-
-  res.json({ success: true, message: "Courses added" });
 });
