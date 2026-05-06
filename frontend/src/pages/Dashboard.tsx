@@ -54,12 +54,19 @@ export default function Dashboard() {
 
   // FILTER COURSES
   const filteredCourses = selectedExam
-    ? courses.filter(
-        (c) =>
-          (c.examId || "").trim() ===
-          selectedExam.trim()
-      )
-    : courses;
+  ? courses.filter((c: any) => {
+      const examValue =
+        c.examId ||
+        c.exam ||
+        c.examName ||
+        "";
+
+      return (
+        String(examValue).trim() ===
+        String(selectedExam).trim()
+      );
+    })
+  : courses;
 
   return (
     <div
@@ -179,7 +186,7 @@ export default function Dashboard() {
                 color: "#64748b",
               }}
             >
-              🎯 Exam: {course.examId}
+              🎯 Exam: {course.examId || course.exam || course.examName}
             </p>
 
             <div
