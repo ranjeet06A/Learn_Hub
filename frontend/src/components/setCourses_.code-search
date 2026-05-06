@@ -1,0 +1,52 @@
+# Query: setCourses(
+# ContextLines: 1
+
+11 results - 6 files
+
+frontend\src\pages\Admin.tsx:
+  26        if (Array.isArray(data)) {
+  27:         setCourses(data);
+  28          localStorage.setItem(
+
+  39  
+  40:       
+  41      }
+
+  62  
+  63:     setCourses(data);
+  64    };
+
+frontend\src\pages\AdminPanel.tsx:
+  39      );
+  40:     setCourses(data);
+  41    }, []);
+
+  43    const saveCourses = (updated: Course[]) => {
+  44:     setCourses(updated);
+  45      
+
+frontend\src\pages\Courses.tsx:
+  27  
+  28:         setCourses(finalData);
+  29          return;
+
+frontend\src\pages\Dashboard.tsx:
+  40  
+  41:     setCourses(courseData);
+  42      setExams(extractedExams);
+
+frontend\src\pages\Progress.tsx:
+  49  
+  50:       setCourses(allCourses);
+  51  
+
+C:\Users\Ranjeet Kumar\OneDrive\Desktop\das.tsx:
+  24        if (Array.isArray(data)) {
+  25:         setCourses(data);
+  26        } else {
+  27:         setCourses([]);
+  28        }
+
+  30        console.error(error);
+  31:       setCourses([]);
+  32      }

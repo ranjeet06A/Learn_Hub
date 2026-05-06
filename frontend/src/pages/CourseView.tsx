@@ -22,7 +22,7 @@ export default function CourseView() {
   const [course, setCourse] = useState<Course | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("learn_hub_courses");
+    
     const courses: Course[] = stored ? JSON.parse(stored) : [];
 
     console.log("📚 COURSES:", courses);

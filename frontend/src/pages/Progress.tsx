@@ -31,7 +31,7 @@ export default function Progress() {
 
       // 🔥 FALLBACK (UNCHANGED)
       const stored = JSON.parse(
-        localStorage.getItem("learn_hub_progress") || "[]"
+       
       );
       setData(Array.isArray(stored) ? stored : []);
 

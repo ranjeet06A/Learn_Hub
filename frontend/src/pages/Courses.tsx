@@ -43,13 +43,13 @@ export default function Courses() {
       stored = [];
     }
 
-    setCourses(stored);
+    
   };
 
   // 🔥 ENROLL FUNCTION (UNCHANGED)
   const enrollCourse = (courseId: string) => {
     const user = JSON.parse(
-      localStorage.getItem("learn_hub_user") || "{}"
+      
     );
 
     const enrollments = JSON.parse(

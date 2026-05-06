@@ -10,12 +10,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // LOAD COURSES
-    const storedCourses =
-      localStorage.getItem("learn_hub_courses");
-
-    const courseData = storedCourses
-      ? JSON.parse(storedCourses)
-      : [];
+    
 
     // CREATE EXAMS FROM COURSES
     const extractedExams = Array.from(

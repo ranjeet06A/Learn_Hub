@@ -37,7 +37,7 @@ export default function LessonView() {
   // ======================
   useEffect(() => {
     const courses: Course[] = JSON.parse(
-      localStorage.getItem("learn_hub_courses") || "[]"
+     
     );
 
     const foundCourse = courses.find(
