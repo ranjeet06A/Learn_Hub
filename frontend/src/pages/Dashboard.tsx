@@ -77,6 +77,14 @@ export default function Dashboard() {
           localStorage.getItem(
             "selected_exam"
           ) || "";
+          console.log("SAVED EXAM:", savedExam);
+
+if (
+  savedExam === "undefined" ||
+  savedExam === "null"
+) {
+  localStorage.removeItem("selected_exam");
+}
 
         if (
           extractedExams.includes(savedExam)
@@ -125,8 +133,10 @@ export default function Dashboard() {
   }, []);
 
   // ✅ FILTER COURSES
-  const filteredCourses = selectedExam
-    ? courses.filter((c: any) => {
+  const filteredCourses =
+  !selectedExam || selectedExam === "All Exams"
+    ? courses
+    : courses.filter((c: any) => {
         const examValue =
           c.examId ||
           c.exam ||
@@ -134,11 +144,19 @@ export default function Dashboard() {
           "";
 
         return (
-          String(examValue).trim() ===
-          String(selectedExam).trim()
+          String(examValue)
+            .trim()
+            .toLowerCase() ===
+          String(selectedExam)
+            .trim()
+            .toLowerCase()
         );
-      })
-    : courses;
+      });
+
+console.log(
+  "FILTERED COURSES:",
+  filteredCourses
+);
 
   return (
     <div style={{ padding: 30 }}>
