@@ -17,46 +17,37 @@ export default function Dashboard() {
       ? JSON.parse(storedCourses)
       : [];
 
-    // LOAD EXAMS
-    const storedExams =
-      localStorage.getItem("learn_hub_exams");
-
-    const rawExamData = storedExams
-      ? JSON.parse(storedExams)
-      : [];
-
-    // NORMALIZE EXAMS
-    const examData = rawExamData
-      .map((exam: any) =>
-        typeof exam === "string"
-          ? exam.trim()
-          : (exam?.name || exam?.title || "").trim()
-      )
-      .filter(Boolean);
-
-    // REMOVE DUPLICATES
-    const uniqueExams = [...new Set(examData)];
+    // CREATE EXAMS FROM COURSES
+    const extractedExams = [
+      ...new Set(
+        courseData
+          .map((course: any) =>
+            (course.examId || "").trim()
+          )
+          .filter(Boolean)
+      ),
+    ];
 
     // SAVED EXAM
     const savedExam =
       localStorage.getItem("selected_exam") || "";
 
     // VALIDATE SAVED EXAM
-    const validExam = uniqueExams.includes(savedExam)
+    const validExam = extractedExams.includes(savedExam)
       ? savedExam
       : "";
 
     // REMOVE INVALID CACHE
-    if (!uniqueExams.includes(savedExam)) {
+    if (!extractedExams.includes(savedExam)) {
       localStorage.removeItem("selected_exam");
     }
 
     setCourses(courseData);
-    setExams(uniqueExams);
+    setExams(extractedExams);
     setSelectedExam(validExam);
 
     console.log("📚 COURSES:", courseData);
-    console.log("📝 EXAMS:", uniqueExams);
+    console.log("📝 EXAMS:", extractedExams);
     console.log("🎯 SELECTED:", validExam);
   }, []);
 
