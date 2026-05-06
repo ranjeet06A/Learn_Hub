@@ -18,15 +18,17 @@ export default function Dashboard() {
       : [];
 
     // CREATE EXAMS FROM COURSES
-    const extractedExams: string[] = [
-  ...new Set(
+    const extractedExams = Array.from(
+  new Set(
     courseData
       .map((course: any) =>
         String(course.examId || "").trim()
       )
-      .filter(Boolean)
-  ),
-];
+      .filter(
+        (exam: string) => exam.length > 0
+      )
+  )
+) as string[];
     // SAVED EXAM
     const savedExam =
       localStorage.getItem("selected_exam") || "";
