@@ -12,10 +12,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     const stored = localStorage.getItem("learn_hub_courses");
+
     const data = stored ? JSON.parse(stored) : [];
 
-    const storedExams = localStorage.getItem("learn_hub_exams");
-    const examData = storedExams ? JSON.parse(storedExams) : [];
+    const storedExams = localStorage.getItem(
+      "learn_hub_exams"
+    );
+
+    const examData = storedExams
+      ? JSON.parse(storedExams)
+      : [];
 
     console.log("📚 ALL COURSES:", data);
 
@@ -23,22 +29,33 @@ export default function Dashboard() {
     setExams(examData);
   }, []);
 
-  const filteredCourses = selectedExam
-    ? courses.filter((c) => c.examId === selectedExam)
-    : courses;
+  // ✅ FIXED MOBILE FILTER
+  const filteredCourses =
+    !selectedExam || selectedExam === "All Exams"
+      ? courses
+      : courses.filter(
+          (course) =>
+            String(course.examId || "")
+              .trim()
+              .toLowerCase() ===
+            String(selectedExam || "")
+              .trim()
+              .toLowerCase()
+        );
 
   return (
     <div
       style={{
         minHeight: "100vh",
         padding: "30px",
-        background: "linear-gradient(135deg, #eef2ff, #f8fafc)", // ✅ softer
+        background:
+          "linear-gradient(135deg, #eef2ff, #f8fafc)",
       }}
     >
       <h1
         style={{
           marginBottom: "20px",
-          color: "#1e293b", // ✅ darker clean text
+          color: "#1e293b",
           textAlign: "center",
         }}
       >
@@ -56,17 +73,24 @@ export default function Dashboard() {
           value={selectedExam}
           onChange={(e) => {
             setSelectedExam(e.target.value);
-            localStorage.setItem("selected_exam", e.target.value);
+
+            localStorage.setItem(
+              "selected_exam",
+              e.target.value
+            );
           }}
           style={{
-            padding: "10px 15px",
+            padding: "12px",
             borderRadius: "8px",
             border: "1px solid #cbd5e1",
             background: "white",
-            fontSize: "15px",
+            fontSize: "16px", // ✅ mobile fix
+            width: "100%",
+            maxWidth: "300px",
           }}
         >
           <option value="">All Exams</option>
+
           {exams.map((exam, i) => (
             <option key={i} value={exam}>
               {exam}
@@ -76,7 +100,12 @@ export default function Dashboard() {
       </div>
 
       {filteredCourses.length === 0 && (
-        <p style={{ color: "#64748b", textAlign: "center" }}>
+        <p
+          style={{
+            color: "#64748b",
+            textAlign: "center",
+          }}
+        >
           No courses found
         </p>
       )}
@@ -92,43 +121,75 @@ export default function Dashboard() {
       >
         {filteredCourses.map((course: any) => (
           <div
-            key={course.id}
+            key={course._id || course.id}
             style={{
               background: "white",
               padding: "22px",
               borderRadius: "12px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)", // ✅ softer shadow
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.08)",
               border: "1px solid #e2e8f0",
             }}
           >
-            <h2 style={{ marginBottom: 10, color: "#0f172a" }}>
+            <h2
+              style={{
+                marginBottom: 10,
+                color: "#0f172a",
+              }}
+            >
               {course.title || course.name}
             </h2>
 
             <p style={{ color: "#475569" }}>
-              📘 Lessons: {course.lessons?.length || 0}
+              📘 Lessons:{" "}
+              {course.lessons?.length || 0}
             </p>
 
-            <p style={{ fontSize: "13px", color: "#64748b" }}>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "#64748b",
+              }}
+            >
               🎯 Exam: {course.examId}
             </p>
 
-            <div style={{ display: "flex", gap: "10px", marginTop: 15 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginTop: 15,
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 onClick={() => {
-                  if (course.lessons && course.lessons.length > 0) {
+                  if (
+                    course.lessons &&
+                    course.lessons.length > 0
+                  ) {
+                    const firstLesson =
+                      course.lessons[0];
+
                     navigate(
-                      `/course/${course.id}/lesson/${course.lessons[0].id}`
+                      `/course/${
+                        course._id || course.id
+                      }/lesson/${
+                        firstLesson._id ||
+                        firstLesson.id
+                      }`
                     );
                   } else {
-                    alert("No lessons available in this course");
+                    alert(
+                      "No lessons available in this course"
+                    );
                   }
                 }}
                 style={{
                   padding: "10px 16px",
                   borderRadius: "8px",
                   border: "none",
-                  background: "#4f46e5", // ✅ elegant blue
+                  background: "#4f46e5",
                   color: "white",
                   cursor: "pointer",
                   fontWeight: "600",
@@ -138,12 +199,18 @@ export default function Dashboard() {
               </button>
 
               <button
-                onClick={() => navigate(`/course/${course.id}`)}
+                onClick={() =>
+                  navigate(
+                    `/course/${
+                      course._id || course.id
+                    }`
+                  )
+                }
                 style={{
                   padding: "10px 16px",
                   borderRadius: "8px",
                   border: "1px solid #cbd5e1",
-                  background: "#f1f5f9", // ✅ subtle grey
+                  background: "#f1f5f9",
                   cursor: "pointer",
                   color: "#334155",
                 }}
