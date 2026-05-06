@@ -3,45 +3,53 @@ import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const [courses, setCourses] = useState<any[]>([]);
+  const [exams, setExams] = useState<string[]>([]);
+  const [selectedExam, setSelectedExam] = useState("");
+
   const navigate = useNavigate();
 
-  const [exams, setExams] = useState<string[]>([]);
-  const [selectedExam, setSelectedExam] = useState(
-    localStorage.getItem("selected_exam") || ""
-  );
-
   useEffect(() => {
-    const stored = localStorage.getItem("learn_hub_courses");
+    // LOAD COURSES
+    const storedCourses = localStorage.getItem("learn_hub_courses");
+    const courseData = storedCourses
+      ? JSON.parse(storedCourses)
+      : [];
 
-    const data = stored ? JSON.parse(stored) : [];
-
-    const storedExams = localStorage.getItem(
-      "learn_hub_exams"
-    );
-
+    // LOAD EXAMS
+    const storedExams = localStorage.getItem("learn_hub_exams");
     const examData = storedExams
       ? JSON.parse(storedExams)
       : [];
 
-    console.log("📚 ALL COURSES:", data);
+    // LOAD SAVED EXAM
+    const savedExam =
+      localStorage.getItem("selected_exam") || "";
 
-    setCourses(data);
+    // CHECK IF SAVED EXAM STILL EXISTS
+    const validExam = examData.includes(savedExam)
+      ? savedExam
+      : "";
+
+    // RESET INVALID OLD CACHE
+    if (!examData.includes(savedExam)) {
+      localStorage.removeItem("selected_exam");
+    }
+
+    setCourses(courseData);
     setExams(examData);
+    setSelectedExam(validExam);
+
+    console.log("📚 COURSES:", courseData);
+    console.log("📝 EXAMS:", examData);
+    console.log("🎯 SELECTED:", validExam);
   }, []);
 
-  // ✅ FIXED MOBILE FILTER
-  const filteredCourses =
-    !selectedExam || selectedExam === "All Exams"
-      ? courses
-      : courses.filter(
-          (course) =>
-            String(course.examId || "")
-              .trim()
-              .toLowerCase() ===
-            String(selectedExam || "")
-              .trim()
-              .toLowerCase()
-        );
+  // FILTER COURSES
+  const filteredCourses = selectedExam
+    ? courses.filter(
+        (c) => c.examId?.trim() === selectedExam.trim()
+      )
+    : courses;
 
   return (
     <div
@@ -62,6 +70,7 @@ export default function Dashboard() {
         📚 Available Courses
       </h1>
 
+      {/* EXAM SELECT */}
       <div
         style={{
           marginBottom: 30,
@@ -72,21 +81,27 @@ export default function Dashboard() {
         <select
           value={selectedExam}
           onChange={(e) => {
-            setSelectedExam(e.target.value);
+            const value = e.target.value;
 
-            localStorage.setItem(
-              "selected_exam",
-              e.target.value
-            );
+            setSelectedExam(value);
+
+            if (value) {
+              localStorage.setItem(
+                "selected_exam",
+                value
+              );
+            } else {
+              localStorage.removeItem("selected_exam");
+            }
           }}
           style={{
-            padding: "12px",
-            borderRadius: "8px",
+            padding: "12px 16px",
+            borderRadius: "10px",
             border: "1px solid #cbd5e1",
             background: "white",
-            fontSize: "16px", // ✅ mobile fix
-            width: "100%",
-            maxWidth: "300px",
+            fontSize: "16px",
+            minWidth: "240px",
+            maxWidth: "100%",
           }}
         >
           <option value="">All Exams</option>
@@ -99,6 +114,7 @@ export default function Dashboard() {
         </select>
       </div>
 
+      {/* EMPTY */}
       {filteredCourses.length === 0 && (
         <p
           style={{
@@ -110,6 +126,7 @@ export default function Dashboard() {
         </p>
       )}
 
+      {/* COURSES */}
       <div
         style={{
           display: "flex",
@@ -121,7 +138,7 @@ export default function Dashboard() {
       >
         {filteredCourses.map((course: any) => (
           <div
-            key={course._id || course.id}
+            key={course.id}
             style={{
               background: "white",
               padding: "22px",
@@ -168,16 +185,8 @@ export default function Dashboard() {
                     course.lessons &&
                     course.lessons.length > 0
                   ) {
-                    const firstLesson =
-                      course.lessons[0];
-
                     navigate(
-                      `/course/${
-                        course._id || course.id
-                      }/lesson/${
-                        firstLesson._id ||
-                        firstLesson.id
-                      }`
+                      `/course/${course.id}/lesson/${course.lessons[0].id}`
                     );
                   } else {
                     alert(
@@ -200,11 +209,7 @@ export default function Dashboard() {
 
               <button
                 onClick={() =>
-                  navigate(
-                    `/course/${
-                      course._id || course.id
-                    }`
-                  )
+                  navigate(`/course/${course.id}`)
                 }
                 style={{
                   padding: "10px 16px",
