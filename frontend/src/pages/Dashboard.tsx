@@ -10,35 +10,40 @@ export default function Dashboard() {
 
   useEffect(() => {
     // LOAD COURSES
-    const storedExams = localStorage.getItem("learn_hub_exams");
+    const storedCourses =
+      localStorage.getItem("learn_hub_courses");
 
-const rawExamData = storedExams
-  ? JSON.parse(storedExams)
-  : [];
-
-// NORMALIZE EXAMS
-const examData = rawExamData.map((exam: any) =>
-  typeof exam === "string"
-    ? exam
-    : exam.name || exam.title || ""
-).filter(Boolean);
+    const courseData = storedCourses
+      ? JSON.parse(storedCourses)
+      : [];
 
     // LOAD EXAMS
-    const storedExams = localStorage.getItem("learn_hub_exams");
-    const examData = storedExams
+    const storedExams =
+      localStorage.getItem("learn_hub_exams");
+
+    const rawExamData = storedExams
       ? JSON.parse(storedExams)
       : [];
 
-    // LOAD SAVED EXAM
+    // NORMALIZE EXAMS
+    const examData = rawExamData
+      .map((exam: any) =>
+        typeof exam === "string"
+          ? exam
+          : exam.name || exam.title || ""
+      )
+      .filter(Boolean);
+
+    // SAVED EXAM
     const savedExam =
       localStorage.getItem("selected_exam") || "";
 
-    // CHECK IF SAVED EXAM STILL EXISTS
+    // VALIDATE SAVED EXAM
     const validExam = examData.includes(savedExam)
       ? savedExam
       : "";
 
-    // RESET INVALID OLD CACHE
+    // REMOVE INVALID CACHE
     if (!examData.includes(savedExam)) {
       localStorage.removeItem("selected_exam");
     }
@@ -55,7 +60,8 @@ const examData = rawExamData.map((exam: any) =>
   // FILTER COURSES
   const filteredCourses = selectedExam
     ? courses.filter(
-        (c) => c.examId?.trim() === selectedExam.trim()
+        (c) =>
+          c.examId?.trim() === selectedExam.trim()
       )
     : courses;
 
@@ -78,7 +84,7 @@ const examData = rawExamData.map((exam: any) =>
         📚 Available Courses
       </h1>
 
-      {/* EXAM SELECT */}
+      {/* EXAM DROPDOWN */}
       <div
         style={{
           marginBottom: 30,
@@ -99,7 +105,9 @@ const examData = rawExamData.map((exam: any) =>
                 value
               );
             } else {
-              localStorage.removeItem("selected_exam");
+              localStorage.removeItem(
+                "selected_exam"
+              );
             }
           }}
           style={{
@@ -109,16 +117,15 @@ const examData = rawExamData.map((exam: any) =>
             background: "white",
             fontSize: "16px",
             minWidth: "240px",
-            maxWidth: "100%",
           }}
         >
           <option value="">All Exams</option>
 
           {exams.map((exam: string, i) => (
-  <option key={i} value={exam}>
-    {exam}
-  </option>
-))}
+            <option key={i} value={exam}>
+              {exam}
+            </option>
+          ))}
         </select>
       </div>
 
