@@ -9,50 +9,119 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ✅ LOAD COURSES SAFELY
-    const courseData = JSON.parse(
-      localStorage.getItem("learn_hub_courses") || "[]"
-    );
+    const loadCourses = async () => {
+      try {
+        // ✅ BACKEND FETCH
+        const res = await fetch(
+          "https://learn-hub-backend-g1pi.onrender.com/courses"
+        );
 
-    // ✅ ENSURE ARRAY
-    const finalData = Array.isArray(courseData)
-      ? courseData
-      : [];
+        const backendData = await res.json();
 
-    // ✅ CREATE EXAMS FROM COURSES
-    const extractedExams = Array.from(
-      new Set(
-        finalData
-          .map((course: any) =>
-            String(course.examId || "").trim()
+        console.log(
+          "RAW BACKEND DATA:",
+          backendData
+        );
+
+        // ✅ SAFE ARRAY
+        const finalCourses = Array.isArray(
+          backendData
+        )
+          ? backendData
+          : [];
+
+        console.log(
+          "FINAL COURSES ARRAY:",
+          finalCourses
+        );
+
+        // ✅ SAVE LOCAL CACHE
+        localStorage.setItem(
+          "learn_hub_courses",
+          JSON.stringify(finalCourses)
+        );
+
+        // ✅ SET COURSES
+        setCourses(finalCourses);
+
+        // ✅ EXTRACT EXAMS
+        const extractedExams = Array.from(
+          new Set(
+            finalCourses
+              .map((course: any) =>
+                String(
+                  course.examId ||
+                    course.exam ||
+                    course.examName ||
+                    ""
+                ).trim()
+              )
+              .filter(
+                (e: string) =>
+                  e.length > 0
+              )
           )
-          .filter(
-            (exam: string) => exam.length > 0
+        );
+
+        setExams(
+          extractedExams as string[]
+        );
+
+        console.log(
+          "EXAMS:",
+          extractedExams
+        );
+
+        // ✅ RESTORE SAVED EXAM
+        const savedExam =
+          localStorage.getItem(
+            "selected_exam"
+          ) || "";
+
+        if (
+          extractedExams.includes(savedExam)
+        ) {
+          setSelectedExam(savedExam);
+        }
+      } catch (err) {
+        console.log(
+          "Backend failed, using localStorage"
+        );
+
+        // ✅ FALLBACK LOCAL
+        const localCourses = JSON.parse(
+          localStorage.getItem(
+            "learn_hub_courses"
+          ) || "[]"
+        );
+
+        setCourses(localCourses);
+
+        const extractedExams = Array.from(
+          new Set(
+            localCourses
+              .map((course: any) =>
+                String(
+                  course.examId ||
+                    course.exam ||
+                    course.examName ||
+                    ""
+                ).trim()
+              )
+              .filter(
+                (e: string) =>
+                  e.length > 0
+              )
           )
-      )
-    ) as string[];
+        );
 
-    // ✅ SAVED EXAM
-    const savedExam =
-      localStorage.getItem("selected_exam") || "";
+        setExams(
+          extractedExams as string[]
+        );
+      }
+    };
 
-    // ✅ VALIDATE SAVED EXAM
-    const validExam = extractedExams.includes(savedExam)
-      ? savedExam
-      : "";
-
-    // ✅ REMOVE INVALID CACHE
-    if (!extractedExams.includes(savedExam)) {
-      localStorage.removeItem("selected_exam");
-    }
-
-    setCourses(finalData);
-    setExams(extractedExams);
-    setSelectedExam(validExam);
-
-    console.log("📚 COURSES:", finalData);
-    console.log("📝 EXAMS:", extractedExams);
-    console.log("🎯 SELECTED:", validExam);
+    loadCourses();
   }, []);
 
   // ✅ FILTER COURSES
@@ -72,184 +141,87 @@ export default function Dashboard() {
     : courses;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "30px",
-        background:
-          "linear-gradient(135deg, #eef2ff, #f8fafc)",
-      }}
-    >
-      <h1
+    <div style={{ padding: 30 }}>
+      <h1>📚 Available Courses</h1>
+
+      {/* EXAM FILTER */}
+      <select
+        value={selectedExam}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          setSelectedExam(value);
+
+          localStorage.setItem(
+            "selected_exam",
+            value
+          );
+        }}
         style={{
-          marginBottom: "20px",
-          color: "#1e293b",
-          textAlign: "center",
+          padding: 10,
+          marginBottom: 20,
+          minWidth: 250,
         }}
       >
-        📚 Available Courses
-      </h1>
+        <option value="">
+          All Exams
+        </option>
 
-      {/* EXAM DROPDOWN */}
-      <div
-        style={{
-          marginBottom: 30,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <select
-          value={selectedExam}
-          onChange={(e) => {
-            const value = e.target.value;
-
-            setSelectedExam(value);
-
-            if (value) {
-              localStorage.setItem(
-                "selected_exam",
-                value
-              );
-            } else {
-              localStorage.removeItem(
-                "selected_exam"
-              );
-            }
-          }}
-          style={{
-            padding: "12px 16px",
-            borderRadius: "10px",
-            border: "1px solid #cbd5e1",
-            background: "white",
-            fontSize: "16px",
-            minWidth: "240px",
-          }}
-        >
-          <option value="">All Exams</option>
-
-          {exams.map((exam: string, i) => (
-            <option key={i} value={exam}>
-              {exam}
-            </option>
-          ))}
-        </select>
-      </div>
+        {exams.map((exam, i) => (
+          <option key={i} value={exam}>
+            {exam}
+          </option>
+        ))}
+      </select>
 
       {/* EMPTY */}
       {filteredCourses.length === 0 && (
-        <p
-          style={{
-            color: "#64748b",
-            textAlign: "center",
-          }}
-        >
-          No courses found
-        </p>
+        <p>No courses found</p>
       )}
 
       {/* COURSES */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          maxWidth: "800px",
-          margin: "auto",
-        }}
-      >
-        {filteredCourses.map((course: any) => (
+      {filteredCourses.map(
+        (course: any) => (
           <div
             key={course.id}
             style={{
-              background: "white",
-              padding: "22px",
-              borderRadius: "12px",
-              boxShadow:
-                "0 4px 12px rgba(0,0,0,0.08)",
-              border: "1px solid #e2e8f0",
+              border:
+                "1px solid #ccc",
+              padding: 20,
+              marginBottom: 15,
+              borderRadius: 8,
             }}
           >
-            <h2
-              style={{
-                marginBottom: 10,
-                color: "#0f172a",
-              }}
-            >
-              {course.title || course.name}
+            <h2>
+              {course.title ||
+                course.name}
             </h2>
 
-            <p style={{ color: "#475569" }}>
-              📘 Lessons:{" "}
-              {course.lessons?.length || 0}
-            </p>
-
-            <p
-              style={{
-                fontSize: "13px",
-                color: "#64748b",
-              }}
-            >
-              🎯 Exam:{" "}
+            <p>
+              Exam:{" "}
               {course.examId ||
                 course.exam ||
                 course.examName}
             </p>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginTop: 15,
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                onClick={() => {
-                  if (
-                    course.lessons &&
-                    course.lessons.length > 0
-                  ) {
-                    navigate(
-                      `/course/${course.id}/lesson/${course.lessons[0].id}`
-                    );
-                  } else {
-                    alert(
-                      "No lessons available in this course"
-                    );
-                  }
-                }}
-                style={{
-                  padding: "10px 16px",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: "#4f46e5",
-                  color: "white",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
-              >
-                Open Course
-              </button>
+            <p>
+              Lessons:{" "}
+              {course.lessons
+                ?.length || 0}
+            </p>
 
-              <button
-                onClick={() =>
-                  navigate(`/course/${course.id}`)
-                }
-                style={{
-                  padding: "10px 16px",
-                  borderRadius: "8px",
-                  border: "1px solid #cbd5e1",
-                  background: "#f1f5f9",
-                  cursor: "pointer",
-                  color: "#334155",
-                }}
-              >
-                View Lessons
-              </button>
-            </div>
+            <button
+              onClick={() =>
+                navigate(
+                  `/course/${course.id}`
+                )
+              }
+            >
+              Open Course
+            </button>
           </div>
-        ))}
-      </div>
+        )
+      )}
     </div>
   );
 }
