@@ -27,33 +27,36 @@ export default function Dashboard() {
 
     // NORMALIZE EXAMS
     const examData = rawExamData
-  .map((exam: any) =>
-    typeof exam === "string"
-      ? exam
-      : exam.name || exam.title || ""
-  )
-  .filter(Boolean);
+      .map((exam: any) =>
+        typeof exam === "string"
+          ? exam.trim()
+          : (exam?.name || exam?.title || "").trim()
+      )
+      .filter(Boolean);
+
+    // REMOVE DUPLICATES
+    const uniqueExams = [...new Set(examData)];
 
     // SAVED EXAM
     const savedExam =
       localStorage.getItem("selected_exam") || "";
 
     // VALIDATE SAVED EXAM
-    const validExam = examData.includes(savedExam)
+    const validExam = uniqueExams.includes(savedExam)
       ? savedExam
       : "";
 
     // REMOVE INVALID CACHE
-    if (!examData.includes(savedExam)) {
+    if (!uniqueExams.includes(savedExam)) {
       localStorage.removeItem("selected_exam");
     }
 
     setCourses(courseData);
-    setExams(examData);
+    setExams(uniqueExams);
     setSelectedExam(validExam);
 
     console.log("📚 COURSES:", courseData);
-    console.log("📝 EXAMS:", examData);
+    console.log("📝 EXAMS:", uniqueExams);
     console.log("🎯 SELECTED:", validExam);
   }, []);
 
@@ -61,7 +64,8 @@ export default function Dashboard() {
   const filteredCourses = selectedExam
     ? courses.filter(
         (c) =>
-          c.examId?.trim() === selectedExam.trim()
+          (c.examId || "").trim() ===
+          selectedExam.trim()
       )
     : courses;
 
