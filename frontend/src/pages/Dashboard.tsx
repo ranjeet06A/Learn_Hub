@@ -10,10 +10,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     // LOAD COURSES
-    const storedCourses = localStorage.getItem("learn_hub_courses");
-    const courseData = storedCourses
-      ? JSON.parse(storedCourses)
-      : [];
+    const storedExams = localStorage.getItem("learn_hub_exams");
+
+const rawExamData = storedExams
+  ? JSON.parse(storedExams)
+  : [];
+
+// NORMALIZE EXAMS
+const examData = rawExamData.map((exam: any) =>
+  typeof exam === "string"
+    ? exam
+    : exam.name || exam.title || ""
+).filter(Boolean);
 
     // LOAD EXAMS
     const storedExams = localStorage.getItem("learn_hub_exams");
@@ -106,11 +114,11 @@ export default function Dashboard() {
         >
           <option value="">All Exams</option>
 
-          {exams.map((exam, i) => (
-            <option key={i} value={exam}>
-              {exam}
-            </option>
-          ))}
+          {exams.map((exam: string, i) => (
+  <option key={i} value={exam}>
+    {exam}
+  </option>
+))}
         </select>
       </div>
 
