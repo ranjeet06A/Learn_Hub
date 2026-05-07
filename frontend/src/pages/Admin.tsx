@@ -254,50 +254,78 @@ export default function Admin() {
       }
     };
 
-  // =========================
-  // ADD QUIZ
-  // =========================
-  const handleAddQuiz =
-    async () => {
-      if (
-        !quizInput ||
-        !selectedLessonId
-      ) {
-        alert(
-          "Select lesson and paste quiz JSON"
+ // =========================
+// ADD QUIZ
+// =========================
+app.post(
+  "/courses/:courseId/lessons/:lessonId/quizzes",
+  async (req, res) => {
+    try {
+      const {
+        courseId,
+        lessonId,
+      } = req.params;
+
+      const course =
+        await Course.findById(
+          courseId
         );
-        return;
+
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Course not found",
+        });
       }
 
-      let parsed: any[] = [];
-
-      try {
-        parsed =
-          JSON.parse(
-            quizInput
-          );
-      } catch {
-        alert(
-          "Invalid Quiz JSON"
+      const lesson =
+        course.lessons.id(
+          lessonId
         );
-        return;
+
+      if (!lesson) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Lesson not found",
+        });
       }
 
-      if (
-        !Array.isArray(parsed)
-      ) {
-        parsed = [parsed];
+      // RECEIVE QUIZZES
+      let quizzes =
+        req.body.quizzes;
+
+      console.log(
+        "RAW QUIZZES:",
+        quizzes
+      );
+
+      // FORCE ARRAY
+      if (!Array.isArray(quizzes)) {
+        quizzes = [quizzes];
       }
 
-      // CLEAN QUESTIONS
-      const cleanedQuestions =
-        parsed.map((q) => ({
+      // CLEAN FORMAT
+      const cleanedQuizzes =
+        quizzes.map((q) => ({
           questionTitle:
             q.questionTitle || "",
+
           statements:
-            q.statements || [],
+            Array.isArray(
+              q.statements
+            )
+              ? q.statements
+              : [],
+
           options:
-            q.options || [],
+            Array.isArray(
+              q.options
+            )
+              ? q.options
+              : [],
+
           correctIndex:
             Number(
               q.correctIndex
@@ -305,57 +333,42 @@ export default function Admin() {
         }));
 
       console.log(
-        "SAVING QUESTIONS:",
-        cleanedQuestions
+        "CLEANED QUIZZES:",
+        cleanedQuizzes
       );
 
-      try {
-        const response =
-          await fetch(
-            `${backend}/courses/${selectedCourseId}/lessons/${selectedLessonId}/quizzes`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                quizzes:
-                  cleanedQuestions,
-              }),
-            }
-          );
-
-        const data =
-          await response.json();
-
-        console.log(
-          "QUIZ SAVE RESPONSE:",
-          data
-        );
-
-        if (data.success) {
-          await loadCourses();
-
-          setQuizInput("");
-
-          alert(
-            "Quiz Added Successfully"
-          );
-        } else {
-          alert(
-            "Quiz save failed"
-          );
-        }
-      } catch (err) {
-        console.log(err);
-
-        alert(
-          "Quiz save failed"
-        );
+      // ENSURE quizzes exists
+      if (
+        !Array.isArray(
+          lesson.quizzes
+        )
+      ) {
+        lesson.quizzes = [];
       }
-    };
+
+      // SAVE QUESTIONS
+      lesson.quizzes.push(
+        ...cleanedQuizzes
+      );
+
+      await course.save();
+
+      res.json({
+        success: true,
+        quizzes:
+          lesson.quizzes,
+      });
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Server Error",
+      });
+    }
+  }
+);
 
   // =========================
   // DELETE COURSE
