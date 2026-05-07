@@ -100,18 +100,27 @@ export default function AppRoutes() {
 
         {/* ADMIN */}
         <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              {JSON.parse(localStorage.getItem("learn_hub_user") || "{}")
-                ?.role === "admin" ? (
-                <Admin />
-              ) : (
-                <Navigate to="/" />
-              )}
-            </ProtectedRoute>
-          }
-        />
+  path="/admin"
+  element={
+    <ProtectedRoute>
+      {(() => {
+        const user = JSON.parse(
+          localStorage.getItem("learn_hub_user") || "{}"
+        );
+
+        const isAdmin =
+          user.email === "admin@admin" ||
+          user.email === "admin2@admin";
+
+        return isAdmin ? (
+          <Admin />
+        ) : (
+          <Navigate to="/" />
+        );
+      })()}
+    </ProtectedRoute>
+  }
+/>
 
         {/* EXTRA */}
         <Route path="/select-exam" element={<SelectExam />} />
