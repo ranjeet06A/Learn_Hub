@@ -373,53 +373,116 @@ app.post("/courses/:courseId/lessons", async (req, res) => {
   }
 });
 
-// ======================
+// =========================
 // ADD QUIZ
-// ======================
-app.post(
+// =========================
+router.post(
   "/courses/:courseId/lessons/:lessonId/quizzes",
   async (req, res) => {
     try {
-      const { courseId, lessonId } = req.params;
+      const {
+        courseId,
+        lessonId,
+      } = req.params;
 
-      const { question, options, answer } = req.body;
-
-      const course = await Course.findById(courseId);
+      const course =
+        await Course.findById(
+          courseId
+        );
 
       if (!course) {
         return res.status(404).json({
           success: false,
-          message: "Course not found",
+          message:
+            "Course not found",
         });
       }
 
-      const lesson = course.lessons.id(lessonId);
+      const lesson =
+        course.lessons.id(
+          lessonId
+        );
 
       if (!lesson) {
         return res.status(404).json({
           success: false,
-          message: "Lesson not found",
+          message:
+            "Lesson not found",
         });
       }
 
-      lesson.quizzes.push({
-        question,
-        options,
-        answer,
-      });
+      let quizzes =
+        req.body.quizzes;
+
+      console.log(
+        "RAW QUIZZES:",
+        quizzes
+      );
+
+      // FORCE ARRAY
+      if (!Array.isArray(quizzes)) {
+        quizzes = [quizzes];
+      }
+
+      // CLEAN FORMAT
+      const cleanedQuizzes =
+        quizzes.map((q) => ({
+          questionTitle:
+            q.questionTitle || "",
+
+          statements:
+            Array.isArray(
+              q.statements
+            )
+              ? q.statements
+              : [],
+
+          options:
+            Array.isArray(
+              q.options
+            )
+              ? q.options
+              : [],
+
+          correctIndex:
+            Number(
+              q.correctIndex
+            ) || 0,
+        }));
+
+      console.log(
+        "CLEANED QUIZZES:",
+        cleanedQuizzes
+      );
+
+      // ENSURE ARRAY EXISTS
+      if (
+        !Array.isArray(
+          lesson.quizzes
+        )
+      ) {
+        lesson.quizzes = [];
+      }
+
+      // SAVE QUESTIONS
+      lesson.quizzes.push(
+        ...cleanedQuizzes
+      );
 
       await course.save();
 
       res.json({
         success: true,
-        quizzes: lesson.quizzes,
+        quizzes:
+          lesson.quizzes,
       });
     } catch (err) {
       console.log(err);
 
       res.status(500).json({
         success: false,
-        message: "Failed to add quiz",
+        message:
+          "Server Error",
       });
     }
   }
