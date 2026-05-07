@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 type Lesson = {
-  id: string;
+  _id?: string;
+  id?: string;
   name?: string;
   title?: string;
   content?: string;
@@ -11,14 +12,15 @@ type Lesson = {
 };
 
 type Course = {
-  id: string;
+  _id?: string;
+  id?: string;
   name?: string;
   title?: string;
   lessons: Lesson[];
 };
 
 export default function CourseView() {
-  // ✅ CORRECT PARAM
+  // ✅ ROUTE PARAM
   const { courseId } = useParams();
 
   const navigate = useNavigate();
@@ -46,10 +48,10 @@ export default function CourseView() {
         courseId
       );
 
-      // ✅ FIND COURSE
+      // ✅ FIND COURSE USING _id OR id
       const found = courses.find(
         (c) =>
-          String(c.id) ===
+          String(c._id || c.id) ===
           String(courseId)
       );
 
@@ -128,7 +130,10 @@ export default function CourseView() {
       {course.lessons.map(
         (lesson) => (
           <div
-            key={lesson.id}
+            key={
+              lesson._id ||
+              lesson.id
+            }
             style={{
               padding: 15,
               marginTop: 10,
@@ -148,14 +153,23 @@ export default function CourseView() {
                   "OPENING LESSON:",
                   {
                     courseId:
+                      course._id ||
                       course.id,
+
                     lessonId:
+                      lesson._id ||
                       lesson.id,
                   }
                 );
 
                 navigate(
-                  `/course/${course.id}/lesson/${lesson.id}`
+                  `/course/${
+                    course._id ||
+                    course.id
+                  }/lesson/${
+                    lesson._id ||
+                    lesson.id
+                  }`
                 );
               }}
               style={{
