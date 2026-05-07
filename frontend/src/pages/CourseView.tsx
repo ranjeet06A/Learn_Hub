@@ -16,7 +16,7 @@ type Course = {
 };
 
 export default function CourseView() {
-  const { courseId } = useParams();
+  const { course.id } = useParams();
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -29,11 +29,11 @@ export default function CourseView() {
       );
 
       console.log("📚 COURSES:", courses);
-      console.log("🌐 URL courseId:", courseId);
+      console.log("🌐 URL course.id:", course.id);
 
       // ✅ Find matching course
       const found = courses.find(
-        (c) => String(c.id) === String(courseId)
+        (c) => String(c.id) === String(course.id)
       );
 
       if (!found) {
@@ -53,7 +53,7 @@ export default function CourseView() {
     } catch (error) {
       console.error("❌ Failed to load course:", error);
     }
-  }, [courseId]);
+  }, [course.id]);
 
   // ✅ Loading / Not found state
   if (!course) {
@@ -102,22 +102,30 @@ export default function CourseView() {
           <h3>{lesson.title || lesson.name}</h3>
 
           <button
-            onClick={() =>
-              navigate(
-                `/course/${courseId}/lesson/${lesson.id}`
-              )
-            }
-            style={{
-              padding: "8px 12px",
-              background: "#667eea",
-              color: "white",
-              border: "none",
-              borderRadius: 5,
-              cursor: "pointer",
-            }}
-          >
-            Open Lesson
-          </button>
+  onClick={() => {
+    console.log(
+      "OPENING LESSON:",
+      {
+        courseId: course.id,
+        lessonId: lesson.id,
+      }
+    );
+
+    navigate(
+      `/course/${course.id}/lesson/${lesson.id}`
+    );
+  }}
+  style={{
+    padding: "8px 12px",
+    background: "#667eea",
+    color: "white",
+    border: "none",
+    borderRadius: 5,
+    cursor: "pointer",
+  }}
+>
+  Open Lesson
+</button>
         </div>
       ))}
     </div>
