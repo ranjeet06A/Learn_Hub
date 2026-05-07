@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Courses() {
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] =
+    useState<any[]>([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,11 +17,24 @@ export default function Courses() {
 
         const data = await res.json();
 
-        console.log("RAW BACKEND DATA:", data);
+        console.log(
+          "RAW BACKEND DATA:",
+          data
+        );
 
-        const finalCourses = Array.isArray(data)
-          ? data
-          : [];
+        // ✅ SAFE ARRAY
+        const finalCourses =
+          Array.isArray(data)
+            ? data.map((c: any) => ({
+                ...c,
+                lessons:
+                  Array.isArray(
+                    c.lessons
+                  )
+                    ? c.lessons
+                    : [],
+              }))
+            : [];
 
         console.log(
           "FINAL COURSES ARRAY:",
@@ -29,7 +44,9 @@ export default function Courses() {
         // ✅ SAVE CACHE
         localStorage.setItem(
           "learn_hub_courses",
-          JSON.stringify(finalCourses)
+          JSON.stringify(
+            finalCourses
+          )
         );
 
         setCourses(finalCourses);
@@ -39,11 +56,12 @@ export default function Courses() {
         );
 
         // ✅ FALLBACK LOCAL
-        const stored = JSON.parse(
-          localStorage.getItem(
-            "learn_hub_courses"
-          ) || "[]"
-        );
+        const stored =
+          JSON.parse(
+            localStorage.getItem(
+              "learn_hub_courses"
+            ) || "[]"
+          );
 
         setCourses(
           Array.isArray(stored)
@@ -64,43 +82,69 @@ export default function Courses() {
         <p>No courses found</p>
       )}
 
-      {courses.map((course: any) => (
-        <div
-          key={course.id}
-          style={{
-            border: "1px solid #ccc",
-            padding: 20,
-            marginBottom: 15,
-            borderRadius: 8,
-          }}
-        >
-          <h2>
-            {course.title || course.name}
-          </h2>
-
-          <p>
-            Exam:{" "}
-            {course.examId ||
-              course.exam ||
-              course.examName}
-          </p>
-
-          <p>
-            Lessons:{" "}
-            {course.lessons?.length || 0}
-          </p>
-
-          <button
-            onClick={() =>
-              navigate(
-                `/course/${course.id}`
-              )
+      {courses.map(
+        (course: any) => (
+          <div
+            key={
+              course._id ||
+              course.id
             }
+            style={{
+              border:
+                "1px solid #ccc",
+              padding: 20,
+              marginBottom: 15,
+              borderRadius: 8,
+            }}
           >
-            Open Course
-          </button>
-        </div>
-      ))}
+            <h2>
+              {course.title ||
+                course.name}
+            </h2>
+
+            <p>
+              Exam:{" "}
+              {course.examId ||
+                course.exam ||
+                course.examName}
+            </p>
+
+            <p>
+              Lessons:{" "}
+              {course.lessons
+                ?.length || 0}
+            </p>
+
+            <button
+              onClick={() => {
+                console.log(
+                  "OPENING COURSE:",
+                  course
+                );
+
+                navigate(
+                  `/course/${
+                    course._id ||
+                    course.id
+                  }`
+                );
+              }}
+              style={{
+                padding:
+                  "10px 14px",
+                background:
+                  "#667eea",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer",
+              }}
+            >
+              Open Course
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
 }
