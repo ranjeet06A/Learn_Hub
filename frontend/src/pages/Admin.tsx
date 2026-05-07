@@ -26,9 +26,6 @@ export default function Admin() {
   const [quizInput, setQuizInput] =
     useState("");
 
-  const [editingLessonId, setEditingLessonId] =
-    useState<any>(null);
-
   const backend =
     "https://learn-hub-backend-g1pi.onrender.com";
 
@@ -43,43 +40,44 @@ export default function Admin() {
 
       const data = await res.json();
 
-      console.log(
-        "RAW BACKEND DATA:",
-        data
+      const fixed = Array.isArray(data)
+        ? data.map((c: any) => ({
+            ...c,
+            id: c._id || c.id,
+            lessons: Array.isArray(c.lessons)
+              ? c.lessons.map((l: any) => ({
+                  ...l,
+                  id: l._id || l.id,
+                  quizzes:
+                    l.quizzes || [],
+                }))
+              : [],
+          }))
+        : [];
+
+      setCourses(fixed);
+
+      localStorage.setItem(
+        "learn_hub_courses",
+        JSON.stringify(fixed)
       );
 
-      if (Array.isArray(data)) {
-        const fixed = data.map((c: any) => ({
-          ...c,
-          lessons: Array.isArray(c.lessons)
-            ? c.lessons
-            : [],
-        }));
-
-        setCourses(fixed);
-
-        localStorage.setItem(
-          "learn_hub_courses",
-          JSON.stringify(fixed)
-        );
-
-        console.log(
-          "FINAL COURSES ARRAY:",
-          fixed
-        );
-      }
+      console.log(
+        "FINAL COURSES ARRAY:",
+        fixed
+      );
     } catch (err) {
       console.log(
-        "Backend load failed"
+        "Backend failed, using local"
       );
 
-      const storedCourses = JSON.parse(
+      const stored = JSON.parse(
         localStorage.getItem(
           "learn_hub_courses"
         ) || "[]"
       );
 
-      setCourses(storedCourses);
+      setCourses(stored);
     }
   };
 
@@ -97,18 +95,6 @@ export default function Admin() {
 
     setExams(storedExams);
   }, []);
-
-  // =========================
-  // SAVE EXAMS
-  // =========================
-  const saveExams = (data: string[]) => {
-    localStorage.setItem(
-      "learn_hub_exams",
-      JSON.stringify(data)
-    );
-
-    setExams(data);
-  };
 
   // =========================
   // DOCX IMPORT
@@ -159,7 +145,12 @@ export default function Admin() {
       selectedExam,
     ];
 
-    saveExams(updated);
+    setExams(updated);
+
+    localStorage.setItem(
+      "learn_hub_exams",
+      JSON.stringify(updated)
+    );
 
     setSelectedExam("");
 
@@ -174,8 +165,10 @@ export default function Admin() {
       if (
         !courseTitle ||
         !selectedExam
-      )
+      ) {
+        alert("Fill all fields");
         return;
+      }
 
       try {
         const res = await fetch(
@@ -212,15 +205,17 @@ export default function Admin() {
     };
 
   // =========================
-  // ADD / UPDATE LESSON
+  // ADD LESSON
   // =========================
   const handleAddLesson =
     async () => {
       if (
         !lessonTitle ||
         !selectedCourseId
-      )
+      ) {
+        alert("Fill all fields");
         return;
+      }
 
       try {
         const response =
@@ -249,9 +244,6 @@ export default function Admin() {
 
           setLessonTitle("");
           setLessonContent("");
-          setEditingLessonId(
-            null
-          );
 
           alert(
             "Lesson Added"
@@ -270,10 +262,14 @@ export default function Admin() {
       if (
         !quizInput ||
         !selectedLessonId
-      )
+      ) {
+        alert(
+          "Select lesson and paste quiz JSON"
+        );
         return;
+      }
 
-      let parsed;
+      let parsed: any[] = [];
 
       try {
         parsed =
@@ -287,12 +283,31 @@ export default function Admin() {
         return;
       }
 
-      // force array
       if (
         !Array.isArray(parsed)
       ) {
         parsed = [parsed];
       }
+
+      // CLEAN QUESTIONS
+      const cleanedQuestions =
+        parsed.map((q) => ({
+          questionTitle:
+            q.questionTitle || "",
+          statements:
+            q.statements || [],
+          options:
+            q.options || [],
+          correctIndex:
+            Number(
+              q.correctIndex
+            ) || 0,
+        }));
+
+      console.log(
+        "SAVING QUESTIONS:",
+        cleanedQuestions
+      );
 
       try {
         const response =
@@ -304,14 +319,21 @@ export default function Admin() {
                 "Content-Type":
                   "application/json",
               },
-              body: JSON.stringify(
-                parsed
-              ),
+
+              body: JSON.stringify({
+                quizzes:
+                  cleanedQuestions,
+              }),
             }
           );
 
         const data =
           await response.json();
+
+        console.log(
+          "QUIZ SAVE RESPONSE:",
+          data
+        );
 
         if (data.success) {
           await loadCourses();
@@ -319,11 +341,19 @@ export default function Admin() {
           setQuizInput("");
 
           alert(
-            "Quiz Added"
+            "Quiz Added Successfully"
+          );
+        } else {
+          alert(
+            "Quiz save failed"
           );
         }
       } catch (err) {
         console.log(err);
+
+        alert(
+          "Quiz save failed"
+        );
       }
     };
 
@@ -334,20 +364,10 @@ export default function Admin() {
     async (
       courseId: string
     ) => {
-      const confirmDelete =
-        confirm(
-          "Delete Course?"
-        );
-
-      if (!confirmDelete)
-        return;
-
       const updated =
         courses.filter(
           (c) =>
-            String(
-              c._id || c.id
-            ) !==
+            String(c.id) !==
             String(courseId)
         );
 
@@ -369,9 +389,7 @@ export default function Admin() {
       const updated =
         courses.map((c) => {
           if (
-            String(
-              c._id || c.id
-            ) ===
+            String(c.id) ===
             String(
               selectedCourseId
             )
@@ -382,78 +400,11 @@ export default function Admin() {
                 c.lessons.filter(
                   (l: any) =>
                     String(
-                      l._id ||
-                        l.id
+                      l.id
                     ) !==
                     String(
                       lessonId
                     )
-                ),
-            };
-          }
-
-          return c;
-        });
-
-      setCourses(updated);
-
-      localStorage.setItem(
-        "learn_hub_courses",
-        JSON.stringify(updated)
-      );
-    };
-
-  // =========================
-  // DELETE QUIZ
-  // =========================
-  const handleDeleteQuiz =
-    (
-      lessonId: string,
-      quizIndex: number
-    ) => {
-      const updated =
-        courses.map((c) => {
-          if (
-            String(
-              c._id || c.id
-            ) ===
-            String(
-              selectedCourseId
-            )
-          ) {
-            return {
-              ...c,
-              lessons:
-                c.lessons.map(
-                  (l: any) => {
-                    if (
-                      String(
-                        l._id ||
-                          l.id
-                      ) ===
-                      String(
-                        lessonId
-                      )
-                    ) {
-                      return {
-                        ...l,
-                        quizzes:
-                          (
-                            l.quizzes ||
-                            []
-                          ).filter(
-                            (
-                              _: any,
-                              i: number
-                            ) =>
-                              i !==
-                              quizIndex
-                          ),
-                      };
-                    }
-
-                    return l;
-                  }
                 ),
             };
           }
@@ -476,7 +427,7 @@ export default function Admin() {
     <div style={{ padding: 20 }}>
       <h2>⚙️ Admin Panel</h2>
 
-      {/* ADD EXAM */}
+      {/* EXAM */}
       <h3>Add Exam</h3>
 
       <input
@@ -496,7 +447,7 @@ export default function Admin() {
         Add Exam
       </button>
 
-      {/* ADD COURSE */}
+      {/* COURSE */}
       <h3>Add Course</h3>
 
       <input
@@ -525,6 +476,7 @@ export default function Admin() {
           (e, i) => (
             <option
               key={i}
+              value={e}
             >
               {e}
             </option>
@@ -540,7 +492,7 @@ export default function Admin() {
         Add Course
       </button>
 
-      {/* ADD LESSON */}
+      {/* LESSON */}
       <h3>Add Lesson</h3>
 
       <select
@@ -559,14 +511,8 @@ export default function Admin() {
 
         {courses.map((c) => (
           <option
-            key={
-              c._id ||
-              c.id
-            }
-            value={
-              c._id ||
-              c.id
-            }
+            key={c.id}
+            value={c.id}
           >
             {c.title}
           </option>
@@ -591,7 +537,7 @@ export default function Admin() {
 
       <textarea
         rows={10}
-        cols={70}
+        cols={80}
         placeholder="Lesson Content"
         value={lessonContent}
         onChange={(e) =>
@@ -623,7 +569,7 @@ export default function Admin() {
         Add Lesson
       </button>
 
-      {/* ADD QUIZ */}
+      {/* QUIZ */}
       <h3>Add Quiz</h3>
 
       <select
@@ -643,10 +589,7 @@ export default function Admin() {
         {courses
           .find(
             (c) =>
-              String(
-                c._id ||
-                  c.id
-              ) ===
+              String(c.id) ===
               String(
                 selectedCourseId
               )
@@ -654,14 +597,8 @@ export default function Admin() {
           ?.lessons?.map(
             (l: any) => (
               <option
-                key={
-                  l._id ||
-                  l.id
-                }
-                value={
-                  l._id ||
-                  l.id
-                }
+                key={l.id}
+                value={l.id}
               >
                 {l.title}
               </option>
@@ -673,8 +610,8 @@ export default function Admin() {
       <br />
 
       <textarea
-        rows={10}
-        cols={70}
+        rows={15}
+        cols={90}
         value={quizInput}
         onChange={(e) =>
           setQuizInput(
@@ -683,9 +620,10 @@ export default function Admin() {
         }
         placeholder={`[
 {
-"questionTitle":"2+2=?",
-"options":["1","2","4","5"],
-"correctIndex":2
+  "questionTitle":"Question?",
+  "statements":["A","B"],
+  "options":["1","2","3","4"],
+  "correctIndex":0
 }
 ]`}
       />
@@ -706,11 +644,11 @@ export default function Admin() {
 
       {courses.map((c) => (
         <div
-          key={c._id || c.id}
+          key={c.id}
           style={{
             border:
               "1px solid #ccc",
-            padding: 10,
+            padding: 15,
             marginBottom: 20,
           }}
         >
@@ -719,8 +657,7 @@ export default function Admin() {
           <button
             onClick={() =>
               handleDeleteCourse(
-                c._id ||
-                  c.id
+                c.id
               )
             }
           >
@@ -730,10 +667,7 @@ export default function Admin() {
           {c.lessons?.map(
             (l: any) => (
               <div
-                key={
-                  l._id ||
-                  l.id
-                }
+                key={l.id}
                 style={{
                   marginTop: 20,
                   padding: 10,
@@ -748,34 +682,11 @@ export default function Admin() {
                 <button
                   onClick={() =>
                     handleDeleteLesson(
-                      l._id ||
-                        l.id
+                      l.id
                     )
                   }
                 >
                   Delete Lesson
-                </button>
-
-                <button
-                  style={{
-                    marginLeft: 10,
-                  }}
-                  onClick={() => {
-                    setLessonTitle(
-                      l.title
-                    );
-
-                    setLessonContent(
-                      l.content
-                    );
-
-                    setEditingLessonId(
-                      l._id ||
-                        l.id
-                    );
-                  }}
-                >
-                  Edit Lesson
                 </button>
 
                 <div
@@ -802,21 +713,6 @@ export default function Admin() {
                         {
                           q.questionTitle
                         }
-
-                        <button
-                          style={{
-                            marginLeft: 10,
-                          }}
-                          onClick={() =>
-                            handleDeleteQuiz(
-                              l._id ||
-                                l.id,
-                              index
-                            )
-                          }
-                        >
-                          Delete Quiz
-                        </button>
                       </div>
                     )
                   )}
