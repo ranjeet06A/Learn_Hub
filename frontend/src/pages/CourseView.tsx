@@ -6,6 +6,8 @@ type Lesson = {
   name?: string;
   title?: string;
   content?: string;
+  quiz?: any[];
+  quizzes?: any[];
 };
 
 type Course = {
@@ -16,53 +18,80 @@ type Course = {
 };
 
 export default function CourseView() {
-  const { course.id } = useParams();
+  // ✅ CORRECT PARAM
+  const { courseId } = useParams();
+
   const navigate = useNavigate();
 
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] =
+    useState<Course | null>(null);
 
   useEffect(() => {
     try {
-      // ✅ Load courses safely from localStorage
-      const courses: Course[] = JSON.parse(
-        localStorage.getItem("learn_hub_courses") || "[]"
+      // ✅ LOAD COURSES
+      const courses: Course[] =
+        JSON.parse(
+          localStorage.getItem(
+            "learn_hub_courses"
+          ) || "[]"
+        );
+
+      console.log(
+        "📚 COURSES:",
+        courses
       );
 
-      console.log("📚 COURSES:", courses);
-      console.log("🌐 URL course.id:", course.id);
+      console.log(
+        "🌐 URL courseId:",
+        courseId
+      );
 
-      // ✅ Find matching course
+      // ✅ FIND COURSE
       const found = courses.find(
-        (c) => String(c.id) === String(course.id)
+        (c) =>
+          String(c.id) ===
+          String(courseId)
       );
 
       if (!found) {
-        console.log("❌ Course not found");
+        console.log(
+          "❌ Course not found"
+        );
         return;
       }
 
-      console.log("✅ FOUND COURSE:", found);
+      console.log(
+        "✅ FOUND COURSE:",
+        found
+      );
 
-      // ✅ Ensure lessons always exists
+      // ✅ SAFE LESSONS
       setCourse({
         ...found,
-        lessons: Array.isArray(found.lessons)
+        lessons: Array.isArray(
+          found.lessons
+        )
           ? found.lessons
           : [],
       });
     } catch (error) {
-      console.error("❌ Failed to load course:", error);
+      console.error(
+        "❌ Failed to load course:",
+        error
+      );
     }
-  }, [course.id]);
+  }, [courseId]);
 
-  // ✅ Loading / Not found state
+  // ✅ NOT FOUND
   if (!course) {
     return (
       <div style={{ padding: 30 }}>
         <h2>Course not found</h2>
 
         <button
-          onClick={() => navigate("/courses")}
+          onClick={() =>
+            navigate("/courses")
+          }
           style={{
             padding: "10px 14px",
             background: "#667eea",
@@ -81,53 +110,70 @@ export default function CourseView() {
 
   return (
     <div style={{ padding: 30 }}>
-      <h1>{course.title || course.name}</h1>
+      <h1>
+        {course.title ||
+          course.name}
+      </h1>
 
-      <p>📘 Lessons: {course.lessons.length}</p>
+      <p>
+        📘 Lessons:{" "}
+        {course.lessons.length}
+      </p>
 
-      {course.lessons.length === 0 && (
+      {course.lessons.length ===
+        0 && (
         <p>No lessons available</p>
       )}
 
-      {course.lessons.map((lesson) => (
-        <div
-          key={lesson.id}
-          style={{
-            padding: 15,
-            marginTop: 10,
-            border: "1px solid #ccc",
-            borderRadius: 6,
-          }}
-        >
-          <h3>{lesson.title || lesson.name}</h3>
+      {course.lessons.map(
+        (lesson) => (
+          <div
+            key={lesson.id}
+            style={{
+              padding: 15,
+              marginTop: 10,
+              border:
+                "1px solid #ccc",
+              borderRadius: 6,
+            }}
+          >
+            <h3>
+              {lesson.title ||
+                lesson.name}
+            </h3>
 
-          <button
-  onClick={() => {
-    console.log(
-      "OPENING LESSON:",
-      {
-        courseId: course.id,
-        lessonId: lesson.id,
-      }
-    );
+            <button
+              onClick={() => {
+                console.log(
+                  "OPENING LESSON:",
+                  {
+                    courseId:
+                      course.id,
+                    lessonId:
+                      lesson.id,
+                  }
+                );
 
-    navigate(
-      `/course/${course.id}/lesson/${lesson.id}`
-    );
-  }}
-  style={{
-    padding: "8px 12px",
-    background: "#667eea",
-    color: "white",
-    border: "none",
-    borderRadius: 5,
-    cursor: "pointer",
-  }}
->
-  Open Lesson
-</button>
-        </div>
-      ))}
+                navigate(
+                  `/course/${course.id}/lesson/${lesson.id}`
+                );
+              }}
+              style={{
+                padding:
+                  "8px 12px",
+                background:
+                  "#667eea",
+                color: "white",
+                border: "none",
+                borderRadius: 5,
+                cursor: "pointer",
+              }}
+            >
+              Open Lesson
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
 }
