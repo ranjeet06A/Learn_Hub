@@ -9,6 +9,13 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+type Question = {
+  questionTitle?: string;
+  statements?: string[];
+  options?: string[];
+  correctIndex?: number;
+};
+
 type Lesson = {
   _id?: string;
   id?: string;
@@ -41,8 +48,11 @@ export default function LessonView() {
   const [lesson, setLesson] =
     useState<Lesson | null>(null);
 
+  const [course, setCourse] =
+    useState<Course | null>(null);
+
   const [questions, setQuestions] =
-    useState<any[]>([]);
+    useState<Question[]>([]);
 
   const [answers, setAnswers] =
     useState<{
@@ -63,15 +73,12 @@ export default function LessonView() {
     setSelectedQuizIndex,
   ] = useState<number | null>(null);
 
-  const [course, setCourse] =
-    useState<Course | null>(null);
-
   const startTimeRef =
     useRef<number>(0);
 
-  // ======================
+  // =========================
   // LOAD COURSE + LESSON
-  // ======================
+  // =========================
   useEffect(() => {
     try {
       const courses: Course[] =
@@ -91,7 +98,6 @@ export default function LessonView() {
         courseId
       );
 
-      // ✅ FIXED FOR MONGODB
       const foundCourse =
         courses.find(
           (c) =>
@@ -111,7 +117,6 @@ export default function LessonView() {
 
       setCourse(foundCourse);
 
-      // ✅ FIXED FOR MONGODB
       const foundLesson =
         foundCourse.lessons?.find(
           (l) =>
@@ -131,8 +136,6 @@ export default function LessonView() {
 
       setLesson(foundLesson);
 
-      setQuestions([]);
-
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -141,9 +144,9 @@ export default function LessonView() {
     }
   }, [courseId, lessonId]);
 
-  // ======================
+  // =========================
   // TIMER
-  // ======================
+  // =========================
   useEffect(() => {
     if (!timeLeft) return;
 
@@ -165,9 +168,9 @@ export default function LessonView() {
       clearInterval(timer);
   }, [timeLeft]);
 
-  // ======================
-  // ANSWER SELECT
-  // ======================
+  // =========================
+  // SELECT ANSWER
+  // =========================
   const handleSelect = (
     optionIndex: number
   ) => {
@@ -177,16 +180,14 @@ export default function LessonView() {
     }));
   };
 
-  // ======================
-  // SUBMIT
-  // ======================
-  const handleSubmit = async () => {
+  // =========================
+  // SUBMIT QUIZ
+  // =========================
+  const handleSubmit = () => {
     if (!questions.length) return;
 
     let correct = 0;
-
     let wrong = 0;
-
     let attempted = 0;
 
     questions.forEach((q, i) => {
@@ -195,11 +196,9 @@ export default function LessonView() {
       if (selected !== undefined) {
         attempted++;
 
-        const correctAnswer =
-          Number(q.correctIndex);
-
         if (
-          selected === correctAnswer
+          selected ===
+          Number(q.correctIndex)
         ) {
           correct++;
         } else {
@@ -214,74 +213,35 @@ export default function LessonView() {
     const score =
       correct - wrong * 0.25;
 
-    // TIME
     const endTime = Date.now();
 
-    const safeStart =
-      startTimeRef.current ||
-      Date.now();
-
-    const timeSpent = Math.max(
-      1,
-      Math.floor(
-        (endTime - safeStart) /
-          1000
-      )
+    const timeSpent = Math.floor(
+      (endTime -
+        startTimeRef.current) /
+        1000
     );
-
-    // DATE
-    const now = new Date();
-
-    const attemptTime =
-      now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-    const attemptDate =
-      now.toLocaleDateString([], {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
 
     const result = {
       courseId,
-
       lessonId,
 
-      quizIndex:
-        selectedQuizIndex,
-
       total,
-
       correct,
-
       wrong,
-
       attempted,
-
       score,
-
       timeSpent,
-
-      attemptTime,
-
-      attemptDate,
 
       courseName:
         course?.title ||
-        course?.name ||
-        "Course",
+        course?.name,
 
       lessonName:
         lesson?.title ||
-        lesson?.name ||
-        "Lesson",
+        lesson?.name,
     };
 
-    // LOCAL SAVE
-    const oldResults =
+    const old =
       JSON.parse(
         localStorage.getItem(
           "learn_hub_progress"
@@ -291,47 +251,17 @@ export default function LessonView() {
     localStorage.setItem(
       "learn_hub_progress",
       JSON.stringify([
-        ...oldResults,
+        ...old,
         result,
       ])
     );
 
-    // BACKEND SAVE
-    try {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      await fetch(
-        "https://learn-hub-backend-g1pi.onrender.com/results",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify(
-            result
-          ),
-        }
-      );
-    } catch {
-      console.warn(
-        "Backend not available"
-      );
-    }
-
     navigate("/results");
   };
 
-  // ======================
-  // TIMER FORMAT
-  // ======================
+  // =========================
+  // FORMAT TIMER
+  // =========================
   const formatTime = () => {
     const min = Math.floor(
       timeLeft / 60
@@ -344,9 +274,9 @@ export default function LessonView() {
     }${sec}`;
   };
 
-  // ======================
+  // =========================
   // LOADING
-  // ======================
+  // =========================
   if (loading) {
     return <h3>Loading...</h3>;
   }
@@ -359,13 +289,27 @@ export default function LessonView() {
     );
   }
 
-  const q = questions[currentQ];
+  // =========================
+  // SAFE QUIZZES
+  // =========================
+  let quizzes: any[] = [];
 
-  // ✅ SAFE QUIZZES
-  const quizzes =
-    lesson.quizzes ||
-    lesson.quiz ||
-    [];
+  if (
+    Array.isArray(lesson.quizzes)
+  ) {
+    quizzes = lesson.quizzes;
+  } else if (
+    Array.isArray(lesson.quiz)
+  ) {
+    quizzes = [lesson.quiz];
+  }
+
+  console.log(
+    "🧠 QUIZZES:",
+    quizzes
+  );
+
+  const q = questions[currentQ];
 
   return (
     <div style={{ padding: 20 }}>
@@ -378,43 +322,62 @@ export default function LessonView() {
       {/* CONTENT */}
       <div
         style={{
-          marginBottom: 30,
           background: "#fff",
           padding: 20,
           borderRadius: 10,
+          marginBottom: 30,
         }}
         dangerouslySetInnerHTML={{
           __html:
             lesson.content ||
-            "<p style='color:red'>No content</p>",
+            "<p>No content</p>",
         }}
       />
 
       {/* QUIZ SELECT */}
-      {quizzes.length > 0 &&
-        selectedQuizIndex ===
-          null && (
+      {selectedQuizIndex ===
+        null &&
+        quizzes.length > 0 && (
           <div>
             <h3>Select Quiz</h3>
 
             {quizzes.map(
               (
-                quiz: any,
-                index: number
+                quiz,
+                index
               ) => (
                 <button
                   key={index}
                   onClick={() => {
+                    console.log(
+                      "SELECTED QUIZ:",
+                      quiz
+                    );
+
+                    let finalQuestions: Question[] =
+                      [];
+
+                    // ✅ DIRECT ARRAY
+                    if (
+                      Array.isArray(
+                        quiz
+                      )
+                    ) {
+                      finalQuestions =
+                        quiz;
+                    }
+
+                    console.log(
+                      "FINAL QUESTIONS:",
+                      finalQuestions
+                    );
+
                     setSelectedQuizIndex(
                       index
                     );
 
                     setQuestions(
-                      Array.isArray(
-                        quiz
-                      )
-                        ? quiz
-                        : []
+                      finalQuestions
                     );
 
                     setCurrentQ(0);
@@ -422,7 +385,7 @@ export default function LessonView() {
                     setAnswers({});
 
                     setTimeLeft(
-                      quiz.length *
+                      finalQuestions.length *
                         60
                     );
 
@@ -432,22 +395,15 @@ export default function LessonView() {
                   style={{
                     display:
                       "block",
-
-                    margin: 10,
-
+                    marginBottom: 10,
+                    padding: 10,
                     background:
                       "#667eea",
-
                     color:
                       "white",
-
-                    padding: 10,
-
-                    borderRadius: 6,
-
                     border:
                       "none",
-
+                    borderRadius: 6,
                     cursor:
                       "pointer",
                   }}
@@ -460,7 +416,7 @@ export default function LessonView() {
           </div>
         )}
 
-      {/* QUIZ */}
+      {/* QUIZ SCREEN */}
       {selectedQuizIndex !==
         null &&
         questions.length >
@@ -474,89 +430,106 @@ export default function LessonView() {
 
             <div
               style={{
-                marginBottom: 10,
+                marginBottom: 15,
               }}
             >
               ⏱{" "}
               {formatTime()}
             </div>
 
-            {q && (
-              <>
-                <h4>
-                  Q
-                  {currentQ +
-                    1}
-                  .{" "}
-                  {
-                    q.questionTitle
-                  }
-                </h4>
+            {q &&
+              questions.length >
+                0 && (
+                <>
+                  <h4>
+                    Q
+                    {currentQ +
+                      1}
+                    .{" "}
+                    {
+                      q.questionTitle
+                    }
+                  </h4>
 
-                {q.statements?.map(
-                  (
-                    s: string,
-                    i: number
-                  ) => (
-                    <div key={i}>
-                      {String.fromCharCode(
-                        65 + i
-                      )}
-                      . {s}
-                    </div>
-                  )
-                )}
+                  {Array.isArray(
+                    q.statements
+                  ) &&
+                    q.statements.map(
+                      (
+                        s,
+                        i
+                      ) => (
+                        <div
+                          key={i}
+                        >
+                          {
+                            String.fromCharCode(
+                              65 +
+                                i
+                            )
+                          }
+                          . {s}
+                        </div>
+                      )
+                    )}
 
-                {q.options?.map(
-                  (
-                    opt: string,
-                    i: number
-                  ) => (
-                    <button
-                      key={i}
-                      onClick={() =>
-                        handleSelect(
+                  <div
+                    style={{
+                      marginTop: 20,
+                    }}
+                  >
+                    {Array.isArray(
+                      q.options
+                    ) &&
+                      q.options.map(
+                        (
+                          opt,
                           i
+                        ) => (
+                          <button
+                            key={i}
+                            onClick={() =>
+                              handleSelect(
+                                i
+                              )
+                            }
+                            style={{
+                              display:
+                                "block",
+                              width:
+                                "100%",
+                              textAlign:
+                                "left",
+                              marginBottom: 10,
+                              padding: 12,
+                              borderRadius: 6,
+                              border:
+                                "1px solid #ccc",
+                              cursor:
+                                "pointer",
+                              background:
+                                answers[
+                                  currentQ
+                                ] ===
+                                i
+                                  ? "#cce5ff"
+                                  : "white",
+                            }}
+                          >
+                            {opt}
+                          </button>
                         )
-                      }
-                      style={{
-                        display:
-                          "block",
+                      )}
+                  </div>
+                </>
+              )}
 
-                        margin: 6,
-
-                        padding: 10,
-
-                        width:
-                          "100%",
-
-                        borderRadius: 6,
-
-                        border:
-                          "1px solid #ccc",
-
-                        background:
-                          answers[
-                            currentQ
-                          ] === i
-                            ? "#cce5ff"
-                            : "#fff",
-
-                        cursor:
-                          "pointer",
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  )
-                )}
-              </>
-            )}
-
-            {/* NAV */}
+            {/* NAVIGATION */}
             <div
               style={{
-                marginTop: 10,
+                marginTop: 20,
+                display: "flex",
+                gap: 10,
               }}
             >
               <button
