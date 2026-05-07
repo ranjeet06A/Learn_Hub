@@ -254,121 +254,89 @@ export default function Admin() {
       }
     };
 
- // =========================
-// ADD QUIZ
-// =========================
-app.post(
-  "/courses/:courseId/lessons/:lessonId/quizzes",
-  async (req, res) => {
-    try {
-      const {
-        courseId,
-        lessonId,
-      } = req.params;
-
-      const course =
-        await Course.findById(
-          courseId
-        );
-
-      if (!course) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Course not found",
-        });
-      }
-
-      const lesson =
-        course.lessons.id(
-          lessonId
-        );
-
-      if (!lesson) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Lesson not found",
-        });
-      }
-
-      // RECEIVE QUIZZES
-      let quizzes =
-        req.body.quizzes;
-
-      console.log(
-        "RAW QUIZZES:",
-        quizzes
-      );
-
-      // FORCE ARRAY
-      if (!Array.isArray(quizzes)) {
-        quizzes = [quizzes];
-      }
-
-      // CLEAN FORMAT
-      const cleanedQuizzes =
-        quizzes.map((q) => ({
-          questionTitle:
-            q.questionTitle || "",
-
-          statements:
-            Array.isArray(
-              q.statements
-            )
-              ? q.statements
-              : [],
-
-          options:
-            Array.isArray(
-              q.options
-            )
-              ? q.options
-              : [],
-
-          correctIndex:
-            Number(
-              q.correctIndex
-            ) || 0,
-        }));
-
-      console.log(
-        "CLEANED QUIZZES:",
-        cleanedQuizzes
-      );
-
-      // ENSURE quizzes exists
+  // =========================
+  // ADD QUIZ
+  // =========================
+  const handleAddQuiz =
+    async () => {
       if (
-        !Array.isArray(
-          lesson.quizzes
-        )
+        !selectedCourseId ||
+        !selectedLessonId
       ) {
-        lesson.quizzes = [];
+        alert(
+          "Select course and lesson"
+        );
+        return;
       }
 
-      // SAVE QUESTIONS
-      lesson.quizzes.push(
-        ...cleanedQuizzes
-      );
+      if (!quizInput.trim()) {
+        alert("Enter quiz JSON");
+        return;
+      }
 
-      await course.save();
+      try {
+        // PARSE JSON
+        const parsed =
+          JSON.parse(quizInput);
 
-      res.json({
-        success: true,
-        quizzes:
-          lesson.quizzes,
-      });
-    } catch (err) {
-      console.log(err);
+        // FORCE ARRAY
+        const quizzes =
+          Array.isArray(parsed)
+            ? parsed
+            : [parsed];
 
-      res.status(500).json({
-        success: false,
-        message:
-          "Server Error",
-      });
-    }
-  }
-);
+        console.log(
+          "QUIZZES TO SAVE:",
+          quizzes
+        );
+
+        // SEND TO BACKEND
+        const response =
+          await fetch(
+            `${backend}/courses/${selectedCourseId}/lessons/${selectedLessonId}/quizzes`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                quizzes,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        console.log(
+          "QUIZ SAVE RESPONSE:",
+          data
+        );
+
+        if (data.success) {
+          alert(
+            "Quiz Added Successfully"
+          );
+
+          setQuizInput("");
+
+          // RELOAD COURSES
+          await loadCourses();
+        } else {
+          alert(
+            data.message ||
+              "Quiz save failed"
+          );
+        }
+      } catch (err) {
+        console.log(err);
+
+        alert(
+          "Invalid quiz JSON format"
+        );
+      }
+    };
 
   // =========================
   // DELETE COURSE
