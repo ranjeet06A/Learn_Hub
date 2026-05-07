@@ -355,17 +355,45 @@ export default function LessonView() {
                     );
 
                     let finalQuestions: Question[] =
-                      [];
+  [];
 
-                    // ✅ DIRECT ARRAY
-                    if (
-                      Array.isArray(
-                        quiz
-                      )
-                    ) {
-                      finalQuestions =
-                        quiz;
-                    }
+// ✅ FORMAT 1
+if (Array.isArray(quiz)) {
+  finalQuestions = quiz;
+}
+
+// ✅ FORMAT 2
+else if (
+  Array.isArray(quiz.questions)
+) {
+  finalQuestions =
+    quiz.questions;
+}
+
+// ✅ FORMAT 3
+else if (
+  Array.isArray(
+    quiz.quiz
+  )
+) {
+  finalQuestions =
+    quiz.quiz;
+}
+
+// ✅ FORMAT 4
+else if (
+  Array.isArray(
+    quiz.questions?.questions
+  )
+) {
+  finalQuestions =
+    quiz.questions.questions;
+}
+
+console.log(
+  "FINAL QUESTIONS:",
+  finalQuestions
+);
 
                     console.log(
                       "FINAL QUESTIONS:",
