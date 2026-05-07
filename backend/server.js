@@ -70,9 +70,10 @@ mongoose
 // ======================
 
 const quizSchema = new mongoose.Schema({
-  question: String,
+  questionTitle: String,
+  statements: [String],
   options: [String],
-  answer: String,
+  correctIndex: Number,
 });
 
 const lessonSchema = new mongoose.Schema({
@@ -373,10 +374,10 @@ app.post("/courses/:courseId/lessons", async (req, res) => {
   }
 });
 
-// =========================
+// ======================
 // ADD QUIZ
-// =========================
-router.post(
+// ======================
+app.post(
   "/courses/:courseId/lessons/:lessonId/quizzes",
   async (req, res) => {
     try {
@@ -424,7 +425,7 @@ router.post(
         quizzes = [quizzes];
       }
 
-      // CLEAN FORMAT
+      // CLEAN QUIZZES
       const cleanedQuizzes =
         quizzes.map((q) => ({
           questionTitle:
@@ -455,7 +456,6 @@ router.post(
         cleanedQuizzes
       );
 
-      // ENSURE ARRAY EXISTS
       if (
         !Array.isArray(
           lesson.quizzes
@@ -464,7 +464,6 @@ router.post(
         lesson.quizzes = [];
       }
 
-      // SAVE QUESTIONS
       lesson.quizzes.push(
         ...cleanedQuizzes
       );
