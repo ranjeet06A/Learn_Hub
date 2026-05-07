@@ -37,12 +37,11 @@ export default function Login() {
       }
 
       localStorage.setItem(
-        "learn_hub_user",
-        JSON.stringify({
-          email: email.trim().toLowerCase(),
-          role: data.role,
-        })
-      );
+  "learn_hub_user",
+  JSON.stringify({
+    email,
+  })
+);
 
       localStorage.setItem("token", data.token);
 

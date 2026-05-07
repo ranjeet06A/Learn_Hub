@@ -5,8 +5,12 @@ export default function Navbar() {
   const location = useLocation();
 
   const user = JSON.parse(
-    localStorage.getItem("learn_hub_user") || "{}"
-  );
+  localStorage.getItem("learn_hub_user") || "{}"
+);
+
+const isAdmin =
+  user.email === "admin@admin" ||
+  user.email === "admin2@admin";
 
   const handleLogout = () => {
     // ✅ FIX: clear EVERYTHING
@@ -45,7 +49,7 @@ export default function Navbar() {
         </span>
 
         {/* ✅ ADMIN CONTROL */}
-        {user?.role === "admin" && (
+       {isAdmin && (
           <span
             onClick={() => navigate("/admin")}
             style={isActive("/admin") ? activeItem : navItem}
