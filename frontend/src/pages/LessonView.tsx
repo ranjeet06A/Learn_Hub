@@ -1,24 +1,40 @@
-import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+  useRef,
+} from "react";
+
+import {
+  useParams,
+  useNavigate,
+} from "react-router-dom";
 
 type Lesson = {
-  id: string;
+  _id?: string;
+  id?: string;
+
   title?: string;
   name?: string;
+
   content?: string;
+
   quiz?: any[];
   quizzes?: any[];
 };
 
 type Course = {
-  id: string;
+  _id?: string;
+  id?: string;
+
   title?: string;
   name?: string;
+
   lessons: Lesson[];
 };
 
 export default function LessonView() {
-  const { courseId, lessonId } = useParams();
+  const { courseId, lessonId } =
+    useParams();
 
   const navigate = useNavigate();
 
@@ -66,24 +82,25 @@ export default function LessonView() {
         );
 
       console.log(
-        "COURSES:",
+        "📚 COURSES:",
         courses
       );
 
       console.log(
-        "URL courseId:",
+        "🌐 URL courseId:",
         courseId
       );
 
+      // ✅ FIXED FOR MONGODB
       const foundCourse =
         courses.find(
           (c) =>
-            String(c.id) ===
+            String(c._id || c.id) ===
             String(courseId)
         );
 
       console.log(
-        "FOUND COURSE:",
+        "✅ FOUND COURSE:",
         foundCourse
       );
 
@@ -94,12 +111,18 @@ export default function LessonView() {
 
       setCourse(foundCourse);
 
+      // ✅ FIXED FOR MONGODB
       const foundLesson =
         foundCourse.lessons?.find(
           (l) =>
-            String(l.id) ===
+            String(l._id || l.id) ===
             String(lessonId)
         );
+
+      console.log(
+        "✅ FOUND LESSON:",
+        foundLesson
+      );
 
       if (!foundLesson) {
         setLoading(false);
@@ -113,6 +136,7 @@ export default function LessonView() {
       setLoading(false);
     } catch (err) {
       console.log(err);
+
       setLoading(false);
     }
   }, [courseId, lessonId]);
@@ -160,7 +184,9 @@ export default function LessonView() {
     if (!questions.length) return;
 
     let correct = 0;
+
     let wrong = 0;
+
     let attempted = 0;
 
     questions.forEach((q, i) => {
@@ -174,9 +200,11 @@ export default function LessonView() {
 
         if (
           selected === correctAnswer
-        )
+        ) {
           correct++;
-        else wrong++;
+        } else {
+          wrong++;
+        }
       }
     });
 
@@ -219,21 +247,33 @@ export default function LessonView() {
 
     const result = {
       courseId,
+
       lessonId,
+
       quizIndex:
         selectedQuizIndex,
+
       total,
+
       correct,
+
       wrong,
+
       attempted,
+
       score,
+
       timeSpent,
+
       attemptTime,
+
       attemptDate,
+
       courseName:
         course?.title ||
         course?.name ||
         "Course",
+
       lessonName:
         lesson?.title ||
         lesson?.name ||
@@ -263,34 +303,23 @@ export default function LessonView() {
           "token"
         );
 
-      const res = await fetch(
-        "http://localhost:5000/results",
+      await fetch(
+        "https://learn-hub-backend-g1pi.onrender.com/results",
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
+
             Authorization: `Bearer ${token}`,
           },
+
           body: JSON.stringify(
             result
           ),
         }
       );
-
-      if (res.status === 401) {
-        alert(
-          "Session expired. Please login again."
-        );
-
-        localStorage.removeItem(
-          "token"
-        );
-
-        navigate("/login");
-
-        return;
-      }
     } catch {
       console.warn(
         "Backend not available"
@@ -318,15 +347,17 @@ export default function LessonView() {
   // ======================
   // LOADING
   // ======================
-  if (loading)
+  if (loading) {
     return <h3>Loading...</h3>;
+  }
 
-  if (!lesson)
+  if (!lesson) {
     return (
       <h3>
         ❌ Lesson not found
       </h3>
     );
+  }
 
   const q = questions[currentQ];
 
@@ -379,7 +410,11 @@ export default function LessonView() {
                     );
 
                     setQuestions(
-                      quiz
+                      Array.isArray(
+                        quiz
+                      )
+                        ? quiz
+                        : []
                     );
 
                     setCurrentQ(0);
@@ -397,15 +432,22 @@ export default function LessonView() {
                   style={{
                     display:
                       "block",
+
                     margin: 10,
+
                     background:
                       "#667eea",
+
                     color:
                       "white",
+
                     padding: 10,
+
                     borderRadius: 6,
+
                     border:
                       "none",
+
                     cursor:
                       "pointer",
                   }}
@@ -456,9 +498,7 @@ export default function LessonView() {
                     s: string,
                     i: number
                   ) => (
-                    <div
-                      key={i}
-                    >
+                    <div key={i}>
                       {String.fromCharCode(
                         65 + i
                       )}
@@ -482,19 +522,26 @@ export default function LessonView() {
                       style={{
                         display:
                           "block",
+
                         margin: 6,
+
                         padding: 10,
+
                         width:
                           "100%",
+
                         borderRadius: 6,
+
                         border:
                           "1px solid #ccc",
+
                         background:
                           answers[
                             currentQ
                           ] === i
                             ? "#cce5ff"
                             : "#fff",
+
                         cursor:
                           "pointer",
                       }}
