@@ -255,88 +255,116 @@ export default function Admin() {
     };
 
   // =========================
-  // ADD QUIZ
-  // =========================
-  const handleAddQuiz =
-    async () => {
-      if (
-        !selectedCourseId ||
-        !selectedLessonId
-      ) {
-        alert(
-          "Select course and lesson"
-        );
-        return;
-      }
+// ADD QUIZ
+// =========================
+const handleAddQuiz = async () => {
+  try {
+    if (
+      !selectedCourseId ||
+      !selectedLessonId
+    ) {
+      alert(
+        "Select course and lesson"
+      );
+      return;
+    }
 
-      if (!quizInput.trim()) {
-        alert("Enter quiz JSON");
-        return;
-      }
+    if (!quizInput.trim()) {
+      alert("Quiz JSON required");
+      return;
+    }
 
-      try {
-        // PARSE JSON
-        const parsed =
-          JSON.parse(quizInput);
+    // PARSE JSON
+    let parsed = JSON.parse(
+      quizInput
+    );
 
-        // FORCE ARRAY
-        const quizzes =
-          Array.isArray(parsed)
-            ? parsed
-            : [parsed];
+    console.log(
+      "RAW PARSED QUIZ:",
+      parsed
+    );
 
-        console.log(
-          "QUIZZES TO SAVE:",
-          quizzes
-        );
+    // FORCE ARRAY
+    if (!Array.isArray(parsed)) {
+      parsed = [parsed];
+    }
 
-        // SEND TO BACKEND
-        const response =
-          await fetch(
-            `${backend}/courses/${selectedCourseId}/lessons/${selectedLessonId}/quizzes`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              body: JSON.stringify({
-                quizzes,
-              }),
-            }
-          );
+    // CLEAN FORMAT
+    const cleaned = parsed.map(
+      (q: any) => ({
+        questionTitle:
+          q.questionTitle || "",
 
-        const data =
-          await response.json();
+        statements:
+          Array.isArray(
+            q.statements
+          )
+            ? q.statements
+            : [],
 
-        console.log(
-          "QUIZ SAVE RESPONSE:",
-          data
-        );
+        options:
+          Array.isArray(
+            q.options
+          )
+            ? q.options
+            : [],
 
-        if (data.success) {
-          alert(
-            "Quiz Added Successfully"
-          );
+        correctIndex:
+          Number(
+            q.correctIndex
+          ) || 0,
+      })
+    );
 
-          setQuizInput("");
+    console.log(
+      "CLEANED QUIZ:",
+      cleaned
+    );
 
-          // RELOAD COURSES
-          await loadCourses();
-        } else {
-          alert(
-            data.message ||
-              "Quiz save failed"
-          );
+    const response =
+      await fetch(
+        `${backend}/courses/${selectedCourseId}/lessons/${selectedLessonId}/quizzes`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            quizzes: cleaned,
+          }),
         }
-      } catch (err) {
-        console.log(err);
+      );
 
-        alert(
-          "Invalid quiz JSON format"
-        );
-      }
-    };
+    const data =
+      await response.json();
+
+    console.log(
+      "QUIZ RESPONSE:",
+      data
+    );
+
+    if (data.success) {
+      alert("Quiz Added");
+
+      setQuizInput("");
+
+      await loadCourses();
+    } else {
+      alert(
+        data.message ||
+          "Failed to add quiz"
+      );
+    }
+  } catch (err) {
+    console.log(err);
+
+    alert(
+      "Invalid JSON format"
+    );
+  }
+};
 
   // =========================
   // DELETE COURSE
