@@ -357,20 +357,31 @@ export default function LessonView() {
                     let finalQuestions: Question[] =
   [];
 
-// ✅ FORMAT 1
+console.log(
+  "QUIZ JSON:",
+  JSON.stringify(
+    quiz,
+    null,
+    2
+  )
+);
+
+// ✅ DIRECT ARRAY
 if (Array.isArray(quiz)) {
   finalQuestions = quiz;
 }
 
-// ✅ FORMAT 2
+// ✅ quiz.questions
 else if (
-  Array.isArray(quiz.questions)
+  Array.isArray(
+    quiz.questions
+  )
 ) {
   finalQuestions =
     quiz.questions;
 }
 
-// ✅ FORMAT 3
+// ✅ quiz.quiz
 else if (
   Array.isArray(
     quiz.quiz
@@ -380,20 +391,68 @@ else if (
     quiz.quiz;
 }
 
-// ✅ FORMAT 4
+// ✅ nested object
 else if (
+  quiz.questions &&
   Array.isArray(
-    quiz.questions?.questions
+    quiz.questions.questions
   )
 ) {
   finalQuestions =
     quiz.questions.questions;
 }
 
+// ✅ Mongo import format
+else if (
+  quiz.data &&
+  Array.isArray(
+    quiz.data
+  )
+) {
+  finalQuestions =
+    quiz.data;
+}
+
+// ✅ SINGLE QUESTION OBJECT
+else if (
+  quiz.questionTitle
+) {
+  finalQuestions = [quiz];
+}
+
+// ✅ LAST RESORT
+else {
+  for (const key in quiz) {
+    if (
+      Array.isArray(
+        quiz[key]
+      ) &&
+      quiz[key].length > 0 &&
+      quiz[key][0]
+        ?.questionTitle
+    ) {
+      finalQuestions =
+        quiz[key];
+
+      break;
+    }
+  }
+}
+
 console.log(
   "FINAL QUESTIONS:",
   finalQuestions
 );
+
+if (
+  !finalQuestions.length
+) {
+  alert(
+    "Quiz format unsupported. Check console."
+  );
+
+  return;
+}
 
                     console.log(
                       "FINAL QUESTIONS:",
