@@ -506,6 +506,130 @@ app.post(
   }
 );
 
+// DELETE QUIZ
+app.delete(
+  "/courses/:courseId/lessons/:lessonId/quizzes/:quizIndex",
+  async (req, res) => {
+    try {
+      const {
+        courseId,
+        lessonId,
+        quizIndex,
+      } = req.params;
+
+      const course =
+        await Course.findById(
+          courseId
+        );
+
+      if (!course) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
+      }
+
+      const lesson =
+        course.lessons.id(
+          lessonId
+        );
+
+      if (!lesson) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Lesson not found",
+          });
+      }
+
+      lesson.quizzes.splice(
+        Number(quizIndex),
+        1
+      );
+
+      await course.save();
+
+      res.json({
+        success: true,
+        message:
+          "Quiz deleted successfully",
+      });
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        success: false,
+      });
+    }
+  }
+);
+// UPDATE QUIZ
+app.put(
+  "/courses/:courseId/lessons/:lessonId/quizzes/:quizIndex",
+  async (req, res) => {
+    try {
+      const {
+        courseId,
+        lessonId,
+        quizIndex,
+      } = req.params;
+
+      const course =
+        await Course.findById(
+          courseId
+        );
+
+      if (!course) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
+      }
+
+      const lesson =
+        course.lessons.id(
+          lessonId
+        );
+
+      if (!lesson) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Lesson not found",
+          });
+      }
+
+      lesson.quizzes[
+        Number(quizIndex)
+      ] = req.body;
+
+      await course.save();
+
+      res.json({
+        success: true,
+        message:
+          "Quiz updated successfully",
+      });
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        success: false,
+      });
+    }
+  }
+);
+
 // ======================
 // RESULTS
 // ======================
