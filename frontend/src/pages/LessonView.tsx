@@ -221,25 +221,51 @@ export default function LessonView() {
         1000
     );
 
+    // ✅ DATE & TIME
+    const now = new Date();
+
     const result = {
-      courseId,
-      lessonId,
+  courseId,
+  lessonId,
 
-      total,
-      correct,
-      wrong,
-      attempted,
-      score,
-      timeSpent,
+  // ✅ QUIZ INDEX
+  quizIndex:
+    selectedQuizIndex || 0,
 
-      courseName:
-        course?.title ||
-        course?.name,
+  total,
+  correct,
+  wrong,
+  attempted,
+  score,
 
-      lessonName:
-        lesson?.title ||
-        lesson?.name,
-    };
+  // ✅ TIME SPENT
+  timeSpent,
+
+  // ✅ DATE
+  attemptDate:
+    now.toLocaleDateString(),
+
+  // ✅ TIME
+  attemptTime:
+    now.toLocaleTimeString(),
+
+  // ✅ FULL ISO DATE
+  createdAt:
+    now.toISOString(),
+
+  courseName:
+    course?.title ||
+    course?.name,
+
+  lessonName:
+    lesson?.title ||
+    lesson?.name,
+};
+
+    console.log(
+      "SAVING RESULT:",
+      result
+    );
 
     const old =
       JSON.parse(
@@ -355,109 +381,112 @@ export default function LessonView() {
                     );
 
                     let finalQuestions: Question[] =
-  [];
+                      [];
 
-console.log(
-  "QUIZ JSON:",
-  JSON.stringify(
-    quiz,
-    null,
-    2
-  )
-);
+                    console.log(
+                      "QUIZ JSON:",
+                      JSON.stringify(
+                        quiz,
+                        null,
+                        2
+                      )
+                    );
 
-// ✅ DIRECT ARRAY
-if (Array.isArray(quiz)) {
-  finalQuestions = quiz;
-}
+                    // ✅ DIRECT ARRAY
+                    if (
+                      Array.isArray(
+                        quiz
+                      )
+                    ) {
+                      finalQuestions =
+                        quiz;
+                    }
 
-// ✅ quiz.questions
-else if (
-  Array.isArray(
-    quiz.questions
-  )
-) {
-  finalQuestions =
-    quiz.questions;
-}
+                    // ✅ quiz.questions
+                    else if (
+                      Array.isArray(
+                        quiz.questions
+                      )
+                    ) {
+                      finalQuestions =
+                        quiz.questions;
+                    }
 
-// ✅ quiz.quiz
-else if (
-  Array.isArray(
-    quiz.quiz
-  )
-) {
-  finalQuestions =
-    quiz.quiz;
-}
+                    // ✅ quiz.quiz
+                    else if (
+                      Array.isArray(
+                        quiz.quiz
+                      )
+                    ) {
+                      finalQuestions =
+                        quiz.quiz;
+                    }
 
-// ✅ nested object
-else if (
-  quiz.questions &&
-  Array.isArray(
-    quiz.questions.questions
-  )
-) {
-  finalQuestions =
-    quiz.questions.questions;
-}
+                    // ✅ nested object
+                    else if (
+                      quiz.questions &&
+                      Array.isArray(
+                        quiz.questions
+                          .questions
+                      )
+                    ) {
+                      finalQuestions =
+                        quiz.questions.questions;
+                    }
 
-// ✅ Mongo import format
-else if (
-  quiz.data &&
-  Array.isArray(
-    quiz.data
-  )
-) {
-  finalQuestions =
-    quiz.data;
-}
+                    // ✅ Mongo import format
+                    else if (
+                      quiz.data &&
+                      Array.isArray(
+                        quiz.data
+                      )
+                    ) {
+                      finalQuestions =
+                        quiz.data;
+                    }
 
-// ✅ SINGLE QUESTION OBJECT
-else if (
-  quiz.questionTitle
-) {
-  finalQuestions = [quiz];
-}
+                    // ✅ SINGLE QUESTION OBJECT
+                    else if (
+                      quiz.questionTitle
+                    ) {
+                      finalQuestions =
+                        [quiz];
+                    }
 
-// ✅ LAST RESORT
-else {
-  for (const key in quiz) {
-    if (
-      Array.isArray(
-        quiz[key]
-      ) &&
-      quiz[key].length > 0 &&
-      quiz[key][0]
-        ?.questionTitle
-    ) {
-      finalQuestions =
-        quiz[key];
+                    // ✅ LAST RESORT
+                    else {
+                      for (const key in quiz) {
+                        if (
+                          Array.isArray(
+                            quiz[key]
+                          ) &&
+                          quiz[key]
+                            .length > 0 &&
+                          quiz[key][0]
+                            ?.questionTitle
+                        ) {
+                          finalQuestions =
+                            quiz[key];
 
-      break;
-    }
-  }
-}
-
-console.log(
-  "FINAL QUESTIONS:",
-  finalQuestions
-);
-
-if (
-  !finalQuestions.length
-) {
-  alert(
-    "Quiz format unsupported. Check console."
-  );
-
-  return;
-}
+                          break;
+                        }
+                      }
+                    }
 
                     console.log(
                       "FINAL QUESTIONS:",
                       finalQuestions
                     );
+
+                    if (
+                      !finalQuestions.length
+                    ) {
+                      alert(
+                        "Quiz format unsupported. Check console."
+                      );
+
+                      return;
+                    }
 
                     setSelectedQuizIndex(
                       index
