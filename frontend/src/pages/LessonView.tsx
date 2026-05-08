@@ -546,17 +546,65 @@ export default function LessonView() {
               </h2>
 
               <div
-                style={{
-                  marginTop: 20,
-                  lineHeight: 1.8,
-                  fontSize: 17,
-                }}
-                dangerouslySetInnerHTML={{
-                  __html:
-                    page?.content ||
-                    "<p>No Content</p>",
-                }}
-              />
+  style={{
+    marginTop: 20,
+    lineHeight: 1.8,
+    fontSize:
+      window.innerWidth < 768
+        ? 15
+        : 17,
+    overflowX: "auto",
+    wordBreak: "break-word",
+  }}
+>
+  <style>
+    {`
+      .lesson-content table {
+        width: 100%;
+        border-collapse: collapse;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .lesson-content th,
+      .lesson-content td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+      }
+
+      .lesson-content img {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .lesson-content iframe {
+        max-width: 100%;
+      }
+
+      .lesson-content pre {
+        overflow-x: auto;
+        background: #f3f4f6;
+        padding: 10px;
+        border-radius: 6px;
+      }
+
+      .lesson-content {
+        overflow-x: auto;
+      }
+    `}
+  </style>
+
+  <div
+    className="lesson-content"
+    dangerouslySetInnerHTML={{
+      __html:
+        page?.content ||
+        "<p>No Content</p>",
+    }}
+  />
+</div>
             </div>
 
             {/* PAGE NAVIGATION */}
