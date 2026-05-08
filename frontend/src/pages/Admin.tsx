@@ -492,6 +492,109 @@ export default function Admin() {
       );
     };
 
+    const handleDeleteQuiz =
+  async (
+    courseId: string,
+    lessonId: string,
+    quizIndex: number
+  ) => {
+    const confirmDelete =
+      window.confirm(
+        "Delete this quiz?"
+      );
+
+    if (!confirmDelete) return;
+
+    try {
+      const response =
+        await fetch(
+          `${backend}/courses/${courseId}/lessons/${lessonId}/quizzes/${quizIndex}`,
+          {
+            method:
+              "DELETE",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (data.success) {
+        alert(
+          "Quiz Deleted"
+        );
+
+        await loadCourses();
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.log(err);
+
+      alert(
+        "Delete failed"
+      );
+    }
+  };
+  const handleEditQuiz =
+  async (
+    courseId: string,
+    lessonId: string,
+    quizIndex: number,
+    quiz: any
+  ) => {
+    const newQuestion =
+      prompt(
+        "Edit Question",
+        quiz.questionTitle
+      );
+
+    if (!newQuestion) return;
+
+    try {
+      const updatedQuiz = {
+        ...quiz,
+        questionTitle:
+          newQuestion,
+      };
+
+      const response =
+        await fetch(
+          `${backend}/courses/${courseId}/lessons/${lessonId}/quizzes/${quizIndex}`,
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify(
+              updatedQuiz
+            ),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (data.success) {
+        alert(
+          "Quiz Updated"
+        );
+
+        await loadCourses();
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.log(err);
+
+      alert(
+        "Update failed"
+      );
+    }
+  };
+
   // =========================
   // UI
   // =========================
@@ -814,14 +917,67 @@ export default function Admin() {
                       index: number
                     ) => (
                       <div
-                        key={
-                          index
-                        }
-                      >
-                        {
-                          q.questionTitle
-                        }
-                      </div>
+  key={index}
+  style={{
+    border:
+      "1px solid #ddd",
+    padding: 10,
+    marginTop: 10,
+  }}
+>
+  <div>
+    {q.questionTitle}
+  </div>
+
+  <div
+    style={{
+      display: "flex",
+      gap: 10,
+      marginTop: 10,
+    }}
+  >
+    <button
+      onClick={() =>
+        handleEditQuiz(
+          c.id,
+          l.id,
+          index,
+          q
+        )
+      }
+      style={{
+        background:
+          "blue",
+        color: "white",
+        border: "none",
+        padding:
+          "5px 10px",
+      }}
+    >
+      Edit Quiz
+    </button>
+
+    <button
+      onClick={() =>
+        handleDeleteQuiz(
+          c.id,
+          l.id,
+          index
+        )
+      }
+      style={{
+        background:
+          "red",
+        color: "white",
+        border: "none",
+        padding:
+          "5px 10px",
+      }}
+    >
+      Delete Quiz
+    </button>
+  </div>
+</div>
                     )
                   )}
                 </div>
