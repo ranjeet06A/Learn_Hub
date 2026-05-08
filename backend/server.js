@@ -335,6 +335,71 @@ app.post("/courses", async (req, res) => {
 });
 
 // ======================
+// UPDATE COURSE
+// ======================
+app.put("/courses/:id", async (req, res) => {
+  try {
+    const updatedCourse = await Course.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedCourse) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Course updated successfully",
+      course: updatedCourse,
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Update failed",
+    });
+  }
+});
+
+// ======================
+// DELETE COURSE
+// ======================
+app.delete("/courses/:id", async (req, res) => {
+  try {
+    const deletedCourse = await Course.findByIdAndDelete(
+      req.params.id
+    );
+
+    if (!deletedCourse) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Course deleted successfully",
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Delete failed",
+    });
+  }
+});
+
+// ======================
 // ADD LESSON
 // ======================
 app.post("/courses/:courseId/lessons", async (req, res) => {
@@ -381,107 +446,61 @@ app.post(
   "/courses/:courseId/lessons/:lessonId/quizzes",
   async (req, res) => {
     try {
-      const {
-        courseId,
-        lessonId,
-      } = req.params;
+      const { courseId, lessonId } = req.params;
 
-      const course =
-        await Course.findById(
-          courseId
-        );
+      const course = await Course.findById(courseId);
 
       if (!course) {
         return res.status(404).json({
           success: false,
-          message:
-            "Course not found",
+          message: "Course not found",
         });
       }
 
-      const lesson =
-        course.lessons.id(
-          lessonId
-        );
+      const lesson = course.lessons.id(lessonId);
 
       if (!lesson) {
         return res.status(404).json({
           success: false,
-          message:
-            "Lesson not found",
+          message: "Lesson not found",
         });
       }
 
-      let quizzes =
-        req.body.quizzes;
+      let quizzes = req.body.quizzes;
 
-      console.log(
-        "RAW QUIZZES:",
-        quizzes
-      );
-
-      // FORCE ARRAY
       if (!Array.isArray(quizzes)) {
         quizzes = [quizzes];
       }
 
-      // CLEAN QUIZZES
-      const cleanedQuizzes =
-        quizzes.map((q) => ({
-          questionTitle:
-            q.questionTitle || "",
+      const cleanedQuizzes = quizzes.map((q) => ({
+        questionTitle: q.questionTitle || "",
+        statements: Array.isArray(q.statements)
+          ? q.statements
+          : [],
+        options: Array.isArray(q.options)
+          ? q.options
+          : [],
+        correctIndex: Number(q.correctIndex) || 0,
+      }));
 
-          statements:
-            Array.isArray(
-              q.statements
-            )
-              ? q.statements
-              : [],
-
-          options:
-            Array.isArray(
-              q.options
-            )
-              ? q.options
-              : [],
-
-          correctIndex:
-            Number(
-              q.correctIndex
-            ) || 0,
-        }));
-
-      console.log(
-        "CLEANED QUIZZES:",
-        cleanedQuizzes
-      );
-
-      if (
-        !Array.isArray(
-          lesson.quizzes
-        )
-      ) {
+      if (!Array.isArray(lesson.quizzes)) {
         lesson.quizzes = [];
       }
 
-      lesson.quizzes.push(
-        ...cleanedQuizzes
-      );
+      lesson.quizzes.push(...cleanedQuizzes);
 
       await course.save();
 
       res.json({
         success: true,
-        quizzes:
-          lesson.quizzes,
+        quizzes: lesson.quizzes,
       });
     } catch (err) {
       console.log(err);
 
       res.status(500).json({
         success: false,
-        message:
-          "Server Error",
+        message: "Server Error",
       });
     }
   }
@@ -547,17 +566,6 @@ app.get("/seed", async (req, res) => {
           {
             title: "Force",
             content: "Introduction to force",
-            quizzes: [],
-          },
-        ],
-      },
-      {
-        title: "Chemistry Basics",
-        examId: "NEET",
-        lessons: [
-          {
-            title: "Atoms",
-            content: "Atomic structure",
             quizzes: [],
           },
         ],
