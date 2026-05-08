@@ -16,6 +16,11 @@ type Question = {
   correctIndex?: number;
 };
 
+type LessonPage = {
+  title?: string;
+  content?: string;
+};
+
 type Lesson = {
   _id?: string;
   id?: string;
@@ -24,6 +29,8 @@ type Lesson = {
   name?: string;
 
   content?: string;
+
+  pages?: LessonPage[];
 
   quiz?: any[];
   quizzes?: any[];
@@ -73,6 +80,10 @@ export default function LessonView() {
     setSelectedQuizIndex,
   ] = useState<number | null>(null);
 
+  // ✅ PAGE SYSTEM
+  const [currentPage, setCurrentPage] =
+    useState(0);
+
   const startTimeRef =
     useRef<number>(0);
 
@@ -88,27 +99,12 @@ export default function LessonView() {
           ) || "[]"
         );
 
-      console.log(
-        "📚 COURSES:",
-        courses
-      );
-
-      console.log(
-        "🌐 URL courseId:",
-        courseId
-      );
-
       const foundCourse =
         courses.find(
           (c) =>
             String(c._id || c.id) ===
             String(courseId)
         );
-
-      console.log(
-        "✅ FOUND COURSE:",
-        foundCourse
-      );
 
       if (!foundCourse) {
         setLoading(false);
@@ -123,11 +119,6 @@ export default function LessonView() {
             String(l._id || l.id) ===
             String(lessonId)
         );
-
-      console.log(
-        "✅ FOUND LESSON:",
-        foundLesson
-      );
 
       if (!foundLesson) {
         setLoading(false);
@@ -167,6 +158,26 @@ export default function LessonView() {
     return () =>
       clearInterval(timer);
   }, [timeLeft]);
+
+  // =========================
+  // LESSON PAGES
+  // =========================
+  const lessonPages =
+    lesson?.pages?.length
+      ? lesson.pages
+      : [
+          {
+            title:
+              lesson?.title ||
+              lesson?.name,
+            content:
+              lesson?.content ||
+              "No Content",
+          },
+        ];
+
+  const page =
+    lessonPages[currentPage];
 
   // =========================
   // SELECT ANSWER
@@ -221,51 +232,40 @@ export default function LessonView() {
         1000
     );
 
-    // ✅ DATE & TIME
     const now = new Date();
 
     const result = {
-  courseId,
-  lessonId,
+      courseId,
+      lessonId,
 
-  // ✅ QUIZ INDEX
-  quizIndex:
-    selectedQuizIndex || 0,
+      quizIndex:
+        selectedQuizIndex || 0,
 
-  total,
-  correct,
-  wrong,
-  attempted,
-  score,
+      total,
+      correct,
+      wrong,
+      attempted,
+      score,
 
-  // ✅ TIME SPENT
-  timeSpent,
+      timeSpent,
 
-  // ✅ DATE
-  attemptDate:
-    now.toLocaleDateString(),
+      attemptDate:
+        now.toLocaleDateString(),
 
-  // ✅ TIME
-  attemptTime:
-    now.toLocaleTimeString(),
+      attemptTime:
+        now.toLocaleTimeString(),
 
-  // ✅ FULL ISO DATE
-  createdAt:
-    now.toISOString(),
+      createdAt:
+        now.toISOString(),
 
-  courseName:
-    course?.title ||
-    course?.name,
+      courseName:
+        course?.title ||
+        course?.name,
 
-  lessonName:
-    lesson?.title ||
-    lesson?.name,
-};
-
-    console.log(
-      "SAVING RESULT:",
-      result
-    );
+      lessonName:
+        lesson?.title ||
+        lesson?.name,
+    };
 
     const old =
       JSON.parse(
@@ -330,242 +330,350 @@ export default function LessonView() {
     quizzes = [lesson.quiz];
   }
 
-  console.log(
-    "🧠 QUIZZES:",
-    quizzes
-  );
-
   const q = questions[currentQ];
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>
-        📘{" "}
-        {lesson.title ||
-          lesson.name}
-      </h2>
-
-      {/* CONTENT */}
+    <div
+      style={{
+        background: "#f3f4f6",
+        minHeight: "100vh",
+        padding: 20,
+      }}
+    >
+      {/* LESSON CONTAINER */}
       <div
         style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 10,
-          marginBottom: 30,
+          maxWidth: "950px",
+          margin: "0 auto",
+          background: "white",
+          borderRadius: 12,
+          padding: 30,
+          boxShadow:
+            "0 4px 15px rgba(0,0,0,0.1)",
         }}
-        dangerouslySetInnerHTML={{
-          __html:
-            lesson.content ||
-            "<p>No content</p>",
-        }}
-      />
-
-      {/* QUIZ SELECT */}
-      {selectedQuizIndex ===
-        null &&
-        quizzes.length > 0 && (
+      >
+        {/* TOP BAR */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent:
+              "space-between",
+            alignItems: "center",
+            marginBottom: 20,
+            flexWrap: "wrap",
+            gap: 15,
+          }}
+        >
           <div>
-            <h3>Select Quiz</h3>
+            <h1>
+              📘{" "}
+              {lesson.title ||
+                lesson.name}
+            </h1>
 
-            {quizzes.map(
-              (
-                quiz,
-                index
-              ) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    console.log(
-                      "SELECTED QUIZ:",
-                      quiz
-                    );
+            <p>
+              Page{" "}
+              {currentPage + 1} of{" "}
+              {lessonPages.length}
+            </p>
+          </div>
 
-                    let finalQuestions: Question[] =
-                      [];
+          {/* QUIZ BUTTONS */}
+          {selectedQuizIndex ===
+            null &&
+            quizzes.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                {quizzes.map(
+                  (
+                    quiz,
+                    index
+                  ) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        let finalQuestions: Question[] =
+                          [];
 
-                    console.log(
-                      "QUIZ JSON:",
-                      JSON.stringify(
-                        quiz,
-                        null,
-                        2
-                      )
-                    );
-
-                    // ✅ DIRECT ARRAY
-                    if (
-                      Array.isArray(
-                        quiz
-                      )
-                    ) {
-                      finalQuestions =
-                        quiz;
-                    }
-
-                    // ✅ quiz.questions
-                    else if (
-                      Array.isArray(
-                        quiz.questions
-                      )
-                    ) {
-                      finalQuestions =
-                        quiz.questions;
-                    }
-
-                    // ✅ quiz.quiz
-                    else if (
-                      Array.isArray(
-                        quiz.quiz
-                      )
-                    ) {
-                      finalQuestions =
-                        quiz.quiz;
-                    }
-
-                    // ✅ nested object
-                    else if (
-                      quiz.questions &&
-                      Array.isArray(
-                        quiz.questions
-                          .questions
-                      )
-                    ) {
-                      finalQuestions =
-                        quiz.questions.questions;
-                    }
-
-                    // ✅ Mongo import format
-                    else if (
-                      quiz.data &&
-                      Array.isArray(
-                        quiz.data
-                      )
-                    ) {
-                      finalQuestions =
-                        quiz.data;
-                    }
-
-                    // ✅ SINGLE QUESTION OBJECT
-                    else if (
-                      quiz.questionTitle
-                    ) {
-                      finalQuestions =
-                        [quiz];
-                    }
-
-                    // ✅ LAST RESORT
-                    else {
-                      for (const key in quiz) {
                         if (
                           Array.isArray(
-                            quiz[key]
-                          ) &&
-                          quiz[key]
-                            .length > 0 &&
-                          quiz[key][0]
-                            ?.questionTitle
+                            quiz
+                          )
                         ) {
                           finalQuestions =
-                            quiz[key];
-
-                          break;
+                            quiz;
+                        } else if (
+                          Array.isArray(
+                            quiz.questions
+                          )
+                        ) {
+                          finalQuestions =
+                            quiz.questions;
+                        } else if (
+                          Array.isArray(
+                            quiz.quiz
+                          )
+                        ) {
+                          finalQuestions =
+                            quiz.quiz;
+                        } else if (
+                          quiz.questions &&
+                          Array.isArray(
+                            quiz.questions
+                              .questions
+                          )
+                        ) {
+                          finalQuestions =
+                            quiz.questions.questions;
+                        } else if (
+                          quiz.data &&
+                          Array.isArray(
+                            quiz.data
+                          )
+                        ) {
+                          finalQuestions =
+                            quiz.data;
+                        } else if (
+                          quiz.questionTitle
+                        ) {
+                          finalQuestions =
+                            [quiz];
                         }
-                      }
-                    }
 
-                    console.log(
-                      "FINAL QUESTIONS:",
-                      finalQuestions
-                    );
+                        if (
+                          !finalQuestions.length
+                        ) {
+                          alert(
+                            "Quiz format unsupported."
+                          );
 
-                    if (
-                      !finalQuestions.length
-                    ) {
-                      alert(
-                        "Quiz format unsupported. Check console."
-                      );
+                          return;
+                        }
 
-                      return;
-                    }
+                        setSelectedQuizIndex(
+                          index
+                        );
 
-                    setSelectedQuizIndex(
-                      index
-                    );
+                        setQuestions(
+                          finalQuestions
+                        );
 
-                    setQuestions(
-                      finalQuestions
-                    );
+                        setCurrentQ(0);
 
-                    setCurrentQ(0);
+                        setAnswers({});
 
-                    setAnswers({});
+                        setTimeLeft(
+                          finalQuestions.length *
+                            60
+                        );
 
-                    setTimeLeft(
-                      finalQuestions.length *
-                        60
-                    );
+                        startTimeRef.current =
+                          Date.now();
 
-                    startTimeRef.current =
-                      Date.now();
-                  }}
+                        window.scrollTo({
+                          top: 0,
+                          behavior:
+                            "smooth",
+                        });
+                      }}
+                      style={{
+                        padding:
+                          "12px 18px",
+                        background:
+                          "#667eea",
+                        color:
+                          "white",
+                        border:
+                          "none",
+                        borderRadius: 8,
+                        cursor:
+                          "pointer",
+                        fontWeight:
+                          "bold",
+                      }}
+                    >
+                      📝 Quiz{" "}
+                      {index + 1}
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+        </div>
+
+        {/* PROGRESS BAR */}
+        <div
+          style={{
+            width: "100%",
+            height: 8,
+            background:
+              "#e5e7eb",
+            borderRadius: 20,
+            overflow: "hidden",
+            marginBottom: 30,
+          }}
+        >
+          <div
+            style={{
+              width: `${
+                ((currentPage + 1) /
+                  lessonPages.length) *
+                100
+              }%`,
+              height: "100%",
+              background:
+                "#667eea",
+            }}
+          />
+        </div>
+
+        {/* LESSON CONTENT */}
+        {selectedQuizIndex ===
+          null && (
+          <>
+            <div
+              style={{
+                minHeight: 350,
+              }}
+            >
+              <h2>
+                {page?.title}
+              </h2>
+
+              <div
+                style={{
+                  marginTop: 20,
+                  lineHeight: 1.8,
+                  fontSize: 17,
+                }}
+                dangerouslySetInnerHTML={{
+                  __html:
+                    page?.content ||
+                    "<p>No Content</p>",
+                }}
+              />
+            </div>
+
+            {/* PAGE NAVIGATION */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "space-between",
+                marginTop: 40,
+              }}
+            >
+              <button
+                disabled={
+                  currentPage === 0
+                }
+                onClick={() =>
+                  setCurrentPage(
+                    currentPage - 1
+                  )
+                }
+                style={{
+                  padding:
+                    "12px 20px",
+                  borderRadius: 8,
+                  border: "none",
+                  background:
+                    currentPage === 0
+                      ? "#d1d5db"
+                      : "#111827",
+                  color: "white",
+                  cursor:
+                    currentPage === 0
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+              >
+                ← Previous
+              </button>
+
+              {currentPage <
+              lessonPages.length -
+                1 ? (
+                <button
+                  onClick={() =>
+                    setCurrentPage(
+                      currentPage + 1
+                    )
+                  }
                   style={{
-                    display:
-                      "block",
-                    marginBottom: 10,
-                    padding: 10,
+                    padding:
+                      "12px 20px",
+                    borderRadius: 8,
+                    border: "none",
                     background:
                       "#667eea",
-                    color:
-                      "white",
-                    border:
-                      "none",
-                    borderRadius: 6,
+                    color: "white",
                     cursor:
                       "pointer",
                   }}
                 >
-                  Quiz{" "}
-                  {index + 1}
+                  Next →
                 </button>
-              )
-            )}
-          </div>
+              ) : (
+                <button
+                  style={{
+                    padding:
+                      "12px 20px",
+                    borderRadius: 8,
+                    border: "none",
+                    background:
+                      "#16a34a",
+                    color: "white",
+                    fontWeight:
+                      "bold",
+                  }}
+                >
+                  ✅ Lesson Complete
+                </button>
+              )}
+            </div>
+          </>
         )}
 
-      {/* QUIZ SCREEN */}
-      {selectedQuizIndex !==
-        null &&
-        questions.length >
-          0 && (
-          <>
-            <h3>
-              📝 Quiz{" "}
-              {selectedQuizIndex +
-                1}
-            </h3>
+        {/* QUIZ SCREEN */}
+        {selectedQuizIndex !==
+          null &&
+          questions.length >
+            0 && (
+            <>
+              <h2>
+                📝 Quiz{" "}
+                {selectedQuizIndex +
+                  1}
+              </h2>
 
-            <div
-              style={{
-                marginBottom: 15,
-              }}
-            >
-              ⏱{" "}
-              {formatTime()}
-            </div>
+              <div
+                style={{
+                  marginBottom: 20,
+                  fontWeight:
+                    "bold",
+                  color: "red",
+                }}
+              >
+                ⏱{" "}
+                {formatTime()}
+              </div>
 
-            {q &&
-              questions.length >
-                0 && (
+              {q && (
                 <>
-                  <h4>
+                  <h3>
                     Q
-                    {currentQ +
-                      1}
+                    {currentQ + 1}
                     .{" "}
                     {
                       q.questionTitle
                     }
-                  </h4>
+                  </h3>
 
                   {Array.isArray(
                     q.statements
@@ -577,6 +685,9 @@ export default function LessonView() {
                       ) => (
                         <div
                           key={i}
+                          style={{
+                            marginTop: 5,
+                          }}
                         >
                           {
                             String.fromCharCode(
@@ -591,7 +702,7 @@ export default function LessonView() {
 
                   <div
                     style={{
-                      marginTop: 20,
+                      marginTop: 25,
                     }}
                   >
                     {Array.isArray(
@@ -616,19 +727,20 @@ export default function LessonView() {
                                 "100%",
                               textAlign:
                                 "left",
-                              marginBottom: 10,
-                              padding: 12,
-                              borderRadius: 6,
+                              marginBottom: 12,
+                              padding: 15,
+                              borderRadius: 8,
                               border:
                                 "1px solid #ccc",
                               cursor:
                                 "pointer",
+                              fontSize: 16,
                               background:
                                 answers[
                                   currentQ
                                 ] ===
                                 i
-                                  ? "#cce5ff"
+                                  ? "#dbeafe"
                                   : "white",
                             }}
                           >
@@ -640,54 +752,55 @@ export default function LessonView() {
                 </>
               )}
 
-            {/* NAVIGATION */}
-            <div
-              style={{
-                marginTop: 20,
-                display: "flex",
-                gap: 10,
-              }}
-            >
-              <button
-                disabled={
-                  currentQ === 0
-                }
-                onClick={() =>
-                  setCurrentQ(
-                    (p) =>
-                      p - 1
-                  )
-                }
+              {/* QUIZ NAVIGATION */}
+              <div
+                style={{
+                  marginTop: 30,
+                  display: "flex",
+                  gap: 10,
+                }}
               >
-                Prev
-              </button>
+                <button
+                  disabled={
+                    currentQ === 0
+                  }
+                  onClick={() =>
+                    setCurrentQ(
+                      (p) =>
+                        p - 1
+                    )
+                  }
+                >
+                  Prev
+                </button>
 
-              <button
-                disabled={
-                  currentQ ===
-                  questions.length -
-                    1
-                }
-                onClick={() =>
-                  setCurrentQ(
-                    (p) =>
-                      p + 1
-                  )
-                }
-              >
-                Next
-              </button>
+                <button
+                  disabled={
+                    currentQ ===
+                    questions.length -
+                      1
+                  }
+                  onClick={() =>
+                    setCurrentQ(
+                      (p) =>
+                        p + 1
+                    )
+                  }
+                >
+                  Next
+                </button>
 
-              <button
-                onClick={
-                  handleSubmit
-                }
-              >
-                Submit
-              </button>
-            </div>
-          </>
-        )}
+                <button
+                  onClick={
+                    handleSubmit
+                  }
+                >
+                  Submit
+                </button>
+              </div>
+            </>
+          )}
+      </div>
     </div>
   );
 }
