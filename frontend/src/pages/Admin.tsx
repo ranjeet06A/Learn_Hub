@@ -205,6 +205,58 @@ export default function Admin() {
     };
 
   // =========================
+  // EDIT COURSE
+  // =========================
+  const handleEditCourse =
+    async (course: any) => {
+      const newTitle = prompt(
+        "Enter new course title",
+        course.title
+      );
+
+      if (!newTitle) return;
+
+      try {
+        const response =
+          await fetch(
+            `${backend}/courses/${course.id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                title: newTitle,
+                examId:
+                  course.examId,
+                lessons:
+                  course.lessons,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (data.success) {
+          alert(
+            "Course Updated"
+          );
+
+          await loadCourses();
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        console.log(err);
+
+        alert("Update failed");
+      }
+    };
+
+  // =========================
   // ADD LESSON
   // =========================
   const handleAddLesson =
@@ -255,116 +307,104 @@ export default function Admin() {
     };
 
   // =========================
-// ADD QUIZ
-// =========================
-const handleAddQuiz = async () => {
-  try {
-    if (
-      !selectedCourseId ||
-      !selectedLessonId
-    ) {
-      alert(
-        "Select course and lesson"
-      );
-      return;
-    }
-
-    if (!quizInput.trim()) {
-      alert("Quiz JSON required");
-      return;
-    }
-
-    // PARSE JSON
-    let parsed = JSON.parse(
-      quizInput
-    );
-
-    console.log(
-      "RAW PARSED QUIZ:",
-      parsed
-    );
-
-    // FORCE ARRAY
-    if (!Array.isArray(parsed)) {
-      parsed = [parsed];
-    }
-
-    // CLEAN FORMAT
-    const cleaned = parsed.map(
-      (q: any) => ({
-        questionTitle:
-          q.questionTitle || "",
-
-        statements:
-          Array.isArray(
-            q.statements
-          )
-            ? q.statements
-            : [],
-
-        options:
-          Array.isArray(
-            q.options
-          )
-            ? q.options
-            : [],
-
-        correctIndex:
-          Number(
-            q.correctIndex
-          ) || 0,
-      })
-    );
-
-    console.log(
-      "CLEANED QUIZ:",
-      cleaned
-    );
-
-    const response =
-      await fetch(
-        `${backend}/courses/${selectedCourseId}/lessons/${selectedLessonId}/quizzes`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            quizzes: cleaned,
-          }),
+  // ADD QUIZ
+  // =========================
+  const handleAddQuiz =
+    async () => {
+      try {
+        if (
+          !selectedCourseId ||
+          !selectedLessonId
+        ) {
+          alert(
+            "Select course and lesson"
+          );
+          return;
         }
-      );
 
-    const data =
-      await response.json();
+        if (!quizInput.trim()) {
+          alert(
+            "Quiz JSON required"
+          );
+          return;
+        }
 
-    console.log(
-      "QUIZ RESPONSE:",
-      data
-    );
+        let parsed = JSON.parse(
+          quizInput
+        );
 
-    if (data.success) {
-      alert("Quiz Added");
+        if (
+          !Array.isArray(parsed)
+        ) {
+          parsed = [parsed];
+        }
 
-      setQuizInput("");
+        const cleaned =
+          parsed.map((q: any) => ({
+            questionTitle:
+              q.questionTitle ||
+              "",
 
-      await loadCourses();
-    } else {
-      alert(
-        data.message ||
-          "Failed to add quiz"
-      );
-    }
-  } catch (err) {
-    console.log(err);
+            statements:
+              Array.isArray(
+                q.statements
+              )
+                ? q.statements
+                : [],
 
-    alert(
-      "Invalid JSON format"
-    );
-  }
-};
+            options:
+              Array.isArray(
+                q.options
+              )
+                ? q.options
+                : [],
+
+            correctIndex:
+              Number(
+                q.correctIndex
+              ) || 0,
+          }));
+
+        const response =
+          await fetch(
+            `${backend}/courses/${selectedCourseId}/lessons/${selectedLessonId}/quizzes`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                quizzes:
+                  cleaned,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (data.success) {
+          alert("Quiz Added");
+
+          setQuizInput("");
+
+          await loadCourses();
+        } else {
+          alert(
+            data.message ||
+              "Failed to add quiz"
+          );
+        }
+      } catch (err) {
+        console.log(err);
+
+        alert(
+          "Invalid JSON format"
+        );
+      }
+    };
 
   // =========================
   // DELETE COURSE
@@ -373,19 +413,42 @@ const handleAddQuiz = async () => {
     async (
       courseId: string
     ) => {
-      const updated =
-        courses.filter(
-          (c) =>
-            String(c.id) !==
-            String(courseId)
+      const confirmDelete =
+        window.confirm(
+          "Are you sure you want to delete this course?"
         );
 
-      setCourses(updated);
+      if (!confirmDelete) return;
 
-      localStorage.setItem(
-        "learn_hub_courses",
-        JSON.stringify(updated)
-      );
+      try {
+        const response =
+          await fetch(
+            `${backend}/courses/${courseId}`,
+            {
+              method:
+                "DELETE",
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (data.success) {
+          alert(
+            "Course Deleted"
+          );
+
+          await loadCourses();
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        console.log(err);
+
+        alert(
+          "Delete failed"
+        );
+      }
     };
 
   // =========================
@@ -663,15 +726,51 @@ const handleAddQuiz = async () => {
         >
           <h3>{c.title}</h3>
 
-          <button
-            onClick={() =>
-              handleDeleteCourse(
-                c.id
-              )
-            }
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginBottom: 10,
+            }}
           >
-            Delete Course
-          </button>
+            <button
+              onClick={() =>
+                handleEditCourse(
+                  c
+                )
+              }
+              style={{
+                background:
+                  "blue",
+                color: "white",
+                padding:
+                  "6px 12px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Edit Course
+            </button>
+
+            <button
+              onClick={() =>
+                handleDeleteCourse(
+                  c.id
+                )
+              }
+              style={{
+                background:
+                  "red",
+                color: "white",
+                padding:
+                  "6px 12px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Delete Course
+            </button>
+          </div>
 
           {c.lessons?.map(
             (l: any) => (
