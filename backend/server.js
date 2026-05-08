@@ -670,6 +670,21 @@ app.get("/results", auth, async (req, res) => {
   }
 });
 
+// DELETE ALL RESULTS
+app.delete("/results", async (req, res) => {
+  try {
+    await Result.deleteMany({});
+
+    res.json({
+      success: true,
+      message: "All results deleted",
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
 // ======================
 // SEED
 // ======================
