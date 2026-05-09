@@ -92,12 +92,17 @@ export default function LessonView() {
   // =========================
   useEffect(() => {
     try {
-      const courses: Course[] =
-        JSON.parse(
-          localStorage.getItem(
-            "learn_hub_courses"
-          ) || "[]"
+      const storedCourses =
+        localStorage.getItem(
+          "learn_hub_courses"
         );
+
+      const courses: Course[] =
+        storedCourses
+          ? JSON.parse(
+              storedCourses
+            )
+          : [];
 
       const foundCourse =
         courses.find(
@@ -129,8 +134,7 @@ export default function LessonView() {
 
       setLoading(false);
     } catch (err) {
-      console.log(err);
-
+      // silent error
       setLoading(false);
     }
   }, [courseId, lessonId]);
@@ -304,7 +308,48 @@ export default function LessonView() {
   // LOADING
   // =========================
   if (loading) {
-    return <h3>Loading...</h3>;
+    return (
+      <div
+        style={{
+          minHeight: "80vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            width: 50,
+            height: 50,
+            border: "5px solid #ddd",
+            borderTop:
+              "5px solid #667eea",
+            borderRadius: "50%",
+            animation:
+              "spin 1s linear infinite",
+          }}
+        />
+
+        <p style={{ marginTop: 20 }}>
+          Loading lesson...
+        </p>
+
+        <style>
+          {`
+            @keyframes spin {
+              0% {
+                transform: rotate(0deg);
+              }
+
+              100% {
+                transform: rotate(360deg);
+              }
+            }
+          `}
+        </style>
+      </div>
+    );
   }
 
   if (!lesson) {
@@ -337,7 +382,10 @@ export default function LessonView() {
       style={{
         background: "#f3f4f6",
         minHeight: "100vh",
-        padding: 20,
+        padding:
+          window.innerWidth < 768
+            ? 12
+            : 20,
       }}
     >
       {/* LESSON CONTAINER */}
@@ -347,7 +395,10 @@ export default function LessonView() {
           margin: "0 auto",
           background: "white",
           borderRadius: 12,
-          padding: 30,
+          padding:
+            window.innerWidth < 768
+              ? 16
+              : 30,
           boxShadow:
             "0 4px 15px rgba(0,0,0,0.1)",
         }}
@@ -387,6 +438,12 @@ export default function LessonView() {
                   display: "flex",
                   gap: 10,
                   flexWrap: "wrap",
+                  width: "100%",
+                  justifyContent:
+                    window.innerWidth <
+                    768
+                      ? "center"
+                      : "flex-end",
                 }}
               >
                 {quizzes.map(
@@ -546,65 +603,67 @@ export default function LessonView() {
               </h2>
 
               <div
-  style={{
-    marginTop: 20,
-    lineHeight: 1.8,
-    fontSize:
-      window.innerWidth < 768
-        ? 15
-        : 17,
-    overflowX: "auto",
-    wordBreak: "break-word",
-  }}
->
-  <style>
-    {`
-      .lesson-content table {
-        width: 100%;
-        border-collapse: collapse;
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
+                style={{
+                  marginTop: 20,
+                  lineHeight: 1.8,
+                  fontSize:
+                    window.innerWidth <
+                    768
+                      ? 15
+                      : 17,
+                  overflowX: "auto",
+                  wordBreak:
+                    "break-word",
+                }}
+              >
+                <style>
+                  {`
+                    .lesson-content table {
+                      width: 100%;
+                      border-collapse: collapse;
+                      display: block;
+                      overflow-x: auto;
+                      white-space: nowrap;
+                    }
 
-      .lesson-content th,
-      .lesson-content td {
-        border: 1px solid #ccc;
-        padding: 10px;
-        text-align: left;
-      }
+                    .lesson-content th,
+                    .lesson-content td {
+                      border: 1px solid #ccc;
+                      padding: 10px;
+                      text-align: left;
+                    }
 
-      .lesson-content img {
-        max-width: 100%;
-        height: auto;
-      }
+                    .lesson-content img {
+                      max-width: 100%;
+                      height: auto;
+                    }
 
-      .lesson-content iframe {
-        max-width: 100%;
-      }
+                    .lesson-content iframe {
+                      max-width: 100%;
+                    }
 
-      .lesson-content pre {
-        overflow-x: auto;
-        background: #f3f4f6;
-        padding: 10px;
-        border-radius: 6px;
-      }
+                    .lesson-content pre {
+                      overflow-x: auto;
+                      background: #f3f4f6;
+                      padding: 10px;
+                      border-radius: 6px;
+                    }
 
-      .lesson-content {
-        overflow-x: auto;
-      }
-    `}
-  </style>
+                    .lesson-content {
+                      overflow-x: auto;
+                    }
+                  `}
+                </style>
 
-  <div
-    className="lesson-content"
-    dangerouslySetInnerHTML={{
-      __html:
-        page?.content ||
-        "<p>No Content</p>",
-    }}
-  />
-</div>
+                <div
+                  className="lesson-content"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      page?.content ||
+                      "<p>No Content</p>",
+                  }}
+                />
+              </div>
             </div>
 
             {/* PAGE NAVIGATION */}
@@ -614,6 +673,7 @@ export default function LessonView() {
                 justifyContent:
                   "space-between",
                 marginTop: 40,
+                gap: 10,
               }}
             >
               <button
@@ -806,6 +866,7 @@ export default function LessonView() {
                   marginTop: 30,
                   display: "flex",
                   gap: 10,
+                  flexWrap: "wrap",
                 }}
               >
                 <button

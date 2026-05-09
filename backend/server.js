@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const compression = require("compression");
 
 require("dotenv").config();
 
@@ -24,11 +25,23 @@ app.use(
       ) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(
+          new Error(
+            "Not allowed by CORS"
+          )
+        );
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
     credentials: true,
   })
 );
@@ -37,18 +50,31 @@ app.options("*", cors());
 
 app.use(express.json());
 
+// ✅ PERFORMANCE
+app.use(compression());
+
 // ======================
 // ENV
 // ======================
-const PORT = process.env.PORT || 10000;
-const SECRET = process.env.JWT_SECRET || "MY_SECRET_KEY";
-const MONGO_URI = process.env.MONGO_URI;
+const PORT =
+  process.env.PORT ||
+  10000;
+
+const SECRET =
+  process.env.JWT_SECRET ||
+  "MY_SECRET_KEY";
+
+const MONGO_URI =
+  process.env.MONGO_URI;
 
 // ======================
 // SAFETY
 // ======================
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI missing");
+  console.error(
+    "❌ MONGO_URI missing"
+  );
+
   process.exit(1);
 }
 
@@ -56,12 +82,20 @@ if (!MONGO_URI) {
 // MONGODB
 // ======================
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    maxPoolSize: 10,
+  })
   .then(() => {
-    console.log("✅ MongoDB Connected");
+    console.log(
+      "✅ MongoDB Connected"
+    );
   })
   .catch((err) => {
-    console.log("❌ Mongo Error:", err.message);
+    console.log(
+      "❌ Mongo Error:",
+      err.message
+    );
+
     process.exit(1);
   });
 
@@ -69,81 +103,123 @@ mongoose
 // SCHEMAS
 // ======================
 
-const quizSchema = new mongoose.Schema({
-  questionTitle: String,
-  statements: [String],
-  options: [String],
-  correctIndex: Number,
-});
+const quizSchema =
+  new mongoose.Schema({
+    questionTitle: String,
+    statements: [String],
+    options: [String],
+    correctIndex: Number,
+  });
 
-const lessonSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  quizzes: [quizSchema],
-});
+const lessonSchema =
+  new mongoose.Schema({
+    title: String,
+    content: String,
+    quizzes: [quizSchema],
+  });
 
-const courseSchema = new mongoose.Schema({
-  title: String,
-  examId: String,
-  lessons: [lessonSchema],
-});
+const courseSchema =
+  new mongoose.Schema({
+    title: String,
+    examId: String,
+    lessons: [lessonSchema],
+  });
 
-const userSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-  role: String,
-});
+const userSchema =
+  new mongoose.Schema({
+    email: String,
+    password: String,
+    role: String,
+  });
 
-const resultSchema = new mongoose.Schema({
-  userId: String,
-  courseId: String,
-  lessonId: String,
-  quizIndex: Number,
-  correct: Number,
-  wrong: Number,
-  attempted: Number,
-  score: Number,
-  total: Number,
-  attemptDate: String,
-  attemptTime: String,
-  timeSpent: Number,
-});
+const resultSchema =
+  new mongoose.Schema({
+    userId: String,
+    courseId: String,
+    lessonId: String,
+    quizIndex: Number,
+    correct: Number,
+    wrong: Number,
+    attempted: Number,
+    score: Number,
+    total: Number,
+    attemptDate: String,
+    attemptTime: String,
+    timeSpent: Number,
+    createdAt: String,
+  });
 
 // ======================
 // MODELS
 // ======================
-const Course = mongoose.model("Course", courseSchema);
-const User = mongoose.model("User", userSchema);
-const Result = mongoose.model("Result", resultSchema);
+const Course =
+  mongoose.model(
+    "Course",
+    courseSchema
+  );
+
+const User =
+  mongoose.model(
+    "User",
+    userSchema
+  );
+
+const Result =
+  mongoose.model(
+    "Result",
+    resultSchema
+  );
 
 // ======================
 // AUTH
 // ======================
-const auth = (req, res, next) => {
-  let token = req.headers.authorization;
+const auth = (
+  req,
+  res,
+  next
+) => {
+  let token =
+    req.headers.authorization;
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: "No token",
-    });
+    return res
+      .status(401)
+      .json({
+        success: false,
+        message: "No token",
+      });
   }
 
   try {
-    if (token.startsWith("Bearer ")) {
-      token = token.split(" ")[1];
+    if (
+      token.startsWith(
+        "Bearer "
+      )
+    ) {
+      token =
+        token.split(
+          " "
+        )[1];
     }
 
-    const decoded = jwt.verify(token, SECRET);
+    const decoded =
+      jwt.verify(
+        token,
+        SECRET
+      );
 
-    req.user = decoded;
+    req.user =
+      decoded;
 
     next();
   } catch (err) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
+    return res
+      .status(401)
+      .json({
+        success: false,
+        message:
+          "Invalid token",
+      });
   }
 };
 
@@ -153,291 +229,441 @@ const auth = (req, res, next) => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Backend running",
+    message:
+      "Backend running",
   });
 });
 
 // ======================
+// HEALTH CHECK
+// ======================
+app.get(
+  "/health",
+  (req, res) => {
+    res
+      .status(200)
+      .send("OK");
+  }
+);
+
+// ======================
 // REGISTER
 // ======================
-app.post("/register", async (req, res) => {
-  try {
-    let { email, password } = req.body;
+app.post(
+  "/register",
+  async (req, res) => {
+    try {
+      let {
+        email,
+        password,
+      } = req.body;
 
-    email = email?.trim().toLowerCase();
-    password = password?.trim();
+      email =
+        email
+          ?.trim()
+          .toLowerCase();
 
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing fields",
+      password =
+        password?.trim();
+
+      if (
+        !email ||
+        !password
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Missing fields",
+          });
+      }
+
+      const existing =
+        await User.findOne(
+          { email }
+        );
+
+      if (existing) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "User already exists",
+          });
+      }
+
+      const hashed =
+        await bcrypt.hash(
+          password,
+          10
+        );
+
+      const user =
+        new User({
+          email,
+          password:
+            hashed,
+          role:
+            email ===
+            "admin@admin"
+              ? "admin"
+              : "user",
+        });
+
+      await user.save();
+
+      res.json({
+        success: true,
+        message:
+          "User created",
       });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Server error",
+        });
     }
-
-    const existing = await User.findOne({ email });
-
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-
-    const user = new User({
-      email,
-      password: hashed,
-      role: email === "admin@admin" ? "admin" : "user",
-    });
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: "User created",
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
   }
-});
+);
 
 // ======================
 // LOGIN
 // ======================
-app.post("/login", async (req, res) => {
-  try {
-    let { email, password } = req.body;
+app.post(
+  "/login",
+  async (req, res) => {
+    try {
+      let {
+        email,
+        password,
+      } = req.body;
 
-    email = email?.trim().toLowerCase();
-    password = password?.trim();
+      email =
+        email
+          ?.trim()
+          .toLowerCase();
 
-    const user = await User.findOne({ email });
+      password =
+        password?.trim();
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+      const user =
+        await User.findOne(
+          { email }
+        );
 
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid password",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      SECRET,
-      {
-        expiresIn: "1h",
+      if (!user) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "User not found",
+          });
       }
-    );
 
-    res.json({
-      success: true,
-      token,
-      role: user.role,
-    });
-  } catch (err) {
-    console.log(err);
+      const match =
+        await bcrypt.compare(
+          password,
+          user.password
+        );
 
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+      if (!match) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid password",
+          });
+      }
+
+      const token =
+        jwt.sign(
+          {
+            id: user._id,
+            role:
+              user.role,
+          },
+          SECRET,
+          {
+            expiresIn:
+              "1h",
+          }
+        );
+
+      res.json({
+        success: true,
+        token,
+        role: user.role,
+      });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Server error",
+        });
+    }
   }
-});
+);
 
 // ======================
-// COURSES
-// ======================
-
 // GET ALL COURSES
-app.get("/courses", async (req, res) => {
-  try {
-    const courses = await Course.find();
+// ======================
+app.get(
+  "/courses",
+  async (req, res) => {
+    try {
+      const courses =
+        await Course.find().lean();
 
-    res.json(courses);
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json([]);
+      res.json(
+        courses
+      );
+    } catch (err) {
+      res
+        .status(500)
+        .json([]);
+    }
   }
-});
+);
 
+// ======================
 // GET SINGLE COURSE
-app.get("/courses/:id", async (req, res) => {
-  try {
-    const course = await Course.findById(req.params.id);
+// ======================
+app.get(
+  "/courses/:id",
+  async (req, res) => {
+    try {
+      const course =
+        await Course.findById(
+          req.params.id
+        ).lean();
 
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
+      if (!course) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
+      }
+
+      res.json(
+        course
+      );
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+        });
     }
-
-    res.json(course);
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-    });
   }
-});
+);
 
+// ======================
 // ADD COURSE
-app.post("/courses", async (req, res) => {
-  try {
-    const { title, examId } = req.body;
+// ======================
+app.post(
+  "/courses",
+  async (req, res) => {
+    try {
+      const {
+        title,
+        examId,
+      } = req.body;
 
-    if (!title || !examId) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and examId required",
+      if (
+        !title ||
+        !examId
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Title and examId required",
+          });
+      }
+
+      const course =
+        new Course({
+          title,
+          examId,
+          lessons: [],
+        });
+
+      await course.save();
+
+      res.json({
+        success: true,
+        course,
       });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          error:
+            err.message,
+        });
     }
-
-    const course = new Course({
-      title,
-      examId,
-      lessons: [],
-    });
-
-    await course.save();
-
-    res.json({
-      success: true,
-      course,
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-      error: err.message,
-    });
   }
-});
+);
 
 // ======================
 // UPDATE COURSE
 // ======================
-app.put("/courses/:id", async (req, res) => {
-  try {
-    const updatedCourse = await Course.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
+app.put(
+  "/courses/:id",
+  async (req, res) => {
+    try {
+      const updatedCourse =
+        await Course.findByIdAndUpdate(
+          req.params.id,
+          req.body,
+          {
+            new: true,
+          }
+        );
+
+      if (
+        !updatedCourse
+      ) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
       }
-    );
 
-    if (!updatedCourse) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
+      res.json({
+        success: true,
+        message:
+          "Course updated successfully",
+        course:
+          updatedCourse,
       });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Update failed",
+        });
     }
-
-    res.json({
-      success: true,
-      message: "Course updated successfully",
-      course: updatedCourse,
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-      message: "Update failed",
-    });
   }
-});
+);
 
 // ======================
 // DELETE COURSE
 // ======================
-app.delete("/courses/:id", async (req, res) => {
-  try {
-    const deletedCourse = await Course.findByIdAndDelete(
-      req.params.id
-    );
+app.delete(
+  "/courses/:id",
+  async (req, res) => {
+    try {
+      const deletedCourse =
+        await Course.findByIdAndDelete(
+          req.params.id
+        );
 
-    if (!deletedCourse) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
+      if (
+        !deletedCourse
+      ) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
+      }
+
+      res.json({
+        success: true,
+        message:
+          "Course deleted successfully",
       });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Delete failed",
+        });
     }
-
-    res.json({
-      success: true,
-      message: "Course deleted successfully",
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-      message: "Delete failed",
-    });
   }
-});
+);
 
 // ======================
 // ADD LESSON
 // ======================
-app.post("/courses/:courseId/lessons", async (req, res) => {
-  try {
-    const { courseId } = req.params;
+app.post(
+  "/courses/:courseId/lessons",
+  async (req, res) => {
+    try {
+      const {
+        courseId,
+      } = req.params;
 
-    const { title, content } = req.body;
+      const {
+        title,
+        content,
+      } = req.body;
 
-    const course = await Course.findById(courseId);
+      const course =
+        await Course.findById(
+          courseId
+        );
 
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
+      if (!course) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
+      }
+
+      course.lessons.push(
+        {
+          title,
+          content,
+          quizzes: [],
+        }
+      );
+
+      await course.save();
+
+      res.json({
+        success: true,
+        lessons:
+          course.lessons,
       });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Failed to add lesson",
+        });
     }
-
-    course.lessons.push({
-      title,
-      content,
-      quizzes: [],
-    });
-
-    await course.save();
-
-    res.json({
-      success: true,
-      lessons: course.lessons,
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to add lesson",
-    });
   }
-});
+);
 
 // ======================
 // ADD QUIZ
@@ -446,67 +672,117 @@ app.post(
   "/courses/:courseId/lessons/:lessonId/quizzes",
   async (req, res) => {
     try {
-      const { courseId, lessonId } = req.params;
+      const {
+        courseId,
+        lessonId,
+      } = req.params;
 
-      const course = await Course.findById(courseId);
+      const course =
+        await Course.findById(
+          courseId
+        );
 
       if (!course) {
-        return res.status(404).json({
-          success: false,
-          message: "Course not found",
-        });
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
       }
 
-      const lesson = course.lessons.id(lessonId);
+      const lesson =
+        course.lessons.id(
+          lessonId
+        );
 
       if (!lesson) {
-        return res.status(404).json({
-          success: false,
-          message: "Lesson not found",
-        });
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Lesson not found",
+          });
       }
 
-      let quizzes = req.body.quizzes;
+      let quizzes =
+        req.body.quizzes;
 
-      if (!Array.isArray(quizzes)) {
-        quizzes = [quizzes];
+      if (
+        !Array.isArray(
+          quizzes
+        )
+      ) {
+        quizzes = [
+          quizzes,
+        ];
       }
 
-      const cleanedQuizzes = quizzes.map((q) => ({
-        questionTitle: q.questionTitle || "",
-        statements: Array.isArray(q.statements)
-          ? q.statements
-          : [],
-        options: Array.isArray(q.options)
-          ? q.options
-          : [],
-        correctIndex: Number(q.correctIndex) || 0,
-      }));
+      const cleanedQuizzes =
+        quizzes.map(
+          (q) => ({
+            questionTitle:
+              q.questionTitle ||
+              "",
 
-      if (!Array.isArray(lesson.quizzes)) {
-        lesson.quizzes = [];
+            statements:
+              Array.isArray(
+                q.statements
+              )
+                ? q.statements
+                : [],
+
+            options:
+              Array.isArray(
+                q.options
+              )
+                ? q.options
+                : [],
+
+            correctIndex:
+              Number(
+                q.correctIndex
+              ) || 0,
+          })
+        );
+
+      if (
+        !Array.isArray(
+          lesson.quizzes
+        )
+      ) {
+        lesson.quizzes =
+          [];
       }
 
-      lesson.quizzes.push(...cleanedQuizzes);
+      lesson.quizzes.push(
+        ...cleanedQuizzes
+      );
 
       await course.save();
 
       res.json({
         success: true,
-        quizzes: lesson.quizzes,
+        quizzes:
+          lesson.quizzes,
       });
     } catch (err) {
-      console.log(err);
-
-      res.status(500).json({
-        success: false,
-        message: "Server Error",
-      });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Server Error",
+        });
     }
   }
 );
 
+// ======================
 // DELETE QUIZ
+// ======================
 app.delete(
   "/courses/:courseId/lessons/:lessonId/quizzes/:quizIndex",
   async (req, res) => {
@@ -548,7 +824,9 @@ app.delete(
       }
 
       lesson.quizzes.splice(
-        Number(quizIndex),
+        Number(
+          quizIndex
+        ),
         1
       );
 
@@ -560,15 +838,18 @@ app.delete(
           "Quiz deleted successfully",
       });
     } catch (err) {
-      console.log(err);
-
-      res.status(500).json({
-        success: false,
-      });
+      res
+        .status(500)
+        .json({
+          success: false,
+        });
     }
   }
 );
+
+// ======================
 // UPDATE QUIZ
+// ======================
 app.put(
   "/courses/:courseId/lessons/:lessonId/quizzes/:quizIndex",
   async (req, res) => {
@@ -610,7 +891,9 @@ app.put(
       }
 
       lesson.quizzes[
-        Number(quizIndex)
+        Number(
+          quizIndex
+        )
       ] = req.body;
 
       await course.save();
@@ -621,113 +904,170 @@ app.put(
           "Quiz updated successfully",
       });
     } catch (err) {
-      console.log(err);
-
-      res.status(500).json({
-        success: false,
-      });
+      res
+        .status(500)
+        .json({
+          success: false,
+        });
     }
   }
 );
 
 // ======================
-// RESULTS
+// SAVE RESULT
 // ======================
-app.post("/results", auth, async (req, res) => {
-  try {
-    const result = new Result({
-      userId: req.user.id,
-      ...req.body,
-    });
+app.post(
+  "/results",
+  auth,
+  async (req, res) => {
+    try {
+      const result =
+        new Result({
+          userId:
+            req.user.id,
+          ...req.body,
+        });
 
-    await result.save();
+      await result.save();
 
-    res.json({
-      success: true,
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-    });
+      res.json({
+        success: true,
+      });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+        });
+    }
   }
-});
+);
 
-app.get("/results", auth, async (req, res) => {
-  try {
-    const results = await Result.find({
-      userId: req.user.id,
-    });
+// ======================
+// GET RESULTS
+// ======================
+app.get(
+  "/results",
+  auth,
+  async (req, res) => {
+    try {
+      const results =
+        await Result.find(
+          {
+            userId:
+              req.user.id,
+          }
+        ).lean();
 
-    res.json(results);
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-    });
+      res.json(
+        results
+      );
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+        });
+    }
   }
-});
+);
 
-// DELETE ALL RESULTS
-app.delete("/results", async (req, res) => {
-  try {
-    await Result.deleteMany({});
+// ======================
+// DELETE RESULTS
+// ======================
+app.delete(
+  "/results",
+  async (req, res) => {
+    try {
+      await Result.deleteMany(
+        {}
+      );
 
-    res.json({
-      success: true,
-      message: "All results deleted",
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
-    });
+      res.json({
+        success: true,
+        message:
+          "All results deleted",
+      });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          error:
+            err.message,
+        });
+    }
   }
-});
+);
+
 // ======================
 // SEED
 // ======================
-app.get("/seed", async (req, res) => {
-  try {
-    await Course.deleteMany();
+app.get(
+  "/seed",
+  async (req, res) => {
+    try {
+      await Course.deleteMany();
 
-    await Course.create([
-      {
-        title: "Physics Basics",
-        examId: "NEET",
-        lessons: [
+      await Course.create(
+        [
           {
-            title: "Motion",
-            content: "Introduction to motion",
-            quizzes: [],
-          },
-          {
-            title: "Force",
-            content: "Introduction to force",
-            quizzes: [],
-          },
-        ],
-      },
-    ]);
+            title:
+              "Physics Basics",
 
-    res.json({
-      success: true,
-      message: "Courses added",
-    });
-  } catch (err) {
-    console.log(err);
+            examId:
+              "NEET",
 
-    res.status(500).json({
-      success: false,
-      error: err.message,
-    });
+            lessons: [
+              {
+                title:
+                  "Motion",
+
+                content:
+                  "Introduction to motion",
+
+                quizzes:
+                  [],
+              },
+              {
+                title:
+                  "Force",
+
+                content:
+                  "Introduction to force",
+
+                quizzes:
+                  [],
+              },
+            ],
+          },
+        ]
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Courses added",
+      });
+    } catch (err) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          error:
+            err.message,
+        });
+    }
   }
-});
+);
 
 // ======================
 // START
 // ======================
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(
+  PORT,
+  () => {
+    console.log(
+      `🚀 Server running on port ${PORT}`
+    );
+  }
+);

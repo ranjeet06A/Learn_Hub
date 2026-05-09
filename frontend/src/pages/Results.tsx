@@ -1,59 +1,12 @@
 import api from "../utils/api";
-import { useEffect, useState } from "react";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
-
-// =========================
-// LOAD COURSES
-// =========================
-const courses = JSON.parse(
-  localStorage.getItem("learn_hub_courses") || "[]"
-);
-
-// =========================
-// GET COURSE NAME
-// =========================
-const getCourseName = (
-  courseId: string
-) => {
-  const c = courses.find(
-    (c: any) =>
-      String(c.id) ===
-      String(courseId)
-  );
-
-  return (
-    c?.title ||
-    c?.name ||
-    "Unknown Course"
-  );
-};
-
-// =========================
-// GET LESSON NAME
-// =========================
-const getLessonName = (
-  courseId: string,
-  lessonId: string
-) => {
-  const c = courses.find(
-    (c: any) =>
-      String(c.id) ===
-      String(courseId)
-  );
-
-  const l =
-    c?.lessons?.find(
-      (l: any) =>
-        String(l.id) ===
-        String(lessonId)
-    );
-
-  return (
-    l?.title ||
-    l?.name ||
-    "Lesson"
-  );
-};
 
 // =========================
 // FORMAT TIME
@@ -78,6 +31,9 @@ export default function Results() {
   const [results, setResults] =
     useState<any[]>([]);
 
+  const [loading, setLoading] =
+    useState(true);
+
   // =========================
   // LOAD RESULTS
   // =========================
@@ -94,60 +50,289 @@ export default function Results() {
             navigate(
               "/login"
             );
+
             return;
           }
 
-          // =========================
-          // BACKEND RESULTS
-          // =========================
+          // ✅ LOCAL CACHE FIRST
+          const cached =
+            JSON.parse(
+              localStorage.getItem(
+                "learn_hub_progress"
+              ) || "[]"
+            );
+
+          if (
+            Array.isArray(
+              cached
+            ) &&
+            cached.length > 0
+          ) {
+            setResults(
+              cached
+            );
+          }
+
+          // ✅ BACKEND FETCH
           const data =
             await api.get(
               "/results"
             );
 
-          console.log(
-            "RESULTS FROM BACKEND:",
-            data
-          );
-
           if (
-            data &&
+            Array.isArray(
+              data
+            ) &&
             data.length > 0
           ) {
-            setResults(data);
-            return;
+            setResults(
+              data
+            );
+
+            // ✅ UPDATE CACHE
+            localStorage.setItem(
+              "learn_hub_progress",
+              JSON.stringify(
+                data
+              )
+            );
           }
         } catch (err) {
-          console.log(
-            "Backend failed, using localStorage"
+          const stored =
+            JSON.parse(
+              localStorage.getItem(
+                "learn_hub_progress"
+              ) || "[]"
+            );
+
+          setResults(
+            Array.isArray(
+              stored
+            )
+              ? stored
+              : []
+          );
+        } finally {
+          setLoading(
+            false
           );
         }
-
-        // =========================
-        // LOCAL STORAGE FALLBACK
-        // =========================
-        const stored =
-          JSON.parse(
-            localStorage.getItem(
-              "learn_hub_progress"
-            ) || "[]"
-          );
-
-        console.log(
-          "RESULTS FROM LOCAL:",
-          stored
-        );
-
-        setResults(stored);
       };
 
     loadResults();
   }, [navigate]);
 
   // =========================
+  // COURSES CACHE
+  // =========================
+  const courses =
+    useMemo(() => {
+      return JSON.parse(
+        localStorage.getItem(
+          "learn_hub_courses"
+        ) || "[]"
+      );
+    }, []);
+
+  // =========================
+  // GET COURSE NAME
+  // =========================
+  const getCourseName = (
+    courseId: string
+  ) => {
+    const c =
+      courses.find(
+        (c: any) =>
+          String(
+            c.id ||
+              c._id
+          ) ===
+          String(
+            courseId
+          )
+      );
+
+    return (
+      c?.title ||
+      c?.name ||
+      "Unknown Course"
+    );
+  };
+
+  // =========================
+  // GET LESSON NAME
+  // =========================
+  const getLessonName = (
+    courseId: string,
+    lessonId: string
+  ) => {
+    const c =
+      courses.find(
+        (c: any) =>
+          String(
+            c.id ||
+              c._id
+          ) ===
+          String(
+            courseId
+          )
+      );
+
+    const l =
+      c?.lessons?.find(
+        (l: any) =>
+          String(
+            l.id ||
+              l._id
+          ) ===
+          String(
+            lessonId
+          )
+      );
+
+    return (
+      l?.title ||
+      l?.name ||
+      "Lesson"
+    );
+  };
+
+  // =========================
+  // GROUP RESULTS
+  // =========================
+  const grouped =
+    useMemo(() => {
+      const data: any =
+        {};
+
+      results.forEach(
+        (r) => {
+          const course =
+            r.courseName ||
+            getCourseName(
+              r.courseId
+            );
+
+          const lesson =
+            r.lessonName ||
+            getLessonName(
+              r.courseId,
+              r.lessonId
+            );
+
+          const quiz =
+            r.quizIndex ??
+            0;
+
+          if (
+            !data[
+              course
+            ]
+          )
+            data[
+              course
+            ] = {};
+
+          if (
+            !data[
+              course
+            ][lesson]
+          )
+            data[
+              course
+            ][lesson] =
+              {};
+
+          if (
+            !data[
+              course
+            ][lesson][
+              quiz
+            ]
+          )
+            data[
+              course
+            ][lesson][
+              quiz
+            ] = [];
+
+          data[
+            course
+          ][lesson][
+            quiz
+          ].push(r);
+        }
+      );
+
+      return data;
+    }, [results]);
+
+  // =========================
+  // LOADING
+  // =========================
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight:
+            "80vh",
+          display:
+            "flex",
+          justifyContent:
+            "center",
+          alignItems:
+            "center",
+          flexDirection:
+            "column",
+        }}
+      >
+        <div
+          style={{
+            width: 50,
+            height: 50,
+            border:
+              "5px solid #ddd",
+            borderTop:
+              "5px solid #667eea",
+            borderRadius:
+              "50%",
+            animation:
+              "spin 1s linear infinite",
+          }}
+        />
+
+        <p
+          style={{
+            marginTop: 20,
+          }}
+        >
+          Loading results...
+        </p>
+
+        <style>
+          {`
+            @keyframes spin {
+              0% {
+                transform: rotate(0deg);
+              }
+
+              100% {
+                transform: rotate(360deg);
+              }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
+
+  // =========================
   // EMPTY
   // =========================
-  if (!results.length) {
+  if (
+    results.length ===
+    0
+  ) {
     return (
       <div
         style={{
@@ -164,6 +349,22 @@ export default function Results() {
           onClick={() =>
             navigate("/")
           }
+          style={{
+            marginTop: 20,
+            padding:
+              "12px 20px",
+            border:
+              "none",
+            borderRadius: 8,
+            background:
+              "#667eea",
+            color:
+              "white",
+            cursor:
+              "pointer",
+            fontWeight:
+              "bold",
+          }}
         >
           Go to Dashboard
         </button>
@@ -172,314 +373,319 @@ export default function Results() {
   }
 
   // =========================
-  // GROUP RESULTS
-  // =========================
-  const grouped: any =
-    {};
-
-  results.forEach((r) => {
-    const course =
-      r.courseName ||
-      getCourseName(
-        r.courseId
-      );
-
-    const lesson =
-      r.lessonName ||
-      getLessonName(
-        r.courseId,
-        r.lessonId
-      );
-
-    const quiz =
-      r.quizIndex ?? 0;
-
-    if (!grouped[course])
-      grouped[course] =
-        {};
-
-    if (
-      !grouped[course][
-        lesson
-      ]
-    )
-      grouped[course][
-        lesson
-      ] = {};
-
-    if (
-      !grouped[course][
-        lesson
-      ][quiz]
-    )
-      grouped[course][
-        lesson
-      ][quiz] = [];
-
-    grouped[course][
-      lesson
-    ][quiz].push(r);
-  });
-
-  // =========================
   // UI
   // =========================
   return (
     <div
       style={{
-        padding: 30,
+        background:
+          "#f3f4f6",
+        minHeight:
+          "100vh",
+        padding:
+          window.innerWidth <
+          768
+            ? 15
+            : 30,
       }}
     >
-      <h1
+      <div
         style={{
-          textAlign:
-            "center",
+          maxWidth: 1100,
+          margin:
+            "0 auto",
         }}
       >
-        📊 Quiz Results
-      </h1>
-
-      {Object.keys(
-        grouped
-      ).map((course) => (
+        {/* HEADER */}
         <div
-          key={course}
           style={{
-            marginTop: 30,
+            textAlign:
+              "center",
+            marginBottom: 30,
           }}
         >
-          <h2>
-            📘 {course}
-          </h2>
+          <h1>
+            📊 Quiz Results
+          </h1>
+        </div>
 
-          {Object.keys(
-            grouped[course]
-          ).map((lesson) => (
+        {/* RESULTS */}
+        {Object.keys(
+          grouped
+        ).map(
+          (course) => (
             <div
-              key={lesson}
+              key={
+                course
+              }
               style={{
-                marginLeft: 20,
+                marginBottom: 35,
               }}
             >
-              <h3>
-                📖 {lesson}
-              </h3>
+              <h2
+                style={{
+                  marginBottom: 20,
+                }}
+              >
+                📘 {course}
+              </h2>
 
               {Object.keys(
                 grouped[
                   course
-                ][lesson]
+                ]
               ).map(
-                (quiz) => (
+                (
+                  lesson
+                ) => (
                   <div
-                    key={quiz}
+                    key={
+                      lesson
+                    }
                     style={{
-                      marginLeft: 20,
+                      marginBottom: 25,
                     }}
                   >
-                    <h4>
-                      📝 Quiz{" "}
-                      {Number(
-                        quiz
-                      ) + 1}
-                    </h4>
+                    <h3>
+                      📖{" "}
+                      {
+                        lesson
+                      }
+                    </h3>
 
-                    {grouped[
-                      course
-                    ][lesson][
-                      quiz
-                    ].map(
+                    {Object.keys(
+                      grouped[
+                        course
+                      ][lesson]
+                    ).map(
                       (
-                        r: any,
-                        index: number
-                      ) => {
-                        const total =
-                          r.total ??
-                          0;
+                        quiz
+                      ) => (
+                        <div
+                          key={
+                            quiz
+                          }
+                          style={{
+                            marginTop: 20,
+                          }}
+                        >
+                          <h4>
+                            📝
+                            Quiz{" "}
+                            {Number(
+                              quiz
+                            ) +
+                              1}
+                          </h4>
 
-                        const score =
-                          r.score ??
-                          0;
-
-                        const correct =
-                          r.correct ??
-                          0;
-
-                        const wrong =
-                          r.wrong ??
-                          0;
-
-                        // =========================
-                        // DATE FIX
-                        // =========================
-                        let attemptDate =
-                          "N/A";
-
-                        let attemptTime =
-                          "N/A";
-
-                        // NEW FORMAT
-                        if (
-                          r.attemptDate
-                        ) {
-                          attemptDate =
-                            r.attemptDate;
-                        }
-
-                        if (
-                          r.attemptTime
-                        ) {
-                          attemptTime =
-                            r.attemptTime;
-                        }
-
-                        // OLD FORMAT SUPPORT
-                        if (
-                          r.createdAt
-                        ) {
-                          const d =
-                            new Date(
-                              r.createdAt
-                            );
-
-                          attemptDate =
-                            d.toLocaleDateString();
-
-                          attemptTime =
-                            d.toLocaleTimeString();
-                        }
-
-                        const timeSpent =
-                          r.timeSpent ||
-                          0;
-
-                        const percentage =
-                          total >
-                          0
-                            ? (score /
-                                total) *
-                              100
-                            : 0;
-
-                        return (
                           <div
-                            key={
-                              index
-                            }
                             style={{
-                              border:
-                                "1px solid #ccc",
-                              marginBottom: 10,
-                              padding: 15,
-                              borderRadius: 8,
-                              background:
-                                "#f9fafb",
+                              display:
+                                "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fit, minmax(280px, 1fr))",
+                              gap: 20,
+                              marginTop: 15,
                             }}
                           >
-                            <strong>
-                              Attempt{" "}
-                              {index +
-                                1}
-                            </strong>
+                            {grouped[
+                              course
+                            ][
+                              lesson
+                            ][
+                              quiz
+                            ].map(
+                              (
+                                r: any,
+                                index: number
+                              ) => {
+                                const total =
+                                  r.total ??
+                                  0;
 
-                            <p>
-                              📅
-                              Attempt
-                              Date:
-                              {" "}
-                              {
-                                attemptDate
+                                const score =
+                                  r.score ??
+                                  0;
+
+                                const correct =
+                                  r.correct ??
+                                  0;
+
+                                const wrong =
+                                  r.wrong ??
+                                  0;
+
+                                let attemptDate =
+                                  "N/A";
+
+                                let attemptTime =
+                                  "N/A";
+
+                                if (
+                                  r.attemptDate
+                                ) {
+                                  attemptDate =
+                                    r.attemptDate;
+                                }
+
+                                if (
+                                  r.attemptTime
+                                ) {
+                                  attemptTime =
+                                    r.attemptTime;
+                                }
+
+                                if (
+                                  r.createdAt
+                                ) {
+                                  const d =
+                                    new Date(
+                                      r.createdAt
+                                    );
+
+                                  attemptDate =
+                                    d.toLocaleDateString();
+
+                                  attemptTime =
+                                    d.toLocaleTimeString();
+                                }
+
+                                const timeSpent =
+                                  r.timeSpent ||
+                                  0;
+
+                                const percentage =
+                                  total >
+                                  0
+                                    ? (score /
+                                        total) *
+                                      100
+                                    : 0;
+
+                                return (
+                                  <div
+                                    key={
+                                      index
+                                    }
+                                    style={{
+                                      background:
+                                        "white",
+                                      borderRadius: 14,
+                                      padding: 20,
+                                      boxShadow:
+                                        "0 4px 12px rgba(0,0,0,0.08)",
+                                    }}
+                                  >
+                                    <h3>
+                                      Attempt{" "}
+                                      {index +
+                                        1}
+                                    </h3>
+
+                                    <p>
+                                      📅{" "}
+                                      {
+                                        attemptDate
+                                      }
+                                    </p>
+
+                                    <p>
+                                      🕒{" "}
+                                      {
+                                        attemptTime
+                                      }
+                                    </p>
+
+                                    <p>
+                                      ⏱{" "}
+                                      {formatTime(
+                                        timeSpent
+                                      )}
+                                    </p>
+
+                                    <hr />
+
+                                    <p>
+                                      🎯
+                                      Score:
+                                      {" "}
+                                      {score}
+                                    </p>
+
+                                    <p>
+                                      ✅
+                                      Correct:
+                                      {" "}
+                                      {
+                                        correct
+                                      }
+                                    </p>
+
+                                    <p>
+                                      ❌
+                                      Wrong:
+                                      {" "}
+                                      {
+                                        wrong
+                                      }
+                                    </p>
+
+                                    <p>
+                                      📊
+                                      Percentage:
+                                      {" "}
+                                      {percentage.toFixed(
+                                        2
+                                      )}
+                                      %
+                                    </p>
+                                  </div>
+                                );
                               }
-                            </p>
-
-                            <p>
-                              🕒
-                              Attempt
-                              Time:
-                              {" "}
-                              {
-                                attemptTime
-                              }
-                            </p>
-
-                            <p>
-                              ⏱
-                              Time
-                              Spent:
-                              {" "}
-                              {formatTime(
-                                timeSpent
-                              )}
-                            </p>
-
-                            <p>
-                              Score:
-                              {" "}
-                              {
-                                score
-                              }
-                            </p>
-
-                            <p>
-                              Correct:
-                              {" "}
-                              {
-                                correct
-                              }
-                            </p>
-
-                            <p>
-                              Wrong:
-                              {" "}
-                              {
-                                wrong
-                              }
-                            </p>
-
-                            <p>
-                              Percentage:
-                              {" "}
-                              {percentage.toFixed(
-                                2
-                              )}
-                              %
-                            </p>
+                            )}
                           </div>
-                        );
-                      }
+                        </div>
+                      )
                     )}
                   </div>
                 )
               )}
             </div>
-          ))}
-        </div>
-      ))}
+          )
+        )}
 
-      <div
-        style={{
-          textAlign:
-            "center",
-          marginTop: 30,
-        }}
-      >
-        <button
-          onClick={() =>
-            navigate("/")
-          }
+        {/* BACK */}
+        <div
           style={{
-            padding:
-              "10px 20px",
-            background:
-              "#667eea",
-            color: "white",
-            border: "none",
-            borderRadius: 5,
-            cursor: "pointer",
+            textAlign:
+              "center",
+            marginTop: 40,
           }}
         >
-          Back to Dashboard
-        </button>
+          <button
+            onClick={() =>
+              navigate("/")
+            }
+            style={{
+              padding:
+                "12px 24px",
+              background:
+                "#667eea",
+              color:
+                "white",
+              border:
+                "none",
+              borderRadius: 8,
+              cursor:
+                "pointer",
+              fontWeight:
+                "bold",
+              fontSize: 16,
+            }}
+          >
+            Back to Dashboard
+          </button>
+        </div>
       </div>
     </div>
   );
