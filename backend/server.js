@@ -666,115 +666,86 @@ app.post(
 );
 
 // ======================
-// ADD QUIZ
+// GET QUIZZES
 // ======================
-app.post(
-  "/courses/:courseId/lessons/:lessonId/quizzes",
+app.get(
+  "/quizzes/:lessonId",
   async (req, res) => {
     try {
-      const {
-        courseId,
-        lessonId,
-      } = req.params;
+      const { lessonId } =
+        req.params;
 
-      const course =
-        await Course.findById(
-          courseId
-        );
+      const courses =
+        await Course.find();
 
-      if (!course) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message:
-              "Course not found",
-          });
+      for (const course of courses) {
+        const lesson =
+          course.lessons.find(
+            (l) =>
+              String(l._id) ===
+              String(lessonId)
+          );
+
+        if (lesson) {
+          let quizzes =
+            lesson.quizzes || [];
+
+          // ✅ SUPPORT OLD + NEW FORMAT
+          quizzes =
+            quizzes.map(
+              (
+                quiz,
+                index
+              ) => {
+                // OLD ARRAY FORMAT
+                if (
+                  Array.isArray(
+                    quiz
+                  )
+                ) {
+                  return {
+                    title: `Quiz ${
+                      index + 1
+                    }`,
+                    questions:
+                      quiz,
+                  };
+                }
+
+                // NEW FORMAT
+                if (
+                  quiz.questions
+                ) {
+                  return quiz;
+                }
+
+                // SINGLE QUESTION FORMAT
+                return {
+                  title: `Quiz ${
+                    index + 1
+                  }`,
+                  questions:
+                    [quiz],
+                };
+              }
+            );
+
+          return res.json(
+            quizzes
+          );
+        }
       }
 
-      const lesson =
-        course.lessons.id(
-          lessonId
-        );
-
-      if (!lesson) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message:
-              "Lesson not found",
-          });
-      }
-
-      let quizzes =
-        req.body.quizzes;
-
-      if (
-        !Array.isArray(
-          quizzes
-        )
-      ) {
-        quizzes = [
-          quizzes,
-        ];
-      }
-
-      const cleanedQuizzes =
-        quizzes.map(
-          (q) => ({
-            questionTitle:
-              q.questionTitle ||
-              "",
-
-            statements:
-              Array.isArray(
-                q.statements
-              )
-                ? q.statements
-                : [],
-
-            options:
-              Array.isArray(
-                q.options
-              )
-                ? q.options
-                : [],
-
-            correctIndex:
-              Number(
-                q.correctIndex
-              ) || 0,
-          })
-        );
-
-      if (
-        !Array.isArray(
-          lesson.quizzes
-        )
-      ) {
-        lesson.quizzes =
-          [];
-      }
-
-      lesson.quizzes.push(
-        ...cleanedQuizzes
-      );
-
-      await course.save();
-
-      res.json({
-        success: true,
-        quizzes:
-          lesson.quizzes,
-      });
+      res.json([]);
     } catch (err) {
+      console.log(err);
+
       res
         .status(500)
         .json({
           success: false,
           message:
-            "Server Error",
+            "Failed to load quizzes",
         });
     }
   }
