@@ -361,83 +361,114 @@ export default function LessonView() {
   }
 
   // =========================
-// SAFE QUIZZES
-// PROFESSIONAL QUIZ FIX
+// PROFESSIONAL QUIZ SYSTEM
 // =========================
+
+// ✅ LOAD QUIZZES FROM LOCAL STORAGE
+const allQuizData = JSON.parse(
+  localStorage.getItem("quizData") || "{}"
+);
+
+const lessonQuizData =
+  allQuizData[lessonId || ""] || [];
 
 let quizzes: any[] = [];
 
-// CASE 1:
-// lesson.quizzes exists
+// =========================
+// NEW PROFESSIONAL FORMAT
+// [
+//   {
+//     title: "Quiz 1",
+//     questions: []
+//   }
+// ]
+// =========================
 if (
+  Array.isArray(lessonQuizData) &&
+  lessonQuizData.length > 0
+) {
+  const firstItem =
+    lessonQuizData[0];
+
+  // ✅ PROFESSIONAL QUIZ SETS
+  if (
+    firstItem &&
+    Array.isArray(
+      firstItem.questions
+    )
+  ) {
+    quizzes = lessonQuizData;
+  }
+
+  // ✅ OLD DIRECT QUESTIONS
+  else if (
+    firstItem &&
+    firstItem.questionTitle
+  ) {
+    quizzes = [
+      {
+        title: "Quiz 1",
+        questions:
+          lessonQuizData,
+      },
+    ];
+  }
+}
+
+// =========================
+// FALLBACK TO LESSON DATA
+// =========================
+else if (
   Array.isArray(lesson.quizzes)
 ) {
-
   const firstItem =
     lesson.quizzes[0];
 
-  const isDirectQuestionFormat =
-    firstItem &&
-    firstItem.questionTitle;
-
-  // ✅ IF ARRAY CONTAINS DIRECT QUESTIONS
-  // convert all into ONE quiz
   if (
-    isDirectQuestionFormat
+    firstItem &&
+    Array.isArray(
+      firstItem.questions
+    )
   ) {
-
-    quizzes = [
-      {
-        title: "Main Quiz",
-        questions:
-          lesson.quizzes,
-      },
-    ];
-
-  } else {
-
-    // normal professional structure
     quizzes =
       lesson.quizzes;
   }
 
+  else if (
+    firstItem &&
+    firstItem.questionTitle
+  ) {
+    quizzes = [
+      {
+        title: "Quiz 1",
+        questions:
+          lesson.quizzes,
+      },
+    ];
+  }
 }
 
-// CASE 2:
-// lesson.quiz exists
 else if (
   Array.isArray(lesson.quiz)
 ) {
-
   const firstItem =
     lesson.quiz[0];
 
-  const isDirectQuestionFormat =
-    firstItem &&
-    firstItem.questionTitle;
-
   if (
-    isDirectQuestionFormat
+    firstItem &&
+    firstItem.questionTitle
   ) {
-
     quizzes = [
       {
-        title: "Main Quiz",
+        title: "Quiz 1",
         questions:
           lesson.quiz,
       },
     ];
-
-  } else {
-
-    quizzes = [
-      lesson.quiz,
-    ];
-
   }
 }
 
-  const q = questions[currentQ];
+const q = questions[currentQ];
 
   return (
     <div
@@ -616,8 +647,7 @@ else if (
                           "bold",
                       }}
                     >
-                      📝 Quiz{" "}
-                      {index + 1}
+                      📝 {quiz.title || `Quiz ${index + 1}`}
                     </button>
                   )
                 )}
@@ -817,10 +847,12 @@ else if (
             0 && (
             <>
               <h2>
-                📝 Quiz{" "}
-                {selectedQuizIndex +
-                  1}
-              </h2>
+  📝 {
+    quizzes[selectedQuizIndex]
+      ?.title ||
+    `Quiz ${selectedQuizIndex + 1}`
+  }
+</h2>
 
               <div
                 style={{
