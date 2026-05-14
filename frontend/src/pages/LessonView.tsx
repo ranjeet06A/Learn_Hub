@@ -361,19 +361,81 @@ export default function LessonView() {
   }
 
   // =========================
-  // SAFE QUIZZES
-  // =========================
-  let quizzes: any[] = [];
+// SAFE QUIZZES
+// PROFESSIONAL QUIZ FIX
+// =========================
+
+let quizzes: any[] = [];
+
+// CASE 1:
+// lesson.quizzes exists
+if (
+  Array.isArray(lesson.quizzes)
+) {
+
+  const firstItem =
+    lesson.quizzes[0];
+
+  const isDirectQuestionFormat =
+    firstItem &&
+    firstItem.questionTitle;
+
+  // ✅ IF ARRAY CONTAINS DIRECT QUESTIONS
+  // convert all into ONE quiz
+  if (
+    isDirectQuestionFormat
+  ) {
+
+    quizzes = [
+      {
+        title: "Main Quiz",
+        questions:
+          lesson.quizzes,
+      },
+    ];
+
+  } else {
+
+    // normal professional structure
+    quizzes =
+      lesson.quizzes;
+  }
+
+}
+
+// CASE 2:
+// lesson.quiz exists
+else if (
+  Array.isArray(lesson.quiz)
+) {
+
+  const firstItem =
+    lesson.quiz[0];
+
+  const isDirectQuestionFormat =
+    firstItem &&
+    firstItem.questionTitle;
 
   if (
-    Array.isArray(lesson.quizzes)
+    isDirectQuestionFormat
   ) {
-    quizzes = lesson.quizzes;
-  } else if (
-    Array.isArray(lesson.quiz)
-  ) {
-    quizzes = [lesson.quiz];
+
+    quizzes = [
+      {
+        title: "Main Quiz",
+        questions:
+          lesson.quiz,
+      },
+    ];
+
+  } else {
+
+    quizzes = [
+      lesson.quiz,
+    ];
+
   }
+}
 
   const q = questions[currentQ];
 
