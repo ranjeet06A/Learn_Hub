@@ -664,92 +664,95 @@ app.post(
     }
   }
 );
-
 // ======================
-// GET QUIZZES
+// ADD QUIZ
 // ======================
-app.get(
-  "/quizzes/:lessonId",
+app.post(
+  "/courses/:courseId/lessons/:lessonId/quizzes",
   async (req, res) => {
     try {
-      const { lessonId } =
-        req.params;
+      const {
+        courseId,
+        lessonId,
+      } = req.params;
 
-      const courses =
-        await Course.find();
+      const {
+        title,
+        questions,
+      } = req.body;
 
-      for (const course of courses) {
-        const lesson =
-          course.lessons.find(
-            (l) =>
-              String(l._id) ===
-              String(lessonId)
-          );
+      const course =
+        await Course.findById(
+          courseId
+        );
 
-        if (lesson) {
-          let quizzes =
-            lesson.quizzes || [];
-
-          quizzes =
-            quizzes.map(
-              (
-                quiz,
-                index
-              ) => {
-                // OLD FORMAT
-                if (
-                  Array.isArray(
-                    quiz
-                  )
-                ) {
-                  return {
-                    title: `Quiz ${
-                      index + 1
-                    }`,
-                    questions:
-                      quiz,
-                  };
-                }
-
-                // NEW FORMAT
-                if (
-                  quiz.questions
-                ) {
-                  return quiz;
-                }
-
-                // SINGLE QUESTION
-                return {
-                  title: `Quiz ${
-                    index + 1
-                  }`,
-                  questions:
-                    [quiz],
-                };
-              }
-            );
-
-          return res.json(
-            quizzes
-          );
-        }
+      if (!course) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Course not found",
+          });
       }
 
-      return res.json([]);
+      const lesson =
+        course.lessons.id(
+          lessonId
+        );
+
+      if (!lesson) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "Lesson not found",
+          });
+      }
+
+      if (
+        !Array.isArray(
+          lesson.quizzes
+        )
+      ) {
+        lesson.quizzes =
+          [];
+      }
+
+      // ✅ NEW QUIZ SET
+      lesson.quizzes.push({
+        title:
+          title ||
+          `Quiz ${
+            lesson.quizzes
+              .length + 1
+          }`,
+
+        questions:
+          questions || [],
+      });
+
+      await course.save();
+
+      res.json({
+        success: true,
+        quizzes:
+          lesson.quizzes,
+      });
     } catch (err) {
       console.log(err);
 
-      return res
+      res
         .status(500)
         .json({
           success: false,
           message:
-            "Failed to load quizzes",
+            "Server Error",
         });
     }
   }
 );
-
 // ======================
 // DELETE QUIZ
 // ======================
