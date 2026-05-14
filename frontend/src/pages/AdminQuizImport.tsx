@@ -2,115 +2,330 @@ import { useState } from "react";
 import { convertToQuizJSON } from "../utils/quizConverter";
 
 export default function AdminQuizImport() {
-  const [input, setInput] = useState("");
-  const [quizData, setQuizData] = useState<any[]>([]);
-  const [lessonId, setLessonId] = useState("");
+  const [input, setInput] =
+    useState("");
 
-  // 🔄 Convert only
+  const [quizData, setQuizData] =
+    useState<any[]>([]);
+
+  const [lessonId, setLessonId] =
+    useState("");
+
+  // ✅ NEW
+  const [quizTitle, setQuizTitle] =
+    useState("");
+
+  // =========================
+  // CONVERT
+  // =========================
   const handleConvert = () => {
-    const result = convertToQuizJSON(input);
+    const result =
+      convertToQuizJSON(input);
 
     if (result.length === 0) {
-      alert("❌ No valid questions detected");
+      alert(
+        "❌ No valid questions detected"
+      );
+
       return;
     }
 
     setQuizData(result);
   };
 
-  // 🚀 Import into system
+  // =========================
+  // IMPORT
+  // =========================
   const handleImport = () => {
     if (!lessonId.trim()) {
-      alert("⚠️ Enter Lesson ID");
+      alert(
+        "⚠️ Enter Lesson ID"
+      );
+
+      return;
+    }
+
+    if (!quizTitle.trim()) {
+      alert(
+        "⚠️ Enter Quiz Title"
+      );
+
       return;
     }
 
     if (quizData.length === 0) {
-      alert("⚠️ No quiz data to import");
+      alert(
+        "⚠️ No quiz data to import"
+      );
+
       return;
     }
 
-    const existing = JSON.parse(localStorage.getItem("quizData") || "{}");
-    const old = existing[lessonId] || [];
+    // =========================
+    // GET EXISTING
+    // =========================
+    const existing =
+      JSON.parse(
+        localStorage.getItem(
+          "quizData"
+        ) || "{}"
+      );
 
-    // 🧠 Remove duplicates
-    const newQuestions = quizData.filter(
-      (q) => !old.some((o: any) => o.question.trim() === q.question.trim())
+    // lesson structure
+    if (
+      !existing[lessonId]
+    ) {
+      existing[lessonId] = [];
+    }
+
+    // ✅ CREATE NEW QUIZ SET
+    const newQuizSet = {
+      title:
+        quizTitle,
+
+      questions:
+        quizData,
+    };
+
+    // ✅ ADD NEW QUIZ
+    existing[
+      lessonId
+    ].push(
+      newQuizSet
     );
 
-    existing[lessonId] = [...old, ...newQuestions];
+    // =========================
+    // SAVE
+    // =========================
+    localStorage.setItem(
+      "quizData",
+      JSON.stringify(
+        existing
+      )
+    );
 
-    localStorage.setItem("quizData", JSON.stringify(existing));
+    alert(
+      `✅ ${quizData.length} Questions Imported into "${quizTitle}"`
+    );
 
-    alert(`✅ ${newQuestions.length} Questions Imported Successfully`);
-
-    // reset
+    // =========================
+    // RESET
+    // =========================
     setInput("");
+
     setQuizData([]);
+
+    setQuizTitle("");
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🧠 ICAI Quiz Import Panel</h1>
+    <div
+      style={{
+        padding: 20,
+        maxWidth: 1000,
+        margin: "0 auto",
+      }}
+    >
+      <h1>
+        🧠 ICAI Quiz Import
+        Panel
+      </h1>
 
-      {/* 📥 INPUT */}
+      {/* INPUT */}
       <textarea
         rows={15}
-        style={{ width: "100%" }}
+        style={{
+          width: "100%",
+          padding: 12,
+          borderRadius: 8,
+          border:
+            "1px solid #ccc",
+        }}
         placeholder="Paste ICAI questions here..."
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        onChange={(e) =>
+          setInput(
+            e.target.value
+          )
+        }
       />
 
-      <br /><br />
+      <br />
+      <br />
 
-      <button onClick={handleConvert}>
+      <button
+        onClick={
+          handleConvert
+        }
+        style={{
+          padding:
+            "12px 20px",
+          background:
+            "#667eea",
+          color: "white",
+          border: "none",
+          borderRadius: 8,
+          cursor: "pointer",
+          fontWeight:
+            "bold",
+        }}
+      >
         🔄 Convert
       </button>
 
-      {/* 📊 PREVIEW */}
-      {quizData.length > 0 && (
+      {/* PREVIEW */}
+      {quizData.length >
+        0 && (
         <>
-          <h3>📊 Preview ({quizData.length} Questions)</h3>
+          <h3
+            style={{
+              marginTop: 30,
+            }}
+          >
+            📊 Preview (
+            {
+              quizData.length
+            }{" "}
+            Questions)
+          </h3>
 
           <div
             style={{
-              background: "#111",
+              background:
+                "#111",
               color: "#0f0",
-              padding: 10,
-              maxHeight: "300px",
-              overflow: "auto",
+              padding: 15,
+              maxHeight:
+                "300px",
+              overflow:
+                "auto",
+              borderRadius: 8,
             }}
           >
-            {quizData.map((q, i) => (
-              <div key={i} style={{ marginBottom: 10 }}>
-                <b>Q{i + 1}:</b> {q.question}
-              </div>
-            ))}
+            {quizData.map(
+              (
+                q,
+                i
+              ) => (
+                <div
+                  key={
+                    i
+                  }
+                  style={{
+                    marginBottom: 12,
+                  }}
+                >
+                  <b>
+                    Q
+                    {i + 1}
+                    :
+                  </b>{" "}
+                  {q.questionTitle ||
+                    q.question}
+                </div>
+              )
+            )}
           </div>
 
           <br />
 
-          {/* 🎯 LESSON ID */}
+          {/* LESSON ID */}
           <input
-            placeholder="Enter Lesson ID (IMPORTANT)"
-            value={lessonId}
-            onChange={(e) => setLessonId(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
+            placeholder="Enter Lesson ID"
+            value={
+              lessonId
+            }
+            onChange={(e) =>
+              setLessonId(
+                e.target.value
+              )
+            }
+            style={{
+              width:
+                "100%",
+              padding: 12,
+              borderRadius: 8,
+              border:
+                "1px solid #ccc",
+              marginBottom: 15,
+            }}
           />
 
-          <br /><br />
+          {/* QUIZ TITLE */}
+          <input
+            placeholder="Enter Quiz Title (Example: Quiz 1)"
+            value={
+              quizTitle
+            }
+            onChange={(e) =>
+              setQuizTitle(
+                e.target.value
+              )
+            }
+            style={{
+              width:
+                "100%",
+              padding: 12,
+              borderRadius: 8,
+              border:
+                "1px solid #ccc",
+            }}
+          />
 
-          <button onClick={handleImport}>
-            🚀 Import to Lesson
+          <br />
+          <br />
+
+          <button
+            onClick={
+              handleImport
+            }
+            style={{
+              padding:
+                "12px 20px",
+              background:
+                "#16a34a",
+              color:
+                "white",
+              border:
+                "none",
+              borderRadius: 8,
+              cursor:
+                "pointer",
+              fontWeight:
+                "bold",
+            }}
+          >
+            🚀 Import to
+            Lesson
           </button>
         </>
       )}
 
-      {/* 🧾 DEBUG JSON */}
-      <h3>📦 JSON Output</h3>
-      <pre style={{ background: "#222", color: "#0f0", padding: 10 }}>
-        {JSON.stringify(quizData, null, 2)}
+      {/* JSON OUTPUT */}
+      <h3
+        style={{
+          marginTop: 40,
+        }}
+      >
+        📦 JSON Output
+      </h3>
+
+      <pre
+        style={{
+          background:
+            "#222",
+          color: "#0f0",
+          padding: 15,
+          overflow:
+            "auto",
+          borderRadius: 8,
+        }}
+      >
+        {JSON.stringify(
+          quizData,
+          null,
+          2
+        )}
       </pre>
     </div>
   );
