@@ -690,14 +690,13 @@ app.get(
           let quizzes =
             lesson.quizzes || [];
 
-          // ✅ SUPPORT OLD + NEW FORMAT
           quizzes =
             quizzes.map(
               (
                 quiz,
                 index
               ) => {
-                // OLD ARRAY FORMAT
+                // OLD FORMAT
                 if (
                   Array.isArray(
                     quiz
@@ -719,7 +718,7 @@ app.get(
                   return quiz;
                 }
 
-                // SINGLE QUESTION FORMAT
+                // SINGLE QUESTION
                 return {
                   title: `Quiz ${
                     index + 1
@@ -736,11 +735,11 @@ app.get(
         }
       }
 
-      res.json([]);
+      return res.json([]);
     } catch (err) {
       console.log(err);
 
-      res
+      return res
         .status(500)
         .json({
           success: false,
