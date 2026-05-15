@@ -688,125 +688,119 @@ const q = questions[currentQ];
             ⏰ {formatTime()}
           </div>
 
-          {questions.map(
+         {questions.map(
   (
     question: any,
     index: number
-  ) => (
+  ) => {
     console.log(
-  "QUESTION OBJECT:",
-  question
-),
+      "QUESTION OBJECT:",
+      question
+    );
+
+    return (
+      <div
+        key={index}
+        style={{
+          marginBottom: 40,
+          padding: 20,
+          borderRadius: 12,
+          background: "#fff",
+          border:
+            "1px solid #ddd",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: 30,
+            marginBottom: 20,
+          }}
+        >
+          Q{index + 1}.{" "}
+          {question?.questionTitle}
+        </h2>
+
+        {Array.isArray(
+          question?.statements
+        ) &&
+          question.statements.map(
+            (
+              s: string,
+              i: number
+            ) => (
               <div
-                key={index}
+                key={i}
                 style={{
-                  marginBottom: 40,
-                  padding: 20,
-                  borderRadius: 12,
-                  background:
-                    "#fff",
-                  border:
-                    "1px solid #ddd",
+                  marginBottom: 10,
+                  fontSize: 18,
                 }}
               >
-                <h2
-                  style={{
-                    fontSize: 30,
-                    marginBottom: 20,
-                  }}
-                >
-                  Q{index + 1}.{" "}
-                  {
-                    question?.questionTitle
-                  }
-                </h2>
-
-                {Array.isArray(
-                 question?.statements
-                ) &&
-                 question.statements.map(
-                    (
-                      s: string,
-                      i: number
-                    ) => (
-                      <div
-                        key={i}
-                        style={{
-                          marginBottom: 10,
-                          fontSize: 18,
-                        }}
-                      >
-                        <strong>
-                          {String.fromCharCode(
-                            65 + i
-                          )}
-                          .
-                        </strong>{" "}
-                        {s}
-                      </div>
-                    )
+                <strong>
+                  {String.fromCharCode(
+                    65 + i
                   )}
-
-                <div
-                  style={{
-                    marginTop: 25,
-                  }}
-                >
-                  {Array.isArray(
-                   question?.options
-                  ) &&
-                    question.options.map(
-                      (
-                        opt: string,
-                        optIndex: number
-                      ) => (
-                        <button
-                          key={
-                            optIndex
-                          }
-                          onClick={() =>
-                            handleSelect(
-                              index,
-                              optIndex
-                            )
-                          }
-                          style={{
-                            display:
-                              "block",
-                            width:
-                              "100%",
-                            textAlign:
-                              "left",
-                            marginBottom: 12,
-                            padding: 15,
-                            borderRadius: 10,
-                            border:
-                              answers[
-                                index
-                              ] ===
-                              optIndex
-                                ? "2px solid #4338ca"
-                                : "1px solid #ccc",
-                            background:
-                              answers[
-                                index
-                              ] ===
-                              optIndex
-                                ? "#eef2ff"
-                                : "white",
-                            cursor:
-                              "pointer",
-                            fontSize: 16,
-                          }}
-                        >
-                          {opt}
-                        </button>
-                      )
-                    )}
-                </div>
+                  .
+                </strong>{" "}
+                {s}
               </div>
             )
           )}
+
+        <div
+          style={{
+            marginTop: 25,
+          }}
+        >
+          {Array.isArray(
+            question?.options
+          ) &&
+            question.options.map(
+              (
+                opt: string,
+                optIndex: number
+              ) => (
+                <button
+                  key={optIndex}
+                  onClick={() =>
+                    handleSelect(
+                      index,
+                      optIndex
+                    )
+                  }
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign:
+                      "left",
+                    marginBottom: 12,
+                    padding: 15,
+                    borderRadius: 10,
+                    border:
+                      answers[
+                        index
+                      ] === optIndex
+                        ? "2px solid #4338ca"
+                        : "1px solid #ccc",
+                    background:
+                      answers[
+                        index
+                      ] === optIndex
+                        ? "#eef2ff"
+                        : "white",
+                    cursor:
+                      "pointer",
+                    fontSize: 16,
+                  }}
+                >
+                  {opt}
+                </button>
+              )
+            )}
+        </div>
+      </div>
+    );
+  }
+)}
 
           {/* QUIZ NAVIGATION */}
           <div
