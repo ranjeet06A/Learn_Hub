@@ -780,17 +780,22 @@ const q = questions[currentQ];
         )}
 
         {/* QUIZ SCREEN */}
-        {selectedQuizIndex !== null &&
-  quizzes[selectedQuizIndex] && (
+{selectedQuizIndex !== null &&
+  questions.length > 0 && (
     <div style={{ marginTop: 30 }}>
-      {(
-        Array.isArray(
-          quizzes[selectedQuizIndex]
-        )
-          ? quizzes[selectedQuizIndex]
-          : quizzes[selectedQuizIndex]
-              ?.questions || []
-      ).map(
+      {/* TIMER */}
+      <div
+        style={{
+          fontSize: 22,
+          fontWeight: "bold",
+          color: "red",
+          marginBottom: 25,
+        }}
+      >
+        ⏰ {formatTime()}
+      </div>
+
+      {questions.map(
         (
           q: any,
           index: number
@@ -802,6 +807,8 @@ const q = questions[currentQ];
               padding: 20,
               borderRadius: 12,
               background: "#fff",
+              border:
+                "1px solid #ddd",
             }}
           >
             <h2>
@@ -815,7 +822,12 @@ const q = questions[currentQ];
                   s: string,
                   i: number
                 ) => (
-                  <div key={i}>
+                  <div
+                    key={i}
+                    style={{
+                      marginTop: 8,
+                    }}
+                  >
                     {String.fromCharCode(
                       65 + i
                     )}
@@ -836,16 +848,35 @@ const q = questions[currentQ];
                 ) => (
                   <button
                     key={optIndex}
+                    onClick={() =>
+                      handleSelect(
+                        optIndex
+                      )
+                    }
                     style={{
                       display:
                         "block",
                       width: "100%",
+                      textAlign:
+                        "left",
                       marginBottom: 10,
                       padding: 14,
                       borderRadius: 10,
                       border:
-                        "1px solid #ccc",
-                      cursor: "pointer",
+                        answers[
+                          index
+                        ] === optIndex
+                          ? "2px solid #4338ca"
+                          : "1px solid #ccc",
+                      background:
+                        answers[
+                          index
+                        ] === optIndex
+                          ? "#eef2ff"
+                          : "#fff",
+                      cursor:
+                        "pointer",
+                      fontSize: 16,
                     }}
                   >
                     {opt}
