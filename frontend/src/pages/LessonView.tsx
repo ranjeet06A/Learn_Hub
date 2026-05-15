@@ -543,6 +543,9 @@ const q = questions[currentQ];
       )
     ? quiz.quiz
 
+    : quiz?.questionTitle
+    ? [quiz]
+
     : Array.isArray(
         quiz
       )
