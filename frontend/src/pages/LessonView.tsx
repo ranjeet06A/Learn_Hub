@@ -482,534 +482,376 @@ const q = questions[currentQ];
 
   return (
     <div
-      style={{
-        background: "#f3f4f6",
-        minHeight: "100vh",
-        padding:
-          window.innerWidth < 768
-            ? 12
-            : 20,
-      }}
-    >
-      {/* LESSON CONTAINER */}
-      <div
-        style={{
-          maxWidth: "950px",
-          margin: "0 auto",
-          background: "white",
-          borderRadius: 12,
-          padding:
-            window.innerWidth < 768
-              ? 16
-              : 30,
-          boxShadow:
-            "0 4px 15px rgba(0,0,0,0.1)",
-        }}
-      >
-        {/* TOP BAR */}
-<div
   style={{
-    display: "flex",
-    justifyContent:
-      "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    flexWrap: "wrap",
-    gap: 15,
+    background: "#f3f4f6",
+    minHeight: "100vh",
+    padding:
+      window.innerWidth < 768
+        ? 12
+        : 20,
   }}
 >
-  <div>
-    <h1>
-      📘{" "}
-      {lesson.title ||
-        lesson.name}
-    </h1>
-
-    <p>
-      Page{" "}
-      {currentPage + 1} of{" "}
-      {lessonPages.length}
-    </p>
-  </div>
-</div>
-
-{/* QUIZ BUTTONS */}
-{Array.isArray(quizzes) &&
-  quizzes.length > 0 && (
+  {/* LESSON CONTAINER */}
+  <div
+    style={{
+      maxWidth: "950px",
+      margin: "0 auto",
+      background: "white",
+      borderRadius: 12,
+      padding:
+        window.innerWidth < 768
+          ? 16
+          : 30,
+      boxShadow:
+        "0 4px 15px rgba(0,0,0,0.1)",
+    }}
+  >
+    {/* TOP BAR */}
     <div
       style={{
         display: "flex",
+        justifyContent:
+          "space-between",
+        alignItems: "center",
+        marginBottom: 20,
         flexWrap: "wrap",
-        gap: 12,
-        marginTop: 20,
-        marginBottom: 30,
-        justifyContent: "center",
+        gap: 15,
       }}
     >
-      {quizzes.map(
-        (
-          quiz: any,
-          index: number
-        ) => {
-          const quizTitle =
-            quiz?.title ||
-            `Quiz ${index + 1}`;
+      <div>
+        <h1>
+          📘{" "}
+          {lesson.title ||
+            lesson.name}
+        </h1>
 
-          return (
-            <button
-              key={index}
-              onClick={() => {
-  setSelectedQuizIndex(
-    index
-  );
-
-  setCurrentQ(0);
-
-  console.log(
-    "QUIZ OBJECT:",
-    quiz
-  );
-
-  let loadedQuestions: any[] =
-    [];
-
-  // FORMAT 1
-  if (
-    quiz &&
-    Array.isArray(
-      quiz.questions
-    )
-  ) {
-    loadedQuestions =
-      quiz.questions;
-  }
-
-  // FORMAT 2
-  else if (
-    quiz &&
-    Array.isArray(
-      quiz.quiz
-    )
-  ) {
-    loadedQuestions =
-      quiz.quiz;
-  }
-
-  // FORMAT 3
-  else if (
-    quiz &&
-    quiz.questionTitle
-  ) {
-    loadedQuestions = [
-      quiz,
-    ];
-  }
-
-  // FORMAT 4
-  else if (
-    Array.isArray(quiz)
-  ) {
-    loadedQuestions =
-      quiz;
-  }
-
-  console.log(
-    "LOADED QUESTIONS:",
-    loadedQuestions
-  );
-
-  setQuestions(
-    loadedQuestions
-  );
-
-  console.log(
-    "QUESTIONS STATE:",
-    loadedQuestions
-  );
-
-  setAnswers({});
-
-  setTimeLeft(
-    loadedQuestions.length *
-      120
-  );
-
-  startTimeRef.current =
-    Date.now();
-}}
-              style={{
-                padding:
-                  "12px 18px",
-                border:
-                  "none",
-                borderRadius: 10,
-                background:
-                  selectedQuizIndex ===
-                  index
-                    ? "#4338ca"
-                    : "#667eea",
-                color: "white",
-                cursor:
-                  "pointer",
-                fontWeight: 600,
-                minWidth: 120,
-                boxShadow:
-                  "0 2px 6px rgba(0,0,0,0.15)",
-              }}
-            >
-              📝 {quizTitle}
-            </button>
-          );
-        }
-      )}
+        <p>
+          Page{" "}
+          {currentPage + 1} of{" "}
+          {lessonPages.length}
+        </p>
+      </div>
     </div>
-  )}
-        {/* PROGRESS BAR */}
+
+    {/* QUIZ BUTTONS */}
+    {Array.isArray(quizzes) &&
+      quizzes.length > 0 && (
         <div
           style={{
-            width: "100%",
-            height: 8,
-            background:
-              "#e5e7eb",
-            borderRadius: 20,
-            overflow: "hidden",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            marginTop: 20,
             marginBottom: 30,
+            justifyContent:
+              "center",
           }}
         >
-          <div
-            style={{
-              width: `${
-                ((currentPage + 1) /
-                  lessonPages.length) *
-                100
-              }%`,
-              height: "100%",
-              background:
-                "#667eea",
-            }}
-          />
-        </div>
-
-        {/* LESSON CONTENT */}
-        {selectedQuizIndex ===
-          null && (
-          <>
-            <div
-              style={{
-                minHeight: 350,
-              }}
-            >
-              <h2>
-                {page?.title}
-              </h2>
-
-              <div
-                style={{
-                  marginTop: 20,
-                  lineHeight: 1.8,
-                  fontSize:
-                    window.innerWidth <
-                    768
-                      ? 15
-                      : 17,
-                  overflowX: "auto",
-                  wordBreak:
-                    "break-word",
-                }}
-              >
-                <style>
-                  {`
-                    .lesson-content table {
-                      width: 100%;
-                      border-collapse: collapse;
-                      display: block;
-                      overflow-x: auto;
-                      white-space: nowrap;
-                    }
-
-                    .lesson-content th,
-                    .lesson-content td {
-                      border: 1px solid #ccc;
-                      padding: 10px;
-                      text-align: left;
-                    }
-
-                    .lesson-content img {
-                      max-width: 100%;
-                      height: auto;
-                    }
-
-                    .lesson-content iframe {
-                      max-width: 100%;
-                    }
-
-                    .lesson-content pre {
-                      overflow-x: auto;
-                      background: #f3f4f6;
-                      padding: 10px;
-                      border-radius: 6px;
-                    }
-
-                    .lesson-content {
-                      overflow-x: auto;
-                    }
-                  `}
-                </style>
-
-                <div
-                  className="lesson-content"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      page?.content ||
-                      "<p>No Content</p>",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* PAGE NAVIGATION */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent:
-                  "space-between",
-                marginTop: 40,
-                gap: 10,
-              }}
-            >
+          {quizzes.map(
+            (
+              quiz: any,
+              index: number
+            ) => (
               <button
-                disabled={
-                  currentPage === 0
-                }
-                onClick={() =>
-                  setCurrentPage(
-                    currentPage - 1
-                  )
-                }
+                key={index}
+                onClick={() => {
+                  setSelectedQuizIndex(
+                    index
+                  );
+
+                  setQuestions(
+                    quiz.questions ||
+                      []
+                  );
+
+                  setAnswers({});
+
+                  setCurrentQ(0);
+
+                  startTimeRef.current =
+                    Date.now();
+
+                  setTimeLeft(
+                    (quiz.questions
+                      ?.length ||
+                      1) * 120
+                  );
+                }}
                 style={{
                   padding:
-                    "12px 20px",
-                  borderRadius: 8,
+                    "12px 18px",
                   border: "none",
+                  borderRadius: 10,
                   background:
-                    currentPage === 0
-                      ? "#d1d5db"
-                      : "#111827",
+                    selectedQuizIndex ===
+                    index
+                      ? "#4338ca"
+                      : "#667eea",
                   color: "white",
                   cursor:
-                    currentPage === 0
-                      ? "not-allowed"
-                      : "pointer",
+                    "pointer",
+                  fontWeight: 600,
                 }}
               >
-                ← Previous
+                📝{" "}
+                {quiz.title ||
+                  `Quiz ${
+                    index + 1
+                  }`}
               </button>
+            )
+          )}
+        </div>
+      )}
 
-              {currentPage <
-              lessonPages.length -
-                1 ? (
-                <button
-                  onClick={() =>
-                    setCurrentPage(
-                      currentPage + 1
-                    )
-                  }
-                  style={{
-                    padding:
-                      "12px 20px",
-                    borderRadius: 8,
-                    border: "none",
-                    background:
-                      "#667eea",
-                    color: "white",
-                    cursor:
-                      "pointer",
-                  }}
-                >
-                  Next →
-                </button>
-              ) : (
-                <button
-                  style={{
-                    padding:
-                      "12px 20px",
-                    borderRadius: 8,
-                    border: "none",
-                    background:
-                      "#16a34a",
-                    color: "white",
-                    fontWeight:
-                      "bold",
-                  }}
-                >
-                  ✅ Lesson Complete
-                </button>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* QUIZ SCREEN */}
-{selectedQuizIndex !== null &&
-  questions.length > 0 && (
-    <div style={{ marginTop: 30 }}>
-      {/* TIMER */}
+    {/* PROGRESS BAR */}
+    <div
+      style={{
+        width: "100%",
+        height: 8,
+        background: "#e5e7eb",
+        borderRadius: 20,
+        overflow: "hidden",
+        marginBottom: 30,
+      }}
+    >
       <div
         style={{
-          fontSize: 22,
-          fontWeight: "bold",
-          color: "red",
-          marginBottom: 25,
+          width: `${
+            ((currentPage + 1) /
+              lessonPages.length) *
+            100
+          }%`,
+          height: "100%",
+          background: "#667eea",
         }}
-      >
-        ⏰ {formatTime()}
-      </div>
+      />
+    </div>
 
-      {questions.map(
-        (
-          q: any,
-          index: number
-        ) => (
+    {/* LESSON CONTENT */}
+    {selectedQuizIndex ===
+      null && (
+      <>
+        <div
+          style={{
+            minHeight: 350,
+          }}
+        >
+          <h2>{page?.title}</h2>
+
           <div
-            key={index}
             style={{
-              marginBottom: 40,
-              padding: 20,
-              borderRadius: 12,
-              background: "#fff",
-              border:
-                "1px solid #ddd",
+              marginTop: 20,
+              lineHeight: 1.8,
+              fontSize:
+                window.innerWidth <
+                768
+                  ? 15
+                  : 17,
+              overflowX: "auto",
+              wordBreak:
+                "break-word",
             }}
           >
-            <h2>
-              Q{index + 1}.{" "}
-              {q.questionTitle}
-            </h2>
-
-            {q.statements &&
-              q.statements.map(
-                (
-                  s: string,
-                  i: number
-                ) => (
-                  <div
-                    key={i}
-                    style={{
-                      marginTop: 8,
-                    }}
-                  >
-                    {String.fromCharCode(
-                      65 + i
-                    )}
-                    . {s}
-                  </div>
-                )
-              )}
-
             <div
-              style={{
-                marginTop: 20,
+              className="lesson-content"
+              dangerouslySetInnerHTML={{
+                __html:
+                  page?.content ||
+                  "<p>No Content</p>",
               }}
-            >
-              {q.options?.map(
-                (
-                  opt: string,
-                  optIndex: number
-                ) => (
-                  <button
-                    key={optIndex}
-                    onClick={() =>
-  handleSelect(
-    index,
-    optIndex
-  )
-}
-                    style={{
-                      display:
-                        "block",
-                      width: "100%",
-                      textAlign:
-                        "left",
-                      marginBottom: 10,
-                      padding: 14,
-                      borderRadius: 10,
-                      border:
-                        answers[
-                          index
-                        ] === optIndex
-                          ? "2px solid #4338ca"
-                          : "1px solid #ccc",
-                      background:
-                        answers[
-                          index
-                        ] === optIndex
-                          ? "#eef2ff"
-                          : "#fff",
-                      cursor:
-                        "pointer",
-                      fontSize: 16,
-                    }}
-                  >
-                    {opt}
-                  </button>
-                )
-              )}
-            </div>
+            />
           </div>
-        )
-      )}
-    </div>
-  )}
+        </div>
+      </>
+    )}
 
-              {/* QUIZ NAVIGATION */}
+    {/* QUIZ SCREEN */}
+    {selectedQuizIndex !==
+      null &&
+      questions.length > 0 && (
+        <div
+          style={{
+            marginTop: 30,
+          }}
+        >
+          {/* TIMER */}
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight:
+                "bold",
+              color: "red",
+              marginBottom: 25,
+            }}
+          >
+            ⏰ {formatTime()}
+          </div>
+
+          {questions.map(
+            (
+              q: any,
+              index: number
+            ) => (
               <div
+                key={index}
                 style={{
-                  marginTop: 30,
-                  display: "flex",
-                  gap: 10,
-                  flexWrap: "wrap",
+                  marginBottom: 40,
+                  padding: 20,
+                  borderRadius: 12,
+                  background:
+                    "#fff",
+                  border:
+                    "1px solid #ddd",
                 }}
               >
-                <button
-                  disabled={
-                    currentQ === 0
-                  }
-                  onClick={() =>
-                    setCurrentQ(
-                      (p) =>
-                        p - 1
-                    )
-                  }
+                <h2
+                  style={{
+                    fontSize: 30,
+                    marginBottom: 20,
+                  }}
                 >
-                  Prev
-                </button>
+                  Q{index + 1}.{" "}
+                  {
+                    q?.questionTitle
+                  }
+                </h2>
 
-                <button
-                  disabled={
-                    currentQ ===
-                    questions.length -
-                      1
-                  }
-                  onClick={() =>
-                    setCurrentQ(
-                      (p) =>
-                        p + 1
+                {Array.isArray(
+                  q?.statements
+                ) &&
+                  q.statements.map(
+                    (
+                      s: string,
+                      i: number
+                    ) => (
+                      <div
+                        key={i}
+                        style={{
+                          marginBottom: 10,
+                          fontSize: 18,
+                        }}
+                      >
+                        <strong>
+                          {String.fromCharCode(
+                            65 + i
+                          )}
+                          .
+                        </strong>{" "}
+                        {s}
+                      </div>
                     )
-                  }
-                >
-                  Next
-                </button>
+                  )}
 
-                <button
-                  onClick={
-                    handleSubmit
-                  }
+                <div
+                  style={{
+                    marginTop: 25,
+                  }}
                 >
-                  Submit
-                </button>
+                  {Array.isArray(
+                    q?.options
+                  ) &&
+                    q.options.map(
+                      (
+                        opt: string,
+                        optIndex: number
+                      ) => (
+                        <button
+                          key={
+                            optIndex
+                          }
+                          onClick={() =>
+                            handleSelect(
+                              index,
+                              optIndex
+                            )
+                          }
+                          style={{
+                            display:
+                              "block",
+                            width:
+                              "100%",
+                            textAlign:
+                              "left",
+                            marginBottom: 12,
+                            padding: 15,
+                            borderRadius: 10,
+                            border:
+                              answers[
+                                index
+                              ] ===
+                              optIndex
+                                ? "2px solid #4338ca"
+                                : "1px solid #ccc",
+                            background:
+                              answers[
+                                index
+                              ] ===
+                              optIndex
+                                ? "#eef2ff"
+                                : "white",
+                            cursor:
+                              "pointer",
+                            fontSize: 16,
+                          }}
+                        >
+                          {opt}
+                        </button>
+                      )
+                    )}
+                </div>
               </div>
-            
-      </div>
+            )
+          )}
+
+          {/* QUIZ NAVIGATION */}
+          <div
+            style={{
+              marginTop: 30,
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              disabled={
+                currentQ === 0
+              }
+              onClick={() =>
+                setCurrentQ(
+                  (p) => p - 1
+                )
+              }
+            >
+              Prev
+            </button>
+
+            <button
+              disabled={
+                currentQ ===
+                questions.length -
+                  1
+              }
+              onClick={() =>
+                setCurrentQ(
+                  (p) => p + 1
+                )
+              }
+            >
+              Next
+            </button>
+
+            <button
+              onClick={
+                handleSubmit
+              }
+            >
+              Submit
+            </button>
+                    </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
