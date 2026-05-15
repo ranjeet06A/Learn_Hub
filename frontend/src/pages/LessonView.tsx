@@ -693,6 +693,10 @@ const q = questions[currentQ];
     question: any,
     index: number
   ) => (
+    console.log(
+  "QUESTION OBJECT:",
+  question
+),
               <div
                 key={index}
                 style={{
