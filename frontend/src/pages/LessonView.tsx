@@ -394,19 +394,33 @@ try {
 }
 
 // ✅ SAFETY FIX
+// ✅ SUPPORT BOTH QUIZ FORMATS
 quizzes = quizzes.map(
-  (quiz: any, index: number) => ({
-    title:
-      quiz?.title ||
-      `Quiz ${index + 1}`,
+  (quiz: any, index: number) => {
 
-    questions:
+    // NEW FORMAT
+    if (
       Array.isArray(
         quiz?.questions
       )
-        ? quiz.questions
-        : [],
-  })
+    ) {
+      return {
+        title:
+          quiz?.title ||
+          `Quiz ${index + 1}`,
+
+        questions:
+          quiz.questions,
+      };
+    }
+
+    // OLD FORMAT
+    return {
+      title: `Quiz ${index + 1}`,
+
+      questions: [quiz],
+    };
+  }
 );
 
 const q = questions[currentQ];
