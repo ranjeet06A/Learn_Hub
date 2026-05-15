@@ -368,115 +368,46 @@ export default function LessonView() {
 
 let quizzes: any[] = [];
 
-// ✅ NEW QUIZ FORMAT
-if (
-  Array.isArray(
-    lesson?.quizzes
-  ) &&
-  lesson.quizzes.length > 0
-) {
-  // ✅ already grouped quiz sets
-  if (
-    lesson.quizzes[0]?.questions
-  ) {
-    quizzes =
-      lesson.quizzes as any[];
-  }
+// ✅ LOAD FROM IMPORTED quizData
+try {
+  const allQuizData =
+    JSON.parse(
+      localStorage.getItem(
+        "quizData"
+      ) || "{}"
+    );
 
-  // ✅ flat question array
-  else {
-    const grouped: any[] = [];
+  quizzes =
+    allQuizData[
+      String(lessonId)
+    ] || [];
 
-    for (
-      let i = 0;
-      i <
-      lesson.quizzes.length;
-      i += 40
-    ) {
-      grouped.push({
-        title: `Quiz ${
-          grouped.length + 1
-        }`,
-        questions:
-          lesson.quizzes.slice(
-            i,
-            i + 40
-          ),
-      });
-    }
-
-    quizzes = grouped;
-  }
+  console.log(
+    "QUIZZES FROM quizData:",
+    quizzes
+  );
+} catch (err) {
+  console.log(
+    "Quiz loading error:",
+    err
+  );
 }
 
-// ✅ OLD QUIZ FORMAT
-else if (
-  Array.isArray(
-    lesson?.quiz
-  ) &&
-  lesson.quiz.length > 0
-) {
-  quizzes = [
-    {
-      title: "Quiz 1",
-      questions:
-        lesson.quiz,
-    },
-  ];
-}
+// ✅ SAFETY FIX
+quizzes = quizzes.map(
+  (quiz: any, index: number) => ({
+    title:
+      quiz?.title ||
+      `Quiz ${index + 1}`,
 
-// =========================
-// FALLBACK TO LESSON DATA
-// =========================
-else if (
-  Array.isArray(lesson.quizzes)
-) {
-  const firstItem =
-    lesson.quizzes[0];
-
-  if (
-    firstItem &&
-    Array.isArray(
-      firstItem.questions
-    )
-  ) {
-    quizzes =
-      lesson.quizzes;
-  }
-
-  else if (
-    firstItem &&
-    firstItem.questionTitle
-  ) {
-    quizzes = [
-      {
-        title: "Quiz 1",
-        questions:
-          lesson.quizzes,
-      },
-    ];
-  }
-}
-
-else if (
-  Array.isArray(lesson.quiz)
-) {
-  const firstItem =
-    lesson.quiz[0];
-
-  if (
-    firstItem &&
-    firstItem.questionTitle
-  ) {
-    quizzes = [
-      {
-        title: "Quiz 1",
-        questions:
-          lesson.quiz,
-      },
-    ];
-  }
-}
+    questions:
+      Array.isArray(
+        quiz?.questions
+      )
+        ? quiz.questions
+        : [],
+  })
+);
 
 const q = questions[currentQ];
 
