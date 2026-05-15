@@ -161,26 +161,76 @@ export default function AdminPanel() {
   };
 
   // ================= SAVE QUIZ =================
-  const saveQuiz = () => {
-    if (!selectedCourse || !selectedLesson) {
-      alert("Select course & lesson");
-      return;
+const saveQuiz = () => {
+  if (!selectedCourse || !selectedLesson) {
+    alert("Select course & lesson");
+    return;
+  }
+
+  if (parsedQuestions.length === 0) {
+    alert("No questions found");
+    return;
+  }
+
+  const updatedCourses = courses.map((course: any) => {
+    if (course.id !== selectedCourse) {
+      return course;
     }
 
-    const existing = JSON.parse(
-      localStorage.getItem("learn_hub_quizzes") || "{}"
-    );
+    return {
+      ...course,
+      lessons: course.lessons.map(
+        (lesson: any) => {
+          if (
+            lesson.id !==
+            selectedLesson
+          ) {
+            return lesson;
+          }
 
-    if (!existing[selectedCourse]) {
-      existing[selectedCourse] = {};
-    }
+          // ✅ CREATE QUIZZES ARRAY
+          const existingQuizzes =
+            Array.isArray(
+              lesson.quizzes
+            )
+              ? lesson.quizzes
+              : [];
 
-    existing[selectedCourse][selectedLesson] = parsedQuestions;
+          // ✅ NEW QUIZ SET
+          const newQuiz = {
+            title: `Quiz ${
+              existingQuizzes.length +
+              1
+            }`,
+            questions:
+              parsedQuestions,
+          };
 
-    localStorage.setItem("learn_hub_quizzes", JSON.stringify(existing));
+          return {
+            ...lesson,
+            quizzes: [
+              ...existingQuizzes,
+              newQuiz,
+            ],
+          };
+        }
+      ),
+    };
+  });
 
-    alert("Quiz saved!");
-  };
+  // ✅ SAVE
+  saveCourses(updatedCourses);
+
+  alert(
+    `Quiz ${
+      parsedQuestions.length
+    } questions added successfully`
+  );
+
+  // OPTIONAL RESET
+  setInput("");
+  setParsedQuestions([]);
+};
 
   // ================= UI =================
   return (
