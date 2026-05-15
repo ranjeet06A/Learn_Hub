@@ -125,16 +125,26 @@ const newQuizSet = {
     // =========================
     // SAVE
     // =========================
-    localStorage.setItem(
-      "quizData",
-      JSON.stringify(
-        existing
-      )
-    );
+    const oldQuizData = JSON.parse(
+  localStorage.getItem("quizData") || "{}"
+);
 
-    alert(
-      `✅ ${quizData.length} Questions Imported into "${quizTitle}"`
-    );
+oldQuizData[lessonId] = [
+  {
+    title: "Quiz 1",
+    questions: quizData,
+  },
+];
+
+localStorage.setItem(
+  "quizData",
+  JSON.stringify(oldQuizData)
+);
+
+console.log(
+  "UPDATED quizData:",
+  oldQuizData
+);
 
     // =========================
     // RESET

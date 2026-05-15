@@ -50,44 +50,78 @@ export const QuizBuilder: React.FC = () => {
   // ✅ FINAL SAVE (APPEND + FIXED)
  console.log("🚀 SAVE BUTTON CLICKED");
   const handleAddQuiz = () => {
-    if (!selectedCourse || !selectedLesson) {
-      setErrors(["Please select both course and lesson"]);
-      return;
-    }
+  if (!selectedCourse || !selectedLesson) {
+    setErrors(["Please select both course and lesson"]);
+    return;
+  }
 
-    if (parsedQuestions.length === 0) {
-      setErrors(["No questions to add"]);
-      return;
-    }
+  if (parsedQuestions.length === 0) {
+    setErrors(["No questions to add"]);
+    return;
+  }
 
-    const existing = JSON.parse(localStorage.getItem("quizData") || "{}");
+  try {
+    // Load old data
+    const existing = JSON.parse(
+      localStorage.getItem("quizData") || "{}"
+    );
 
-    const lessonId = Number(selectedLesson);
+    const lessonId = String(selectedLesson);
 
-    const oldQuestions: QuizQuestion[] = existing[lessonId] || [];
+    // ✅ CONVERT QUESTIONS TO SUPPORTED FORMAT
+    const convertedQuestions = parsedQuestions.map((q: any) => ({
+      questionTitle:
+        q.questionTitle ||
+        q.question ||
+        "",
 
-    // ✅ MERGE (NO DUPLICATES)
-    const merged = [
-      ...oldQuestions,
-      ...parsedQuestions.filter(
-        (q) =>
-          !oldQuestions.some(
-            (old) => old.question.trim() === q.question.trim()
-          )
-      ),
+      statements:
+        Array.isArray(q.statements)
+          ? q.statements
+          : [],
+
+      options:
+        Array.isArray(q.options)
+          ? q.options
+          : [],
+
+      correctIndex:
+        typeof q.correctIndex === "number"
+          ? q.correctIndex
+          : q.options?.findIndex(
+              (o: string) => o === q.answer
+            ) || 0,
+    }));
+
+    // ✅ SAVE IN QUIZ SET FORMAT
+    existing[lessonId] = [
+      {
+        title: "Quiz 1",
+        questions: convertedQuestions,
+      },
     ];
 
-    existing[lessonId] = merged;
+    localStorage.setItem(
+      "quizData",
+      JSON.stringify(existing)
+    );
 
-    localStorage.setItem("quizData", JSON.stringify(existing));
+    console.log(
+      "✅ FINAL QUIZ DATA:",
+      existing
+    );
 
-    console.log("✅ FINAL SAVED DATA:", existing);
+    alert(
+      `✅ ${convertedQuestions.length} questions added successfully!`
+    );
 
-    alert(`✅ ${parsedQuestions.length} questions added!`);
-
-    // 🔥 FORCE UPDATE
     window.location.reload();
-  };
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save quiz");
+  }
+};
 
   return (
     <div>
