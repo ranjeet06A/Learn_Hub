@@ -373,7 +373,38 @@ if (
   ) &&
   lesson.quizzes.length > 0
 ) {
-  quizzes = lesson.quizzes as any[];
+  // ✅ already grouped quiz sets
+  if (
+    lesson.quizzes[0]?.questions
+  ) {
+    quizzes =
+      lesson.quizzes as any[];
+  }
+
+  // ✅ flat question array
+  else {
+    const grouped: any[] = [];
+
+    for (
+      let i = 0;
+      i <
+      lesson.quizzes.length;
+      i += 40
+    ) {
+      grouped.push({
+        title: `Quiz ${
+          grouped.length + 1
+        }`,
+        questions:
+          lesson.quizzes.slice(
+            i,
+            i + 40
+          ),
+      });
+    }
+
+    quizzes = grouped;
+  }
 }
 
 // ✅ OLD QUIZ FORMAT
