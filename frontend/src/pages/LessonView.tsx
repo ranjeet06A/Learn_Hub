@@ -187,13 +187,15 @@ export default function LessonView() {
   // SELECT ANSWER
   // =========================
   const handleSelect = (
-    optionIndex: number
-  ) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQ]: optionIndex,
-    }));
-  };
+  questionIndex: number,
+  optionIndex: number
+) => {
+  setAnswers((prev) => ({
+    ...prev,
+    [questionIndex]:
+      optionIndex,
+  }));
+};
 
   // =========================
   // SUBMIT QUIZ
@@ -917,10 +919,11 @@ const q = questions[currentQ];
                   <button
                     key={optIndex}
                     onClick={() =>
-                      handleSelect(
-                        optIndex
-                      )
-                    }
+  handleSelect(
+    index,
+    optIndex
+  )
+}
                     style={{
                       display:
                         "block",
