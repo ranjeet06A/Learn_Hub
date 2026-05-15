@@ -11,7 +11,7 @@ export const QuizBuilder: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [mode, setMode] = useState<"input" | "preview">("input");
 
-  const courseIds = Object.keys(lessonsData).map(Number);
+  const courseIds = Object.keys(lessonsData);
 
   // 📥 HANDLE INPUT
   const handlePaste = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -169,10 +169,10 @@ export const QuizBuilder: React.FC = () => {
           >
             <option value="">Select Course</option>
             {courseIds.map((c) => (
-              <option key={c} value={c}>
-                Course {c}
-              </option>
-            ))}
+  <option key={c} value={c}>
+    {lessonsData[c]?.title || c}
+  </option>
+))}
           </select>
 
           <select
@@ -181,7 +181,7 @@ export const QuizBuilder: React.FC = () => {
           >
             <option value="">Select Lesson</option>
             {selectedCourse &&
-  lessonsData[Number(selectedCourse)]?.map((l: any) => (
+  lessonsData[selectedCourse]?.map((l: any) => (
     <option
       key={l._id || l.id}
       value={l._id || l.id}
