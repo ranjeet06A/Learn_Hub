@@ -523,137 +523,90 @@ const q = questions[currentQ];
           </div>
 
           {/* QUIZ BUTTONS */}
-          {selectedQuizIndex ===
-            null &&
-            quizzes.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  flexWrap: "wrap",
-                  width: "100%",
-                  justifyContent:
-                    window.innerWidth <
-                    768
-                      ? "center"
-                      : "flex-end",
-                }}
-              >
-                {quizzes.map(
-                  (
-                    quiz,
-                    index
-                  ) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        let finalQuestions: Question[] =
-                          [];
+         {Array.isArray(quizzes) &&
+  quizzes.length > 0 && (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 12,
+        marginTop: 20,
+        marginBottom: 30,
+        justifyContent: "center",
+      }}
+    >
+      {quizzes.map(
+        (
+          quiz: any,
+          index: number
+        ) => {
+          const quizTitle =
+            quiz?.title ||
+            `Quiz ${index + 1}`;
 
-                        if (
-                          Array.isArray(
-                            quiz
-                          )
-                        ) {
-                          finalQuestions =
-                            quiz;
-                        } else if (
-                          Array.isArray(
-                            quiz.questions
-                          )
-                        ) {
-                          finalQuestions =
-                            quiz.questions;
-                        } else if (
-                          Array.isArray(
-                            quiz.quiz
-                          )
-                        ) {
-                          finalQuestions =
-                            quiz.quiz;
-                        } else if (
-                          quiz.questions &&
-                          Array.isArray(
-                            quiz.questions
-                              .questions
-                          )
-                        ) {
-                          finalQuestions =
-                            quiz.questions.questions;
-                        } else if (
-                          quiz.data &&
-                          Array.isArray(
-                            quiz.data
-                          )
-                        ) {
-                          finalQuestions =
-                            quiz.data;
-                        } else if (
-                          quiz.questionTitle
-                        ) {
-                          finalQuestions =
-                            [quiz];
-                        }
+          return (
+            <button
+              key={index}
+              onClick={() => {
+                setSelectedQuizIndex(
+                  index
+                );
 
-                        if (
-                          !finalQuestions.length
-                        ) {
-                          alert(
-                            "Quiz format unsupported."
-                          );
+                setCurrentQ(0);
 
-                          return;
-                        }
-
-                        setSelectedQuizIndex(
-                          index
-                        );
-
-                        setQuestions(
-                          finalQuestions
-                        );
-
-                        setCurrentQ(0);
-
-                        setAnswers({});
-
-                        setTimeLeft(
-                          finalQuestions.length *
-                            60
-                        );
-
-                        startTimeRef.current =
-                          Date.now();
-
-                        window.scrollTo({
-                          top: 0,
-                          behavior:
-                            "smooth",
-                        });
-                      }}
-                      style={{
-                        padding:
-                          "12px 18px",
-                        background:
-                          "#667eea",
-                        color:
-                          "white",
-                        border:
-                          "none",
-                        borderRadius: 8,
-                        cursor:
-                          "pointer",
-                        fontWeight:
-                          "bold",
-                      }}
-                    >
-                      📝 {quiz.title || `Quiz ${index + 1}`}
-                    </button>
+                // ✅ LOAD QUESTIONS
+                const loadedQuestions =
+                  Array.isArray(
+                    quiz?.questions
                   )
-                )}
-              </div>
-            )}
-        </div>
+                    ? quiz.questions
+                    : Array.isArray(
+                        quiz
+                      )
+                    ? quiz
+                    : [];
+
+                setQuestions(
+                  loadedQuestions
+                );
+
+                setAnswers({});
+
+                setTimeLeft(
+                  loadedQuestions.length *
+                    120
+                );
+
+                startTimeRef.current =
+                  Date.now();
+              }}
+              style={{
+                padding:
+                  "12px 18px",
+                border:
+                  "none",
+                borderRadius: 10,
+                background:
+                  selectedQuizIndex ===
+                  index
+                    ? "#4338ca"
+                    : "#667eea",
+                color: "white",
+                cursor:
+                  "pointer",
+                fontWeight: 600,
+                minWidth: 120,
+                boxShadow:
+                  "0 2px 6px rgba(0,0,0,0.15)",
+              }}
+            >
+              📝 {quizTitle}
+            </button>
+          );
+        }
+      )}
+    </div>
+  )}
 
         {/* PROGRESS BAR */}
         <div
