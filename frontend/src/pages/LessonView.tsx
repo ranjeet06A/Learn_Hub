@@ -361,58 +361,35 @@ export default function LessonView() {
   }
 
   // =========================
-// PROFESSIONAL QUIZ SYSTEM
+// QUIZ SYSTEM
 // =========================
-
-// ✅ LOAD QUIZZES FROM LOCAL STORAGE
-const allQuizData = JSON.parse(
-  localStorage.getItem("quizData") || "{}"
-);
-
-const lessonQuizData =
-  allQuizData[lessonId || ""] || [];
 
 let quizzes: any[] = [];
 
-// =========================
-// NEW PROFESSIONAL FORMAT
-// [
-//   {
-//     title: "Quiz 1",
-//     questions: []
-//   }
-// ]
-// =========================
+// ✅ NEW QUIZ FORMAT
 if (
-  Array.isArray(lessonQuizData) &&
-  lessonQuizData.length > 0
+  Array.isArray(
+    lesson?.quizzes
+  ) &&
+  lesson.quizzes.length > 0
 ) {
-  const firstItem =
-    lessonQuizData[0];
+  quizzes = lesson.quizzes as any[];
+}
 
-  // ✅ PROFESSIONAL QUIZ SETS
-  if (
-    firstItem &&
-    Array.isArray(
-      firstItem.questions
-    )
-  ) {
-    quizzes = lessonQuizData;
-  }
-
-  // ✅ OLD DIRECT QUESTIONS
-  else if (
-    firstItem &&
-    firstItem.questionTitle
-  ) {
-    quizzes = [
-      {
-        title: "Quiz 1",
-        questions:
-          lessonQuizData,
-      },
-    ];
-  }
+// ✅ OLD QUIZ FORMAT
+else if (
+  Array.isArray(
+    lesson?.quiz
+  ) &&
+  lesson.quiz.length > 0
+) {
+  quizzes = [
+    {
+      title: "Quiz 1",
+      questions:
+        lesson.quiz,
+    },
+  ];
 }
 
 // =========================
