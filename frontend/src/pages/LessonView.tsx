@@ -366,116 +366,35 @@ export default function LessonView() {
 // QUIZ SYSTEM
 // =========================
 
+// =========================
+// QUIZ SYSTEM
+// =========================
+
 let quizzes: any[] = [];
 
-// ✅ NEW QUIZ FORMAT
-if (
-  Array.isArray(
-    lesson?.quizzes
-  ) &&
-  lesson.quizzes.length > 0
-) {
-  // ✅ already grouped quiz sets
-  if (
-    lesson.quizzes[0]?.questions
-  ) {
-    quizzes =
-      lesson.quizzes as any[];
-  }
+// ✅ LOAD QUIZZES FROM quizData STORAGE
+try {
+  const storedQuizData =
+    JSON.parse(
+      localStorage.getItem(
+        "quizData"
+      ) || "{}"
+    );
 
-  // ✅ flat question array
-  else {
-    const grouped: any[] = [];
+  quizzes =
+    storedQuizData[
+      String(lessonId)
+    ] || [];
 
-    for (
-      let i = 0;
-      i <
-      lesson.quizzes.length;
-      i += 40
-    ) {
-      grouped.push({
-        title: `Quiz ${
-          grouped.length + 1
-        }`,
-        questions:
-          lesson.quizzes.slice(
-            i,
-            i + 40
-          ),
-      });
-    }
-
-    quizzes = grouped;
-  }
-}
-
-// ✅ OLD QUIZ FORMAT
-else if (
-  Array.isArray(
-    lesson?.quiz
-  ) &&
-  lesson.quiz.length > 0
-) {
-  quizzes = [
-    {
-      title: "Quiz 1",
-      questions:
-        lesson.quiz,
-    },
-  ];
-}
-
-// =========================
-// FALLBACK TO LESSON DATA
-// =========================
-else if (
-  Array.isArray(lesson.quizzes)
-) {
-  const firstItem =
-    lesson.quizzes[0];
-
-  if (
-    firstItem &&
-    Array.isArray(
-      firstItem.questions
-    )
-  ) {
-    quizzes =
-      lesson.quizzes;
-  }
-
-  else if (
-    firstItem &&
-    firstItem.questionTitle
-  ) {
-    quizzes = [
-      {
-        title: "Quiz 1",
-        questions:
-          lesson.quizzes,
-      },
-    ];
-  }
-}
-
-else if (
-  Array.isArray(lesson.quiz)
-) {
-  const firstItem =
-    lesson.quiz[0];
-
-  if (
-    firstItem &&
-    firstItem.questionTitle
-  ) {
-    quizzes = [
-      {
-        title: "Quiz 1",
-        questions:
-          lesson.quiz,
-      },
-    ];
-  }
+  console.log(
+    "LOADED QUIZZES:",
+    quizzes
+  );
+} catch (err) {
+  console.log(
+    "Quiz load error",
+    err
+  );
 }
 
 const q = questions[currentQ];
