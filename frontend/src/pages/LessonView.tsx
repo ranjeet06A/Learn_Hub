@@ -689,10 +689,10 @@ const q = questions[currentQ];
           </div>
 
           {questions.map(
-            (
-              q: any,
-              index: number
-            ) => (
+  (
+    question: any,
+    index: number
+  ) => (
               <div
                 key={index}
                 style={{
@@ -713,14 +713,14 @@ const q = questions[currentQ];
                 >
                   Q{index + 1}.{" "}
                   {
-                    q?.questionTitle
+                    question?.questionTitle
                   }
                 </h2>
 
                 {Array.isArray(
-                  q?.statements
+                 question?.statements
                 ) &&
-                  q.statements.map(
+                 question.statements.map(
                     (
                       s: string,
                       i: number
@@ -749,9 +749,9 @@ const q = questions[currentQ];
                   }}
                 >
                   {Array.isArray(
-                    q?.options
+                   question?.options
                   ) &&
-                    q.options.map(
+                    question.options.map(
                       (
                         opt: string,
                         optIndex: number
