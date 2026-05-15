@@ -533,15 +533,22 @@ const q = questions[currentQ];
                 setCurrentQ(0);
 
                 const loadedQuestions =
-                  Array.isArray(
-                    quiz?.questions
-                  )
-                    ? quiz.questions
-                    : Array.isArray(
-                        quiz
-                      )
-                    ? quiz
-                    : [];
+  Array.isArray(
+    quiz?.questions
+  )
+    ? quiz.questions
+
+    : Array.isArray(
+        quiz?.quiz
+      )
+    ? quiz.quiz
+
+    : Array.isArray(
+        quiz
+      )
+    ? quiz
+
+    : [];
 
                 setQuestions(
                   loadedQuestions
