@@ -66,7 +66,7 @@ export const QuizBuilder: React.FC = () => {
       localStorage.getItem("quizData") || "{}"
     );
 
-    const lessonId = String(selectedLesson);
+   const lessonId = selectedLesson;
 
     // ✅ CONVERT QUESTIONS TO SUPPORTED FORMAT
     const convertedQuestions = parsedQuestions.map((q: any) => {
