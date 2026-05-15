@@ -497,33 +497,34 @@ const q = questions[currentQ];
         }}
       >
         {/* TOP BAR */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent:
-              "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-            flexWrap: "wrap",
-            gap: 15,
-          }}
-        >
-          <div>
-            <h1>
-              📘{" "}
-              {lesson.title ||
-                lesson.name}
-            </h1>
+<div
+  style={{
+    display: "flex",
+    justifyContent:
+      "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    flexWrap: "wrap",
+    gap: 15,
+  }}
+>
+  <div>
+    <h1>
+      📘{" "}
+      {lesson.title ||
+        lesson.name}
+    </h1>
 
-            <p>
-              Page{" "}
-              {currentPage + 1} of{" "}
-              {lessonPages.length}
-            </p>
-          </div>
+    <p>
+      Page{" "}
+      {currentPage + 1} of{" "}
+      {lessonPages.length}
+    </p>
+  </div>
+</div>
 
-          {/* QUIZ BUTTONS */}
-         {Array.isArray(quizzes) &&
+{/* QUIZ BUTTONS */}
+{Array.isArray(quizzes) &&
   quizzes.length > 0 && (
     <div
       style={{
@@ -554,7 +555,6 @@ const q = questions[currentQ];
 
                 setCurrentQ(0);
 
-                // ✅ LOAD QUESTIONS
                 const loadedQuestions =
                   Array.isArray(
                     quiz?.questions
@@ -607,7 +607,6 @@ const q = questions[currentQ];
       )}
     </div>
   )}
-
         {/* PROGRESS BAR */}
         <div
           style={{
