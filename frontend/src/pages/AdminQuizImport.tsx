@@ -78,14 +78,42 @@ export default function AdminQuizImport() {
       existing[lessonId] = [];
     }
 
-    // ✅ CREATE NEW QUIZ SET
-    const newQuizSet = {
-      title:
-        quizTitle,
+   // ✅ FORMAT QUESTIONS
+const formattedQuestions =
+  quizData.map((q: any) => ({
+    questionTitle:
+      q.questionTitle ||
+      q.question ||
+      "",
 
-      questions:
-        quizData,
-    };
+    statements:
+      Array.isArray(
+        q.statements
+      )
+        ? q.statements
+        : [],
+
+    options:
+      Array.isArray(
+        q.options
+      )
+        ? q.options
+        : [],
+
+    correctIndex:
+      Number(
+        q.correctIndex || 0
+      ),
+  }));
+
+// ✅ CREATE NEW QUIZ SET
+const newQuizSet = {
+  title:
+    quizTitle,
+
+  questions:
+    formattedQuestions,
+};
 
     // ✅ ADD NEW QUIZ
     existing[
