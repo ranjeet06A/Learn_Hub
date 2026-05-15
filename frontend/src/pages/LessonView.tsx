@@ -526,47 +526,84 @@ const q = questions[currentQ];
             <button
               key={index}
               onClick={() => {
-                setSelectedQuizIndex(
-                  index
-                );
+  setSelectedQuizIndex(
+    index
+  );
 
-                setCurrentQ(0);
+  setCurrentQ(0);
 
-                const loadedQuestions =
-  Array.isArray(
-    quiz?.questions
-  )
-    ? quiz.questions
+  console.log(
+    "QUIZ OBJECT:",
+    quiz
+  );
 
-    : Array.isArray(
-        quiz?.quiz
-      )
-    ? quiz.quiz
+  let loadedQuestions: any[] =
+    [];
 
-    : quiz?.questionTitle
-    ? [quiz]
+  // FORMAT 1
+  if (
+    quiz &&
+    Array.isArray(
+      quiz.questions
+    )
+  ) {
+    loadedQuestions =
+      quiz.questions;
+  }
 
-    : Array.isArray(
-        quiz
-      )
-    ? quiz
+  // FORMAT 2
+  else if (
+    quiz &&
+    Array.isArray(
+      quiz.quiz
+    )
+  ) {
+    loadedQuestions =
+      quiz.quiz;
+  }
 
-    : [];
+  // FORMAT 3
+  else if (
+    quiz &&
+    quiz.questionTitle
+  ) {
+    loadedQuestions = [
+      quiz,
+    ];
+  }
 
-                setQuestions(
-                  loadedQuestions
-                );
+  // FORMAT 4
+  else if (
+    Array.isArray(quiz)
+  ) {
+    loadedQuestions =
+      quiz;
+  }
 
-                setAnswers({});
+  console.log(
+    "LOADED QUESTIONS:",
+    loadedQuestions
+  );
 
-                setTimeLeft(
-                  loadedQuestions.length *
-                    120
-                );
+  setQuestions(
+    loadedQuestions
+  );
 
-                startTimeRef.current =
-                  Date.now();
-              }}
+  console.log(
+    "QUESTIONS STATE:",
+    loadedQuestions
+  );
+
+  setAnswers({});
+
+  setTimeLeft(
+    loadedQuestions.length *
+      120
+  );
+
+  startTimeRef.current =
+    Date.now();
+}}
               style={{
                 padding:
                   "12px 18px",
