@@ -780,118 +780,84 @@ const q = questions[currentQ];
         )}
 
         {/* QUIZ SCREEN */}
-        {selectedQuizIndex !==
-          null &&
-          questions.length >
-            0 && (
-            <>
-              <h2>
-  📝 {
-    quizzes[selectedQuizIndex]
-      ?.title ||
-    `Quiz ${selectedQuizIndex + 1}`
-  }
-</h2>
+        {selectedQuizIndex !== null &&
+  quizzes[selectedQuizIndex] && (
+    <div style={{ marginTop: 30 }}>
+      {(
+        Array.isArray(
+          quizzes[selectedQuizIndex]
+        )
+          ? quizzes[selectedQuizIndex]
+          : quizzes[selectedQuizIndex]
+              ?.questions || []
+      ).map(
+        (
+          q: any,
+          index: number
+        ) => (
+          <div
+            key={index}
+            style={{
+              marginBottom: 40,
+              padding: 20,
+              borderRadius: 12,
+              background: "#fff",
+            }}
+          >
+            <h2>
+              Q{index + 1}.{" "}
+              {q.questionTitle}
+            </h2>
 
-              <div
-                style={{
-                  marginBottom: 20,
-                  fontWeight:
-                    "bold",
-                  color: "red",
-                }}
-              >
-                ⏱{" "}
-                {formatTime()}
-              </div>
-
-              {q && (
-                <>
-                  <h3>
-                    Q
-                    {currentQ + 1}
-                    .{" "}
-                    {
-                      q.questionTitle
-                    }
-                  </h3>
-
-                  {Array.isArray(
-                    q.statements
-                  ) &&
-                    q.statements.map(
-                      (
-                        s,
-                        i
-                      ) => (
-                        <div
-                          key={i}
-                          style={{
-                            marginTop: 5,
-                          }}
-                        >
-                          {
-                            String.fromCharCode(
-                              65 +
-                                i
-                            )
-                          }
-                          . {s}
-                        </div>
-                      )
+            {q.statements &&
+              q.statements.map(
+                (
+                  s: string,
+                  i: number
+                ) => (
+                  <div key={i}>
+                    {String.fromCharCode(
+                      65 + i
                     )}
+                    . {s}
+                  </div>
+                )
+              )}
 
-                  <div
+            <div
+              style={{
+                marginTop: 20,
+              }}
+            >
+              {q.options?.map(
+                (
+                  opt: string,
+                  optIndex: number
+                ) => (
+                  <button
+                    key={optIndex}
                     style={{
-                      marginTop: 25,
+                      display:
+                        "block",
+                      width: "100%",
+                      marginBottom: 10,
+                      padding: 14,
+                      borderRadius: 10,
+                      border:
+                        "1px solid #ccc",
+                      cursor: "pointer",
                     }}
                   >
-                    {Array.isArray(
-                      q.options
-                    ) &&
-                      q.options.map(
-                        (
-                          opt,
-                          i
-                        ) => (
-                          <button
-                            key={i}
-                            onClick={() =>
-                              handleSelect(
-                                i
-                              )
-                            }
-                            style={{
-                              display:
-                                "block",
-                              width:
-                                "100%",
-                              textAlign:
-                                "left",
-                              marginBottom: 12,
-                              padding: 15,
-                              borderRadius: 8,
-                              border:
-                                "1px solid #ccc",
-                              cursor:
-                                "pointer",
-                              fontSize: 16,
-                              background:
-                                answers[
-                                  currentQ
-                                ] ===
-                                i
-                                  ? "#dbeafe"
-                                  : "white",
-                            }}
-                          >
-                            {opt}
-                          </button>
-                        )
-                      )}
-                  </div>
-                </>
+                    {opt}
+                  </button>
+                )
               )}
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  )}
 
               {/* QUIZ NAVIGATION */}
               <div
@@ -940,8 +906,7 @@ const q = questions[currentQ];
                   Submit
                 </button>
               </div>
-            </>
-          )}
+            
       </div>
     </div>
   );
