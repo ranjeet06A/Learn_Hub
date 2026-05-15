@@ -69,29 +69,40 @@ export const QuizBuilder: React.FC = () => {
     const lessonId = String(selectedLesson);
 
     // ✅ CONVERT QUESTIONS TO SUPPORTED FORMAT
-    const convertedQuestions = parsedQuestions.map((q: any) => ({
-      questionTitle:
-        q.questionTitle ||
-        q.question ||
-        "",
+    const convertedQuestions = parsedQuestions.map((q: any) => {
+  const options = Array.isArray(q.options)
+    ? q.options
+    : [];
 
-      statements:
-        Array.isArray(q.statements)
-          ? q.statements
-          : [],
+  let correctIndex = 0;
 
-      options:
-        Array.isArray(q.options)
-          ? q.options
-          : [],
+  if (typeof q.correctIndex === "number") {
+    correctIndex = q.correctIndex;
+  } else if (q.answer) {
+    const foundIndex = options.findIndex(
+      (o: string) => o.trim() === q.answer.trim()
+    );
 
-      correctIndex:
-        typeof q.correctIndex === "number"
-          ? q.correctIndex
-          : q.options?.findIndex(
-              (o: string) => o === q.answer
-            ) || 0,
-    }));
+    correctIndex =
+      foundIndex >= 0 ? foundIndex : 0;
+  }
+
+  return {
+    questionTitle:
+      q.questionTitle ||
+      q.question ||
+      "",
+
+    statements:
+      Array.isArray(q.statements)
+        ? q.statements
+        : [],
+
+    options,
+
+    correctIndex,
+  };
+});
 
     // ✅ SAVE IN QUIZ SET FORMAT
     existing[lessonId] = [
@@ -170,11 +181,14 @@ export const QuizBuilder: React.FC = () => {
           >
             <option value="">Select Lesson</option>
             {selectedCourse &&
-              lessonsData[Number(selectedCourse)]?.map((l: any) => (
-                <option key={l.id} value={l.id}>
-                  {l.title}
-                </option>
-              ))}
+  lessonsData[Number(selectedCourse)]?.map((l: any) => (
+    <option
+      key={l._id || l.id}
+      value={l._id || l.id}
+    >
+      {l.title || l.name}
+    </option>
+))}
           </select>
 
           {/* QUESTIONS */}
