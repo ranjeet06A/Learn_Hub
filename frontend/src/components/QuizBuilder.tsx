@@ -73,19 +73,22 @@ const QuizBuilder: React.FC<Props> = () => {
       let answer = "";
 
       lines.forEach((line) => {
-        // QUESTION
-        if (
-          line.startsWith("With") ||
-          line.startsWith("Which") ||
-          line.startsWith("In")
-        ) {
-          question += line + " ";
-        }
+       // QUESTION TITLE
+if (
+  !/^\((I|II|III|IV)\)/.test(line) &&
+  !/^[A-D]\./.test(line) &&
+  !/^Correct Answer/i.test(line)
+) {
+  question += line + " ";
+}
 
         // STATEMENTS
-        else if (/^[A-D]\./.test(line)) {
-          statements.push(line);
-        }
+else if (
+  /^[A-D]\./.test(line) ||
+  /^\d+\./.test(line)
+) {
+  statements.push(line);
+}
 
         // OPTIONS
         else if (
