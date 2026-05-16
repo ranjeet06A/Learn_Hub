@@ -135,6 +135,11 @@ console.log(
   existing
 );
 
+console.log(
+  "SAVED quizData:",
+  localStorage.getItem("quizData")
+);
+
 alert(
   `✅ Quiz Imported Successfully (${formattedQuestions.length} Questions)`
 );
