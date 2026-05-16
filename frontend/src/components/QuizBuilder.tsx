@@ -55,9 +55,12 @@ const QuizBuilder: React.FC<Props> = () => {
     text: string
   ): ParsedQuestion[] => {
     const blocks = text
-      .split(/Q\d+\./)
-      .filter(Boolean);
-
+  .split(
+    /\n\s*(?:Q\s*)?\d+[\.\)]\s*/i
+  )
+  .filter(
+    (b) => b.trim().length > 20
+  );
     return blocks.map((block) => {
       const lines = block
         .split("\n")
@@ -109,7 +112,9 @@ else if (
 
 // QUESTION TITLE
 else {
-  question += line + " ";
+  if (question.length === 0) {
+  question = line;
+}
 }
        
 });
