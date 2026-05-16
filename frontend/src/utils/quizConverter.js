@@ -1,42 +1,66 @@
-export function convertToQuizJSON(input: string) {
+export function convertToQuizJSON(
+  input: string
+) {
+  // =========================
+  // TRY DIRECT JSON PARSE
+  // =========================
+  try {
+    const parsed =
+      JSON.parse(input);
+
+    if (
+      Array.isArray(parsed)
+    ) {
+      console.log(
+        "JSON QUIZ DETECTED:",
+        parsed
+      );
+
+      return parsed;
+    }
+  } catch (err) {
+    console.log(
+      "Not JSON format, using text parser..."
+    );
+  }
+
+  // =========================
+  // TEXT PARSER
+  // =========================
   const questions: any[] = [];
 
-  // =========================
-  // NORMALIZE
-  // =========================
-  input = input.replace(/\r/g, "");
+  input = input.replace(
+    /\r/g,
+    ""
+  );
 
-  // Support Q1. and 1.
   input = input.replace(
     /(?:^|\n)(Q?\d+\.)/g,
     "\n###QUESTION###$1"
   );
 
-  // =========================
-  // SPLIT QUESTIONS
-  // =========================
   const blocks = input
-    .split("###QUESTION###")
+    .split(
+      "###QUESTION###"
+    )
     .map((b) => b.trim())
     .filter(Boolean);
 
-  // =========================
-  // PROCESS BLOCKS
-  // =========================
   blocks.forEach((block) => {
     try {
       const lines = block
         .split("\n")
-        .map((l) => l.trim())
+        .map((l) =>
+          l.trim()
+        )
         .filter(Boolean);
 
-      if (lines.length === 0) {
+      if (
+        lines.length === 0
+      ) {
         return;
       }
 
-      // =========================
-      // QUESTION TITLE
-      // =========================
       const questionTitle =
         lines[0].replace(
           /^Q?\d+\.\s*/,
@@ -46,82 +70,83 @@ export function convertToQuizJSON(input: string) {
       const statements: string[] =
         [];
 
-      const options: string[] = [];
+      const options: string[] =
+        [];
 
       let correctIndex = 0;
 
-      // =========================
-      // PARSE LINES
-      // =========================
-      lines.forEach((line) => {
-        // Statements
-        const statementMatch =
-          line.match(
-            /^\d+\.\s*(.*)/
-          );
-
-        if (
-          statementMatch &&
-          !line
-            .toLowerCase()
-            .includes(
-              "correct answer"
-            )
-        ) {
-          statements.push(
-            statementMatch[1].trim()
-          );
-        }
-
-        // Options
-        const optionMatch =
-          line.match(
-            /^\(([A-D]|I|II|III|IV)\)\s*(.*)/
-          );
-
-        if (optionMatch) {
-          options.push(
-            optionMatch[2].trim()
-          );
-        }
-
-        // Correct answer
-        if (
-          line
-            .toLowerCase()
-            .includes(
-              "correct answer"
-            )
-        ) {
-          const ansMatch =
+      lines.forEach(
+        (line) => {
+          // Statements
+          const statementMatch =
             line.match(
-              /\(([A-D]|I|II|III|IV)\)/
+              /^\d+\.\s*(.*)/
             );
 
-          if (ansMatch) {
-            const key =
-              ansMatch[1];
+          if (
+            statementMatch &&
+            !line
+              .toLowerCase()
+              .includes(
+                "correct answer"
+              )
+          ) {
+            statements.push(
+              statementMatch[1].trim()
+            );
+          }
 
-            const map: any = {
-              A: 0,
-              B: 1,
-              C: 2,
-              D: 3,
-              I: 0,
-              II: 1,
-              III: 2,
-              IV: 3,
-            };
+          // Options
+          const optionMatch =
+            line.match(
+              /^\(([A-D]|I|II|III|IV)\)\s*(.*)/
+            );
 
-            correctIndex =
-              map[key] || 0;
+          if (
+            optionMatch
+          ) {
+            options.push(
+              optionMatch[2].trim()
+            );
+          }
+
+          // Correct Answer
+          if (
+            line
+              .toLowerCase()
+              .includes(
+                "correct answer"
+              )
+          ) {
+            const ansMatch =
+              line.match(
+                /\(([A-D]|I|II|III|IV)\)/
+              );
+
+            if (
+              ansMatch
+            ) {
+              const map: any =
+                {
+                  A: 0,
+                  B: 1,
+                  C: 2,
+                  D: 3,
+                  I: 0,
+                  II: 1,
+                  III: 2,
+                  IV: 3,
+                };
+
+              correctIndex =
+                map[
+                  ansMatch[1]
+                ] || 0;
+            }
           }
         }
-      });
+      );
 
-      // =========================
-      // SAVE QUESTION
-      // =========================
       if (
         questionTitle &&
         options.length >= 2
@@ -142,7 +167,7 @@ export function convertToQuizJSON(input: string) {
   });
 
   console.log(
-    "FINAL CONVERTED QUESTIONS:",
+    "FINAL PARSED QUESTIONS:",
     questions
   );
 
