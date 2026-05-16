@@ -45,14 +45,14 @@ export function parseQuiz(
 
     lines.forEach((line) => {
       // ================= QUESTION =================
-      if (
-        line.startsWith("With") ||
-        line.startsWith("In") ||
-        line.startsWith("Which")
-      ) {
-        questionTitle +=
-          line + " ";
-      }
+if (
+  !/^\d+\./.test(line) &&
+  !/^[A-D]\./.test(line) &&
+  !/^\((I|II|III|IV)\)/.test(line) &&
+  !line.includes("Correct Answer")
+) {
+  questionTitle += line + " ";
+}
 
       // ================= STATEMENTS =================
       else if (
@@ -60,10 +60,10 @@ export function parseQuiz(
         /^[A-D]\./.test(line)
       ) {
         const cleaned =
-          line.replace(
-            /^\d+\.\s*/,
-            ""
-          );
+  line.replace(
+    /^(\d+|[A-D])\.\s*/,
+    ""
+  );
 
         statements.push(cleaned);
       }
