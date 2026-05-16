@@ -73,16 +73,33 @@ const QuizBuilder: React.FC<Props> = () => {
       let answer = "";
 
       lines.forEach((line) => {
-       // QUESTION TITLE
+       // OPTIONS
 if (
-  !/^\((I|II|III|IV)\)/.test(line) &&
-  !/^[A-D]\./.test(line) &&
-  !/^Correct Answer/i.test(line)
+  /^\((I|II|III|IV)\)/.test(line)
 ) {
-  question += line + " ";
+  options.push(
+    line.replace(
+      /^\((I|II|III|IV)\)\s*/,
+      ""
+    )
+  );
 }
 
-        // STATEMENTS
+// CORRECT ANSWER
+else if (
+  /Correct Answer/i.test(line)
+) {
+  const match =
+    line.match(
+      /\((I|II|III|IV)\)/
+    );
+
+  if (match) {
+    answer = match[1];
+  }
+}
+
+// STATEMENTS
 else if (
   /^[A-D]\./.test(line) ||
   /^\d+\./.test(line)
@@ -90,33 +107,12 @@ else if (
   statements.push(line);
 }
 
-        // OPTIONS
-        else if (
-          /^\((I|II|III|IV)\)/.test(line)
-        ) {
-          options.push(
-            line.replace(
-              /^\((I|II|III|IV)\)\s*/,
-              ""
-            )
-          );
-        }
-
-        // ANSWER
-        else if (
-          /Correct Answer/i.test(line)
-        ) {
-          const match =
-            line.match(
-              /\((I|II|III|IV)\)/
-            );
-
-          if (match) {
-            answer = match[1];
-          }
-        }
-      });
-
+// QUESTION TITLE
+else {
+  question += line + " ";
+}
+       
+});
       return {
         question: question.trim(),
         statements,
