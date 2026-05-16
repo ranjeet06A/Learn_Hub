@@ -362,50 +362,23 @@ export default function LessonView() {
     );
   }
 
- // =========================
+ 
+
+// ✅ SUPPORT BOTH FORMATS
+// =========================
 // QUIZ SYSTEM
 // =========================
 
 let quizzes: any[] = [];
 
-// ✅ LOAD QUIZZES DIRECTLY FROM LESSON
-if (
-  Array.isArray(lesson?.quizzes)
-) {
+// LOAD QUIZZES
+if (Array.isArray(lesson?.quizzes)) {
   quizzes = lesson.quizzes;
 }
 
-// ✅ SUPPORT BOTH FORMATS
-quizzes = quizzes.map(
-  (
-    quiz: any,
-    index: number
-  ) => {
-    // NEW FORMAT
-    if (
-      Array.isArray(
-        quiz?.questions
-      )
-    ) {
-      return {
-        title:
-          quiz?.title ||
-          `Quiz ${index + 1}`,
-
-        questions:
-          quiz.questions,
-      };
-    }
-
-    // OLD FORMAT
-    return {
-      title:
-        quiz?.title ||
-        `Quiz ${index + 1}`,
-
-      questions: [quiz],
-    };
-  }
+console.log(
+  "BACKEND QUIZZES:",
+  quizzes
 );
 
 console.log(
@@ -497,12 +470,8 @@ const q = questions[currentQ];
                   console.log("CLICKED QUIZ:", quiz);
 
 const finalQuestions =
-  Array.isArray(quiz.questions)
+  Array.isArray(quiz?.questions)
     ? quiz.questions
-    : Array.isArray(
-        quiz.questions?.questions
-      )
-    ? quiz.questions.questions
     : [];
 
 console.log(
