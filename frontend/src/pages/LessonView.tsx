@@ -494,10 +494,23 @@ const q = questions[currentQ];
                     index
                   );
 
-                  setQuestions(
-                    quiz.questions ||
-                      []
-                  );
+                  console.log("CLICKED QUIZ:", quiz);
+
+const finalQuestions =
+  Array.isArray(quiz.questions)
+    ? quiz.questions
+    : Array.isArray(
+        quiz.questions?.questions
+      )
+    ? quiz.questions.questions
+    : [];
+
+console.log(
+  "FINAL QUESTIONS:",
+  finalQuestions
+);
+
+setQuestions(finalQuestions);
 
                   setAnswers({});
 
@@ -652,7 +665,8 @@ const q = questions[currentQ];
           }}
         >
           Q{index + 1}.{" "}
-          {question?.questionTitle || question?.question}
+          {question?.questionTitle ||
+ question?.question}
         </h2>
 
         {Array.isArray(
