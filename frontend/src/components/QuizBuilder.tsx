@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { lessonsData } from "../data/lessons";
 
-// ✅ TYPE FOR QUESTIONS
+// ================= TYPES =================
 type ParsedQuestion = {
   question: string;
   statements: string[];
@@ -9,25 +9,54 @@ type ParsedQuestion = {
   answer: string;
 };
 
-// ✅ PROPS TYPE
-type Props = {
-  onAddQuiz?: (lessonId: number, questions: ParsedQuestion[]) => void;
+type SavedQuestion = {
+  questionTitle: string;
+  statements: string[];
+  options: string[];
+  correctIndex: number;
 };
 
-export const QuizBuilder: React.FC<Props> = ({ onAddQuiz }) => {
-  const [pastedContent, setPastedContent] = useState("");
-  const [selectedLesson, setSelectedLesson] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [success, setSuccess] = useState(false);
-  const [mode, setMode] = useState<"input" | "preview">("input");
+type Props = {
+  onAddQuiz?: (
+    lessonId: string,
+    questions: SavedQuestion[]
+  ) => void;
+};
 
-  const roman = ["I", "II", "III", "IV"];
+const roman = ["I", "II", "III", "IV"];
 
-  // ✅ PARSER (TYPED)
-  const parseQuiz = (text: string): ParsedQuestion[] => {
-    const blocks = text.split(/Q\d+\./).filter(Boolean);
+// ================= COMPONENT =================
+const QuizBuilder: React.FC<Props> = () => {
+  const [pastedContent, setPastedContent] =
+    useState("");
+
+  const [selectedLesson, setSelectedLesson] =
+    useState("");
+
+  const [selectedCourse, setSelectedCourse] =
+    useState("");
+
+  const [parsedQuestions, setParsedQuestions] =
+    useState<ParsedQuestion[]>([]);
+
+  const [errors, setErrors] = useState<
+    string[]
+  >([]);
+
+  const [success, setSuccess] =
+    useState(false);
+
+  const [mode, setMode] = useState<
+    "input" | "preview"
+  >("input");
+
+  // ================= PARSER =================
+  const parseQuiz = (
+    text: string
+  ): ParsedQuestion[] => {
+    const blocks = text
+      .split(/Q\d+\./)
+      .filter(Boolean);
 
     return blocks.map((block) => {
       const lines = block
@@ -36,20 +65,52 @@ export const QuizBuilder: React.FC<Props> = ({ onAddQuiz }) => {
         .filter(Boolean);
 
       let question = "";
-      let statements: string[] = [];
-      let options: string[] = [];
+
+      const statements: string[] = [];
+
+      const options: string[] = [];
+
       let answer = "";
 
-      lines.forEach((line: string) => {
-        if (/^[A-D]\./.test(line)) {
-          statements.push(line);
-        } else if (/^\((I{1,3}|IV)\)/.test(line)) {
-          options.push(line.replace(/^\((I{1,3}|IV)\)\s*/, ""));
-        } else if (/Correct Answer/i.test(line)) {
-          const match = line.match(/\((.*?)\)/);
-          answer = match ? match[1] : "";
-        } else {
+      lines.forEach((line) => {
+        // QUESTION
+        if (
+          line.startsWith("With") ||
+          line.startsWith("Which") ||
+          line.startsWith("In")
+        ) {
           question += line + " ";
+        }
+
+        // STATEMENTS
+        else if (/^[A-D]\./.test(line)) {
+          statements.push(line);
+        }
+
+        // OPTIONS
+        else if (
+          /^\((I|II|III|IV)\)/.test(line)
+        ) {
+          options.push(
+            line.replace(
+              /^\((I|II|III|IV)\)\s*/,
+              ""
+            )
+          );
+        }
+
+        // ANSWER
+        else if (
+          /Correct Answer/i.test(line)
+        ) {
+          const match =
+            line.match(
+              /\((I|II|III|IV)\)/
+            );
+
+          if (match) {
+            answer = match[1];
+          }
         }
       });
 
@@ -62,95 +123,132 @@ export const QuizBuilder: React.FC<Props> = ({ onAddQuiz }) => {
     });
   };
 
-  // ✅ PARSE BUTTON
+  // ================= PARSE =================
   const handleParse = () => {
     if (!pastedContent.trim()) {
-      setErrors(["Please paste quiz questions first"]);
+      setErrors([
+        "Please paste questions",
+      ]);
       return;
     }
 
     try {
-      const result = parseQuiz(pastedContent);
+      const result =
+        parseQuiz(pastedContent);
+
+      console.log(
+        "PARSED QUESTIONS:",
+        result
+      );
 
       if (result.length > 0) {
         setParsedQuestions(result);
+
         setErrors([]);
+
         setSuccess(true);
+
         setMode("preview");
       } else {
-        setErrors(["Parsing failed"]);
-        setParsedQuestions([]);
+        setErrors([
+          "No questions parsed",
+        ]);
+
         setSuccess(false);
       }
     } catch (err) {
       console.error(err);
-      setErrors(["Parsing error"]);
-      setParsedQuestions([]);
-      setSuccess(false);
+
+      setErrors(["Parsing failed"]);
     }
   };
 
-  // ✅ ADD QUIZ
+  // ================= SAVE QUIZ =================
   const handleAddQuiz = () => {
-    if (!selectedCourse || !selectedLesson) {
-      setErrors(["Select course and lesson"]);
+    if (
+      !selectedCourse ||
+      !selectedLesson
+    ) {
+      setErrors([
+        "Please select course and lesson",
+      ]);
+
       return;
     }
 
     if (parsedQuestions.length === 0) {
-      setErrors(["No questions"]);
+      setErrors(["No questions found"]);
+
       return;
     }
 
-   const existing = JSON.parse(
-  localStorage.getItem("quizData") || "{}"
-);
+    const existing = JSON.parse(
+      localStorage.getItem("quizData") ||
+        "{}"
+    );
 
-existing[selectedLesson] = [
-  {
-    title: "Quiz 1",
-    questions: parsedQuestions.map((q) => {
-      const roman = ["I", "II", "III", "IV"];
-
-      return {
+    const convertedQuestions: SavedQuestion[] =
+      parsedQuestions.map((q) => ({
         questionTitle: q.question,
+
         statements: q.statements,
+
         options: q.options,
-        correctIndex: roman.indexOf(q.answer),
-      };
-    }),
-  },
-];
 
-localStorage.setItem(
-  "quizData",
-  JSON.stringify(existing)
-);
+        correctIndex:
+          roman.indexOf(q.answer),
+      }));
 
-console.log("FINAL QUIZ DATA:", existing);
+    existing[selectedLesson] = [
+      {
+        title: `Quiz 1`,
+        questions: convertedQuestions,
+      },
+    ];
 
-window.location.reload();
+    localStorage.setItem(
+      "quizData",
+      JSON.stringify(existing)
+    );
 
-    alert(`✅ ${parsedQuestions.length} questions added`);
+    console.log(
+      "FINAL QUIZ DATA:",
+      existing
+    );
 
-    setPastedContent("");
-    setParsedQuestions([]);
-    setErrors([]);
-    setSelectedLesson("");
-    setSelectedCourse("");
-    setMode("input");
-    setSuccess(false);
+    alert(
+      `✅ ${convertedQuestions.length} questions added`
+    );
+
+    window.location.reload();
   };
 
+  // ================= UI =================
   return (
     <div style={{ padding: "30px" }}>
       <h2>📝 Quiz Builder</h2>
 
-      {/* MODE */}
-      <div style={{ marginBottom: "20px" }}>
-        <button onClick={() => setMode("input")}>Input</button>
-        <button onClick={() => setMode("preview")}>
-          Preview ({parsedQuestions.length})
+      {/* MODE BUTTONS */}
+      <div
+        style={{
+          marginBottom: "20px",
+        }}
+      >
+        <button
+          onClick={() =>
+            setMode("input")
+          }
+        >
+          Input
+        </button>
+
+        <button
+          onClick={() =>
+            setMode("preview")
+          }
+        >
+          Preview (
+          {parsedQuestions.length})
         </button>
       </div>
 
@@ -158,44 +256,89 @@ window.location.reload();
       {mode === "input" && (
         <div>
           <textarea
+            rows={15}
+            style={{
+              width: "100%",
+            }}
             value={pastedContent}
-            onChange={(e) => setPastedContent(e.target.value)}
-            rows={12}
-            style={{ width: "100%" }}
+            onChange={(e) =>
+              setPastedContent(
+                e.target.value
+              )
+            }
           />
+
           <br />
-          <button onClick={handleParse}>Parse</button>
+
+          <button
+            onClick={handleParse}
+          >
+            Parse Questions
+          </button>
         </div>
       )}
 
       {/* PREVIEW */}
       {mode === "preview" && (
         <div>
-          {/* COURSE + LESSON */}
-          <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+          {/* SELECTORS */}
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "20px",
+            }}
+          >
+            {/* COURSE */}
             <select
               value={selectedCourse}
               onChange={(e) => {
-                setSelectedCourse(e.target.value);
+                setSelectedCourse(
+                  e.target.value
+                );
+
                 setSelectedLesson("");
               }}
             >
-              <option value="">Select Course</option>
-              {Object.keys(lessonsData).map((c) => (
-                <option key={c} value={c}>
+              <option value="">
+                Select Course
+              </option>
+
+              {Object.keys(
+                lessonsData
+              ).map((c) => (
+                <option
+                  key={c}
+                  value={c}
+                >
                   Course {c}
                 </option>
               ))}
             </select>
 
+            {/* LESSON */}
             <select
               value={selectedLesson}
-              onChange={(e) => setSelectedLesson(e.target.value)}
+              onChange={(e) =>
+                setSelectedLesson(
+                  e.target.value
+                )
+              }
             >
-              <option value="">Select Lesson</option>
+              <option value="">
+                Select Lesson
+              </option>
+
               {selectedCourse &&
-                lessonsData[Number(selectedCourse)]?.map((l: any) => (
-                  <option key={l.id} value={l.id}>
+                lessonsData[
+                  Number(
+                    selectedCourse
+                  )
+                ]?.map((l: any) => (
+                  <option
+                    key={l.id}
+                    value={l.id}
+                  >
                     {l.title}
                   </option>
                 ))}
@@ -203,70 +346,119 @@ window.location.reload();
           </div>
 
           {/* QUESTIONS */}
-          <h3>Questions Preview ({parsedQuestions.length})</h3>
+          <h3>
+            Questions Preview (
+            {parsedQuestions.length})
+          </h3>
 
-          {parsedQuestions.map((q, idx) => {
-            const correctIndex = roman.indexOf(q.answer);
-
-            return (
+          {parsedQuestions.map(
+            (q, idx) => (
               <div
                 key={idx}
                 style={{
-                  background: "#f8f9fa",
+                  background:
+                    "#f8f9fa",
+
                   padding: "15px",
-                  marginBottom: "20px",
-                  borderRadius: "6px",
+
+                  marginBottom:
+                    "20px",
+
+                  borderRadius:
+                    "8px",
                 }}
               >
-                <strong>
-                  Q{idx + 1}. {q.question}
-                </strong>
+                <h4>
+                  Q{idx + 1}.{" "}
+                  {q.question}
+                </h4>
 
                 {/* STATEMENTS */}
-                <div style={{ marginTop: "10px" }}>
-                  {q.statements.map((s, i) => (
-                    <div key={i}>{s}</div>
-                  ))}
-                </div>
+                {q.statements.map(
+                  (s, i) => (
+                    <div key={i}>
+                      {s}
+                    </div>
+                  )
+                )}
 
                 <br />
 
                 {/* OPTIONS */}
-                {q.options.map((opt, i) => (
-                  <div key={i}>
-                    ({roman[i]}) {opt}
-                  </div>
-                ))}
+                {q.options.map(
+                  (opt, i) => (
+                    <div key={i}>
+                      ({roman[i]}){" "}
+                      {opt}
+                    </div>
+                  )
+                )}
 
                 <br />
 
-                {/* ANSWER */}
-                {correctIndex !== -1 && (
-                  <div style={{ fontWeight: "bold", color: "green" }}>
-                    Correct Answer: ({roman[correctIndex]})
-                  </div>
-                )}
+                <div
+                  style={{
+                    color: "green",
+                    fontWeight:
+                      "bold",
+                  }}
+                >
+                  Correct Answer: (
+                  {q.answer})
+                </div>
               </div>
-            );
-          })}
+            )
+          )}
 
           {/* BUTTONS */}
-          <div style={{ marginTop: "20px" }}>
-            <button onClick={() => setMode("input")}>← Back</button>
-            <button onClick={handleAddQuiz}>✅ Add Quiz</button>
+          <div
+            style={{
+              marginTop: "20px",
+            }}
+          >
+            <button
+              onClick={() =>
+                setMode("input")
+              }
+            >
+              ← Back
+            </button>
+
+            <button
+              onClick={handleAddQuiz}
+            >
+              ✅ Save Quiz
+            </button>
           </div>
         </div>
       )}
 
       {/* ERRORS */}
       {errors.map((e, i) => (
-        <p key={i} style={{ color: "red" }}>
+        <p
+          key={i}
+          style={{
+            color: "red",
+          }}
+        >
           {e}
         </p>
       ))}
 
       {/* SUCCESS */}
-      {success && <p>✅ Parsed {parsedQuestions.length} questions</p>}
+      {success && (
+        <p
+          style={{
+            color: "green",
+          }}
+        >
+          ✅ Parsed{" "}
+          {parsedQuestions.length}{" "}
+          questions
+        </p>
+      )}
     </div>
   );
 };
+
+export default QuizBuilder;

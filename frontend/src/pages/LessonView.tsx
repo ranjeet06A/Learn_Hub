@@ -652,7 +652,7 @@ const q = questions[currentQ];
           }}
         >
           Q{index + 1}.{" "}
-          {question?.questionTitle}
+          {question?.questionTitle || question?.question}
         </h2>
 
         {Array.isArray(
