@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { convertToQuizJSON } from "../utils/quizConverter";
 
+const API =
+  "https://learn-hub-backend.onrender.com";
+
 export default function AdminQuizImport() {
   const [input, setInput] =
     useState("");
@@ -11,7 +14,6 @@ export default function AdminQuizImport() {
   const [lessonId, setLessonId] =
     useState("");
 
-  // ✅ NEW
   const [quizTitle, setQuizTitle] =
     useState("");
 
@@ -21,6 +23,11 @@ export default function AdminQuizImport() {
   const handleConvert = () => {
     const result =
       convertToQuizJSON(input);
+
+    console.log(
+      "CONVERTED QUESTIONS:",
+      result
+    );
 
     if (result.length === 0) {
       alert(
@@ -34,125 +41,148 @@ export default function AdminQuizImport() {
   };
 
   // =========================
-  // IMPORT
+  // IMPORT QUIZ
   // =========================
-  const handleImport = () => {
-    if (!lessonId.trim()) {
-      alert(
-        "⚠️ Enter Lesson ID"
-      );
+  const handleImport =
+    async () => {
+      try {
+        if (
+          !lessonId.trim()
+        ) {
+          alert(
+            "⚠️ Enter Lesson ID"
+          );
 
-      return;
-    }
+          return;
+        }
 
-    if (!quizTitle.trim()) {
-      alert(
-        "⚠️ Enter Quiz Title"
-      );
+        if (
+          !quizTitle.trim()
+        ) {
+          alert(
+            "⚠️ Enter Quiz Title"
+          );
 
-      return;
-    }
+          return;
+        }
 
-    if (quizData.length === 0) {
-      alert(
-        "⚠️ No quiz data to import"
-      );
+        if (
+          quizData.length === 0
+        ) {
+          alert(
+            "⚠️ No quiz data to import"
+          );
 
-      return;
-    }
+          return;
+        }
 
-    // =========================
-    // GET EXISTING
-    // =========================
-    const existing =
-      JSON.parse(
-        localStorage.getItem(
-          "quizData"
-        ) || "{}"
-      );
+        // =========================
+        // FORMAT QUESTIONS
+        // =========================
+        const formattedQuestions =
+          quizData.map(
+            (q: any) => ({
+              questionTitle:
+                q.questionTitle ||
+                q.question ||
+                "",
 
-    // lesson structure
-    if (
-      !existing[lessonId]
-    ) {
-      existing[lessonId] = [];
-    }
+              statements:
+                Array.isArray(
+                  q.statements
+                )
+                  ? q.statements
+                  : [],
 
-   // ✅ FORMAT QUESTIONS
-const formattedQuestions =
-  quizData.map((q: any) => ({
-    questionTitle:
-      q.questionTitle ||
-      q.question ||
-      "",
+              options:
+                Array.isArray(
+                  q.options
+                )
+                  ? q.options
+                  : [],
 
-    statements:
-      Array.isArray(
-        q.statements
-      )
-        ? q.statements
-        : [],
+              correctIndex:
+                Number(
+                  q.correctIndex ||
+                    0
+                ),
+            })
+          );
 
-    options:
-      Array.isArray(
-        q.options
-      )
-        ? q.options
-        : [],
+        console.log(
+          "FORMATTED QUESTIONS:",
+          formattedQuestions
+        );
 
-    correctIndex:
-      Number(
-        q.correctIndex || 0
-      ),
-  }));
+        // =========================
+        // API CALL
+        // =========================
+        const response =
+          await fetch(
+            `${API}/api/lessons/${lessonId}/quiz`,
+            {
+              method:
+                "POST",
 
-// ✅ CREATE NEW QUIZ SET
-const newQuizSet = {
-  title:
-    quizTitle,
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
 
-  questions:
-    formattedQuestions,
-};
+              body: JSON.stringify(
+                {
+                  title:
+                    quizTitle,
 
-    // ✅ ADD NEW QUIZ
-    existing[
-      lessonId
-    ].push(
-      newQuizSet
-    );
+                  questions:
+                    formattedQuestions,
+                }
+              ),
+            }
+          );
 
-    /// =========================
-// SAVE
-// =========================
-localStorage.setItem(
-  "quizData",
-  JSON.stringify(existing)
-);
+        const data =
+          await response.json();
 
-console.log(
-  "UPDATED quizData:",
-  existing
-);
+        console.log(
+          "QUIZ SAVE RESPONSE:",
+          data
+        );
 
-console.log(
-  "SAVED quizData:",
-  localStorage.getItem("quizData")
-);
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            data.message ||
+              "Quiz save failed"
+          );
+        }
 
-alert(
-  `✅ Quiz Imported Successfully (${formattedQuestions.length} Questions)`
-);
+        alert(
+          `✅ Quiz Imported Successfully (${formattedQuestions.length} Questions)`
+        );
 
-    // =========================
-    // RESET
-    // =========================
-    setInput("");
+        // =========================
+        // RESET
+        // =========================
+        setInput("");
 
-    setQuizData([]);
+        setQuizData([]);
 
-    setQuizTitle("");
-  };
+        setLessonId("");
+
+        setQuizTitle("");
+      } catch (err) {
+        console.error(
+          "IMPORT ERROR:",
+          err
+        );
+
+        alert(
+          "❌ Failed to save quiz"
+        );
+      }
+    };
 
   return (
     <div
@@ -189,6 +219,7 @@ alert(
       <br />
       <br />
 
+      {/* CONVERT BUTTON */}
       <button
         onClick={
           handleConvert
@@ -311,6 +342,7 @@ alert(
           <br />
           <br />
 
+          {/* IMPORT BUTTON */}
           <button
             onClick={
               handleImport

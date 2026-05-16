@@ -362,42 +362,25 @@ export default function LessonView() {
     );
   }
 
-  // =========================
+ // =========================
 // QUIZ SYSTEM
 // =========================
 
 let quizzes: any[] = [];
 
-// ✅ LOAD FROM IMPORTED quizData
-try {
-  const allQuizData =
-    JSON.parse(
-      localStorage.getItem(
-        "quizData"
-      ) || "{}"
-    );
-
-  quizzes =
-    allQuizData[
-      String(lessonId)
-    ] || [];
-
-  console.log(
-    "QUIZZES FROM quizData:",
-    quizzes
-  );
-} catch (err) {
-  console.log(
-    "Quiz loading error:",
-    err
-  );
+// ✅ LOAD QUIZZES DIRECTLY FROM LESSON
+if (
+  Array.isArray(lesson?.quizzes)
+) {
+  quizzes = lesson.quizzes;
 }
 
-// ✅ SAFETY FIX
-// ✅ SUPPORT BOTH QUIZ FORMATS
+// ✅ SUPPORT BOTH FORMATS
 quizzes = quizzes.map(
-  (quiz: any, index: number) => {
-
+  (
+    quiz: any,
+    index: number
+  ) => {
     // NEW FORMAT
     if (
       Array.isArray(
@@ -416,11 +399,18 @@ quizzes = quizzes.map(
 
     // OLD FORMAT
     return {
-      title: `Quiz ${index + 1}`,
+      title:
+        quiz?.title ||
+        `Quiz ${index + 1}`,
 
       questions: [quiz],
     };
   }
+);
+
+console.log(
+  "BACKEND QUIZZES:",
+  quizzes
 );
 
 const q = questions[currentQ];

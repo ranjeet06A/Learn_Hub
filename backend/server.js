@@ -100,10 +100,10 @@ mongoose
   });
 
 // ======================
-// SCHEMAS
+// QUIZ QUESTION SCHEMA
 // ======================
 
-const quizSchema =
+const quizQuestionSchema =
   new mongoose.Schema({
     questionTitle: String,
     statements: [String],
@@ -111,11 +111,31 @@ const quizSchema =
     correctIndex: Number,
   });
 
+// ======================
+// QUIZ SET SCHEMA
+// ======================
+
+const quizSetSchema =
+  new mongoose.Schema({
+    title: String,
+
+    questions: [
+      quizQuestionSchema,
+    ],
+  });
+
+// ======================
+// LESSON SCHEMA
+// ======================
+
 const lessonSchema =
   new mongoose.Schema({
     title: String,
     content: String,
-    quizzes: [quizSchema],
+
+    quizzes: [
+      quizSetSchema,
+    ],
   });
 
 const courseSchema =
