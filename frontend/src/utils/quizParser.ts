@@ -1,80 +1,142 @@
 // ================= TYPES =================
 export interface QuizQuestion {
-  question: string;
+  questionTitle: string;
+  statements: string[];
   options: string[];
-  answer: string;
+  correctIndex: number;
 }
 
 // ================= MAIN PARSER =================
-export function parseQuiz(text: string): QuizQuestion[] {
-  const questions = text.split(/Q\d+\./).filter(Boolean);
+export function parseQuiz(
+  text: string
+): QuizQuestion[] {
+  const blocks = text
+    .split(/Q\d+\./)
+    .filter(Boolean);
 
-  return questions.map((block) => {
-    const lines = block.trim().split("\n").map((l) => l.trim());
+  const questions: QuizQuestion[] =
+    [];
 
-    let questionText = "";
-    let options: string[] = [];
+  blocks.forEach((block) => {
+    const lines = block
+      .trim()
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    let questionTitle = "";
+
+    const statements: string[] =
+      [];
+
+    const options: string[] = [];
+
     let correctIndex = 0;
 
-    const optionMap: Record<string, number> = {
-      "(I)": 0,
-      "(II)": 1,
-      "(III)": 2,
-      "(IV)": 3,
+    const optionMap: Record<
+      string,
+      number
+    > = {
+      I: 0,
+      II: 1,
+      III: 2,
+      IV: 3,
     };
 
     lines.forEach((line) => {
-      // 🟢 QUESTION TEXT
+      // ================= QUESTION =================
       if (
         line.startsWith("With") ||
         line.startsWith("In") ||
         line.startsWith("Which")
       ) {
-        questionText += line + " ";
+        questionTitle +=
+          line + " ";
       }
 
-      // 🟢 STATEMENTS (A. B. C. D.)
-      else if (/^[A-D]\./.test(line)) {
-        questionText += line + " ";
+      // ================= STATEMENTS =================
+      else if (
+        /^\d+\./.test(line) ||
+        /^[A-D]\./.test(line)
+      ) {
+        const cleaned =
+          line.replace(
+            /^\d+\.\s*/,
+            ""
+          );
+
+        statements.push(cleaned);
       }
 
-      // 🟢 OPTIONS (I)(II)(III)(IV)
-      else if (/^\(I\)|^\(II\)|^\(III\)|^\(IV\)/.test(line)) {
-        const clean = line.replace(/^\(\w+\)\s*/, "");
-        options.push(clean);
+      // ================= OPTIONS =================
+      else if (
+        /^\((I|II|III|IV)\)/.test(
+          line
+        )
+      ) {
+        const cleaned =
+          line.replace(
+            /^\((I|II|III|IV)\)\s*/,
+            ""
+          );
+
+        options.push(cleaned);
       }
 
-      // 🟢 CORRECT ANSWER
-      else if (line.includes("Correct Answer")) {
-        const match = line.match(/\(\w+\)/);
+      // ================= CORRECT ANSWER =================
+      else if (
+        line.includes(
+          "Correct Answer"
+        )
+      ) {
+        const match =
+          line.match(
+            /\((I|II|III|IV)\)/
+          );
+
         if (match) {
-          correctIndex = optionMap[match[0]];
+          correctIndex =
+            optionMap[
+              match[1]
+            ] ?? 0;
         }
       }
     });
 
-    return {
-      question: questionText.trim(),
+    questions.push({
+      questionTitle:
+        questionTitle.trim(),
+
+      statements,
+
       options,
-      answer: options[correctIndex] || "",
-    };
+
+      correctIndex,
+    });
   });
+
+  return questions;
 }
 
 // ================= FIXED FOR UI =================
-export function parseQuizData(text: string): {
+export function parseQuizData(
+  text: string
+): {
   success: boolean;
   questions: QuizQuestion[];
   errors: string[];
 } {
   try {
-    const questions = parseQuiz(text);
+    const questions =
+      parseQuiz(text);
 
     if (!questions.length) {
       return {
         success: false,
         questions: [],
-        errors: ["No questions parsed"],
+        errors: [
+          "No questions parsed",
+        ],
       };
     }
 
@@ -87,18 +149,30 @@ export function parseQuizData(text: string): {
     return {
       success: false,
       questions: [],
-      errors: ["Parsing failed"],
+      errors: [
+        "Parsing failed",
+      ],
     };
   }
 }
 
 // ================= VALIDATION =================
-export function validateAnswers(questions: QuizQuestion[]): string[] {
+export function validateAnswers(
+  questions: QuizQuestion[]
+): string[] {
   const errors: string[] = [];
 
   questions.forEach((q, i) => {
-    if (!q.answer || !q.options.includes(q.answer)) {
-      errors.push(`Question ${i + 1} has invalid answer`);
+    if (
+      q.correctIndex < 0 ||
+      q.correctIndex >
+        q.options.length - 1
+    ) {
+      errors.push(
+        `Question ${
+          i + 1
+        } has invalid answer`
+      );
     }
   });
 
