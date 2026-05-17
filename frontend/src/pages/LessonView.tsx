@@ -105,59 +105,138 @@ export default function LessonView() {
   // =========================
 
   const parseQuestions = (
-    rawQuestions: any
-  ): Question[] => {
-    try {
-      // NORMAL ARRAY
-      if (
-        Array.isArray(rawQuestions)
-      ) {
-        return rawQuestions.filter(
-          (q) =>
+  rawQuestions: any
+): Question[] => {
+  try {
+    console.log(
+      "RAW QUESTIONS INPUT:",
+      rawQuestions
+    );
+
+    // =========================
+    // CASE 1: NORMAL ARRAY
+    // =========================
+
+    if (Array.isArray(rawQuestions)) {
+      // FIX NESTED ARRAY
+      const flatQuestions =
+        rawQuestions.flat
+          ? rawQuestions.flat()
+          : rawQuestions;
+
+      const cleaned =
+        flatQuestions.filter(
+          (q: any) =>
             q &&
-            typeof q === "object"
-        );
-      }
-
-      // STRINGIFIED JSON
-      if (
-        typeof rawQuestions ===
-        "string"
-      ) {
-        const parsed = JSON.parse(
-          rawQuestions
+            typeof q ===
+              "object" &&
+            (
+              q.questionTitle ||
+              q.question
+            ) &&
+            Array.isArray(
+              q.options
+            )
         );
 
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-      }
-
-      // MONGOOSE OBJECT CASE
-      if (
-        rawQuestions &&
-        typeof rawQuestions ===
-          "object"
-      ) {
-        if (
-          Array.isArray(
-            rawQuestions.questions
-          )
-        ) {
-          return rawQuestions.questions;
-        }
-      }
-
-      return [];
-    } catch (err) {
       console.log(
-        "QUESTION PARSE ERROR:",
-        err
+        "PARSED ARRAY QUESTIONS:",
+        cleaned
       );
 
-      return [];
+      return cleaned;
     }
-  };
+
+    // =========================
+    // CASE 2: STRINGIFIED JSON
+    // =========================
+
+    if (
+      typeof rawQuestions ===
+      "string"
+    ) {
+      const parsed =
+        JSON.parse(rawQuestions);
+
+      if (
+        Array.isArray(parsed)
+      ) {
+        const cleaned =
+          parsed.filter(
+            (q: any) =>
+              q &&
+              typeof q ===
+                "object" &&
+              (
+                q.questionTitle ||
+                q.question
+              ) &&
+              Array.isArray(
+                q.options
+              )
+          );
+
+        console.log(
+          "PARSED STRING QUESTIONS:",
+          cleaned
+        );
+
+        return cleaned;
+      }
+    }
+
+    // =========================
+    // CASE 3: OBJECT WITH QUESTIONS
+    // =========================
+
+    if (
+      rawQuestions &&
+      typeof rawQuestions ===
+        "object"
+    ) {
+      if (
+        Array.isArray(
+          rawQuestions.questions
+        )
+      ) {
+        const cleaned =
+          rawQuestions.questions.filter(
+            (q: any) =>
+              q &&
+              typeof q ===
+                "object" &&
+              (
+                q.questionTitle ||
+                q.question
+              ) &&
+              Array.isArray(
+                q.options
+              )
+          );
+
+        console.log(
+          "PARSED OBJECT QUESTIONS:",
+          cleaned
+        );
+
+        return cleaned;
+      }
+    }
+
+    console.log(
+      "NO VALID QUESTIONS FOUND"
+    );
+
+    return [];
+  } catch (err) {
+    console.log(
+      "QUESTION PARSE ERROR:",
+      err
+    );
+
+    return [];
+  }
+};
 
   // =========================
   // LOAD LESSON
