@@ -1,3 +1,4 @@
+```tsx
 import {
   useEffect,
   useState,
@@ -8,8 +9,6 @@ import {
   useParams,
   useNavigate,
 } from "react-router-dom";
-
-// ================= API =================
 
 const API =
   "https://learn-hub-backend.onrender.com";
@@ -32,7 +31,7 @@ type Quiz = {
 
   title?: string;
 
-  questions?: Question[];
+  questions?: any;
 };
 
 type LessonPage = {
@@ -102,7 +101,66 @@ export default function LessonView() {
     useRef<number>(0);
 
   // =========================
-  // LOAD FROM BACKEND
+  // SAFE QUESTION PARSER
+  // =========================
+
+  const parseQuestions = (
+    rawQuestions: any
+  ): Question[] => {
+    try {
+      // NORMAL ARRAY
+      if (
+        Array.isArray(rawQuestions)
+      ) {
+        return rawQuestions.filter(
+          (q) =>
+            q &&
+            typeof q === "object"
+        );
+      }
+
+      // STRINGIFIED JSON
+      if (
+        typeof rawQuestions ===
+        "string"
+      ) {
+        const parsed = JSON.parse(
+          rawQuestions
+        );
+
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+
+      // MONGOOSE OBJECT CASE
+      if (
+        rawQuestions &&
+        typeof rawQuestions ===
+          "object"
+      ) {
+        if (
+          Array.isArray(
+            rawQuestions.questions
+          )
+        ) {
+          return rawQuestions.questions;
+        }
+      }
+
+      return [];
+    } catch (err) {
+      console.log(
+        "QUESTION PARSE ERROR:",
+        err
+      );
+
+      return [];
+    }
+  };
+
+  // =========================
+  // LOAD LESSON
   // =========================
 
   useEffect(() => {
@@ -161,6 +219,51 @@ export default function LessonView() {
             setLoading(false);
             return;
           }
+
+          // CLEAN QUIZZES HERE
+
+          const cleanedQuizzes =
+            Array.isArray(
+              foundLesson.quizzes
+            )
+              ? foundLesson.quizzes.map(
+                  (
+                    quiz: any,
+                    index: number
+                  ) => {
+                    const cleanedQuestions =
+                      parseQuestions(
+                        quiz.questions
+                      );
+
+                    console.log(
+                      "CLEANED QUESTIONS:",
+                      cleanedQuestions
+                    );
+
+                    return {
+                      ...quiz,
+
+                      title:
+                        quiz.title ||
+                        `Quiz ${
+                          index + 1
+                        }`,
+
+                      questions:
+                        cleanedQuestions,
+                    };
+                  }
+                )
+              : [];
+
+          foundLesson.quizzes =
+            cleanedQuizzes;
+
+          console.log(
+            "FINAL QUIZZES:",
+            cleanedQuizzes
+          );
 
           setLesson(foundLesson);
 
@@ -352,7 +455,7 @@ export default function LessonView() {
   };
 
   // =========================
-  // FORMAT TIMER
+  // TIMER FORMAT
   // =========================
 
   const formatTime = () => {
@@ -419,14 +522,12 @@ export default function LessonView() {
           }}
         >
           <h1>
-            📘{" "}
-            {lesson.title ||
+            📘 {lesson.title ||
               lesson.name}
           </h1>
 
           <p>
-            Page{" "}
-            {currentPage + 1} of{" "}
+            Page {currentPage + 1} of{" "}
             {lessonPages.length}
           </p>
         </div>
@@ -456,11 +557,9 @@ export default function LessonView() {
                     );
 
                     const finalQuestions =
-                      Array.isArray(
-                        quiz?.questions
-                      )
-                        ? quiz.questions
-                        : [];
+                      parseQuestions(
+                        quiz.questions
+                      );
 
                     console.log(
                       "FINAL QUESTIONS:",
@@ -509,8 +608,7 @@ export default function LessonView() {
                     fontWeight: 600,
                   }}
                 >
-                  📝{" "}
-                  {quiz.title ||
+                  📝 {quiz.title ||
                     `Quiz ${
                       index + 1
                     }`}
@@ -577,8 +675,7 @@ export default function LessonView() {
                 >
                   <h2>
                     Q
-                    {index + 1}
-                    .{" "}
+                    {index + 1}.{" "}
                     {question.questionTitle ||
                       question.question}
                   </h2>
@@ -599,8 +696,7 @@ export default function LessonView() {
                         >
                           <strong>
                             {String.fromCharCode(
-                              65 +
-                                i
+                              65 + i
                             )}
                             .
                           </strong>{" "}
@@ -623,9 +719,7 @@ export default function LessonView() {
                           optIndex
                         ) => (
                           <button
-                            key={
-                              optIndex
-                            }
+                            key={optIndex}
                             onClick={() =>
                               handleSelect(
                                 index,
@@ -670,9 +764,7 @@ export default function LessonView() {
             )}
 
             <button
-              onClick={
-                handleSubmit
-              }
+              onClick={handleSubmit}
               style={{
                 padding:
                   "14px 24px",
@@ -693,3 +785,4 @@ export default function LessonView() {
     </div>
   );
 }
+```
