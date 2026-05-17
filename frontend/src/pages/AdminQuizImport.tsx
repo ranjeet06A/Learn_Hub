@@ -11,9 +11,6 @@ export default function AdminQuizImport() {
   const [quizData, setQuizData] =
     useState<any[]>([]);
 
-  // =========================
-  // NEW
-  // =========================
   const [courseId, setCourseId] =
     useState("");
 
@@ -26,35 +23,108 @@ export default function AdminQuizImport() {
   // =========================
   // CONVERT
   // =========================
+
   const handleConvert = () => {
-    const result =
-      convertToQuizJSON(input);
+    try {
+      const result =
+        convertToQuizJSON(input);
 
-    console.log(
-      "CONVERTED QUESTIONS:",
-      result
-    );
-
-    if (result.length === 0) {
-      alert(
-        "❌ No valid questions detected"
+      console.log(
+        "RAW PARSED QUIZ:",
+        result
       );
 
-      return;
-    }
+      if (
+        !Array.isArray(result)
+      ) {
+        alert(
+          "❌ Invalid parser output"
+        );
 
-    setQuizData(result);
+        return;
+      }
+
+      // =========================
+      // CLEAN QUESTIONS
+      // =========================
+
+      const cleanedQuiz =
+        result
+          .map((q: any) => ({
+            questionTitle:
+              q.questionTitle ||
+              q.question ||
+              "",
+
+            statements:
+              Array.isArray(
+                q.statements
+              )
+                ? q.statements.filter(
+                    Boolean
+                  )
+                : [],
+
+            options:
+              Array.isArray(
+                q.options
+              )
+                ? q.options.filter(
+                    Boolean
+                  )
+                : [],
+
+            correctIndex:
+              Number(
+                q.correctIndex ?? 0
+              ),
+          }))
+          .filter(
+            (q: any) =>
+              q.questionTitle &&
+              q.options.length > 0
+          );
+
+      console.log(
+        "CLEANED QUIZ:",
+        cleanedQuiz
+      );
+
+      if (
+        cleanedQuiz.length === 0
+      ) {
+        alert(
+          "❌ No valid questions found"
+        );
+
+        return;
+      }
+
+      setQuizData(cleanedQuiz);
+
+      alert(
+        `✅ ${cleanedQuiz.length} Questions Converted`
+      );
+    } catch (err) {
+      console.log(err);
+
+      alert(
+        "❌ Conversion failed"
+      );
+    }
   };
 
   // =========================
   // IMPORT QUIZ
   // =========================
+
   const handleImport =
     async () => {
       try {
         // =========================
         // VALIDATION
         // =========================
+
         if (
           !courseId.trim()
         ) {
@@ -86,56 +156,38 @@ export default function AdminQuizImport() {
         }
 
         if (
+          !Array.isArray(
+            quizData
+          ) ||
           quizData.length === 0
         ) {
           alert(
-            "⚠️ No quiz data to import"
+            "⚠️ No quiz data"
           );
 
           return;
         }
 
         // =========================
-        // FORMAT QUESTIONS
+        // FINAL QUIZ OBJECT
         // =========================
-        const formattedQuestions =
-          quizData.map(
-            (q: any) => ({
-              questionTitle:
-                q.questionTitle ||
-                q.question ||
-                "",
 
-              statements:
-                Array.isArray(
-                  q.statements
-                )
-                  ? q.statements
-                  : [],
+        const finalQuiz = {
+          title: quizTitle,
 
-              options:
-                Array.isArray(
-                  q.options
-                )
-                  ? q.options
-                  : [],
-
-              correctIndex:
-                Number(
-                  q.correctIndex ??
-                    0
-                ),
-            })
-          );
+          questions:
+            quizData,
+        };
 
         console.log(
-          "FORMATTED QUESTIONS:",
-          formattedQuestions
+          "FINAL QUIZ PAYLOAD:",
+          finalQuiz
         );
 
         // =========================
         // API CALL
         // =========================
+
         const response =
           await fetch(
             `${API}/courses/${courseId}/lessons/${lessonId}/quizzes`,
@@ -149,13 +201,7 @@ export default function AdminQuizImport() {
               },
 
               body: JSON.stringify(
-                {
-                  title:
-                    quizTitle,
-
-                  questions:
-                    formattedQuestions,
-                }
+                finalQuiz
               ),
             }
           );
@@ -164,7 +210,7 @@ export default function AdminQuizImport() {
           await response.json();
 
         console.log(
-          "QUIZ SAVE RESPONSE:",
+          "QUIZ RESPONSE:",
           data
         );
 
@@ -178,12 +224,13 @@ export default function AdminQuizImport() {
         }
 
         alert(
-          `✅ Quiz Imported Successfully (${formattedQuestions.length} Questions)`
+          `✅ Quiz Imported Successfully (${quizData.length} Questions)`
         );
 
         // =========================
         // RESET
         // =========================
+
         setInput("");
 
         setQuizData([]);
@@ -219,6 +266,7 @@ export default function AdminQuizImport() {
       </h1>
 
       {/* INPUT */}
+
       <textarea
         rows={15}
         style={{
@@ -240,7 +288,8 @@ export default function AdminQuizImport() {
       <br />
       <br />
 
-      {/* CONVERT BUTTON */}
+      {/* CONVERT */}
+
       <button
         onClick={
           handleConvert
@@ -262,6 +311,7 @@ export default function AdminQuizImport() {
       </button>
 
       {/* PREVIEW */}
+
       {quizData.length >
         0 && (
         <>
@@ -308,8 +358,7 @@ export default function AdminQuizImport() {
                     {i + 1}
                     :
                   </b>{" "}
-                  {q.questionTitle ||
-                    q.question}
+                  {q.questionTitle}
                 </div>
               )
             )}
@@ -318,6 +367,7 @@ export default function AdminQuizImport() {
           <br />
 
           {/* COURSE ID */}
+
           <input
             placeholder="Enter Course ID"
             value={
@@ -340,6 +390,7 @@ export default function AdminQuizImport() {
           />
 
           {/* LESSON ID */}
+
           <input
             placeholder="Enter Lesson ID"
             value={
@@ -362,8 +413,9 @@ export default function AdminQuizImport() {
           />
 
           {/* QUIZ TITLE */}
+
           <input
-            placeholder="Enter Quiz Title (Example: Quiz 1)"
+            placeholder="Enter Quiz Title"
             value={
               quizTitle
             }
@@ -385,7 +437,8 @@ export default function AdminQuizImport() {
           <br />
           <br />
 
-          {/* IMPORT BUTTON */}
+          {/* IMPORT */}
+
           <button
             onClick={
               handleImport
@@ -406,13 +459,13 @@ export default function AdminQuizImport() {
                 "bold",
             }}
           >
-            🚀 Import to
-            Lesson
+            🚀 Import Quiz
           </button>
         </>
       )}
 
-      {/* JSON OUTPUT */}
+      {/* JSON */}
+
       <h3
         style={{
           marginTop: 40,
