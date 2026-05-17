@@ -9,6 +9,11 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+// ================= API =================
+
+const API =
+  "https://learn-hub-backend.onrender.com";
+
 // ================= TYPES =================
 
 type Question = {
@@ -97,72 +102,80 @@ export default function LessonView() {
     useRef<number>(0);
 
   // =========================
-  // LOAD LESSON
+  // LOAD FROM BACKEND
   // =========================
 
   useEffect(() => {
-    try {
-      const storedCourses =
-        localStorage.getItem(
-          "learn_hub_courses"
-        );
+    const loadLesson =
+      async () => {
+        try {
+          const response =
+            await fetch(
+              `${API}/courses`
+            );
 
-      const courses: Course[] =
-        storedCourses
-          ? JSON.parse(
-              storedCourses
-            )
-          : [];
+          const courses =
+            await response.json();
 
-      console.log(
-        "COURSES:",
-        courses
-      );
+          console.log(
+            "BACKEND COURSES:",
+            courses
+          );
 
-      const foundCourse =
-        courses.find(
-          (c) =>
-            String(c._id || c.id) ===
-            String(courseId)
-        );
+          const foundCourse =
+            courses.find(
+              (c: Course) =>
+                String(
+                  c._id || c.id
+                ) ===
+                String(courseId)
+            );
 
-      console.log(
-        "FOUND COURSE:",
-        foundCourse
-      );
+          console.log(
+            "FOUND COURSE:",
+            foundCourse
+          );
 
-      if (!foundCourse) {
-        setLoading(false);
-        return;
-      }
+          if (!foundCourse) {
+            setLoading(false);
+            return;
+          }
 
-      setCourse(foundCourse);
+          setCourse(foundCourse);
 
-      const foundLesson =
-        foundCourse.lessons?.find(
-          (l) =>
-            String(l._id || l.id) ===
-            String(lessonId)
-        );
+          const foundLesson =
+            foundCourse.lessons?.find(
+              (l: Lesson) =>
+                String(
+                  l._id || l.id
+                ) ===
+                String(lessonId)
+            );
 
-      console.log(
-        "FOUND LESSON:",
-        foundLesson
-      );
+          console.log(
+            "FOUND LESSON:",
+            foundLesson
+          );
 
-      if (!foundLesson) {
-        setLoading(false);
-        return;
-      }
+          if (!foundLesson) {
+            setLoading(false);
+            return;
+          }
 
-      setLesson(foundLesson);
+          setLesson(foundLesson);
 
-      setLoading(false);
-    } catch (err) {
-      console.log(err);
+          setLoading(false);
+        } catch (err) {
+          console.log(
+            "LOAD ERROR:",
+            err
+          );
 
-      setLoading(false);
-    }
+          setLoading(false);
+        }
+      };
+
+    loadLesson();
   }, [courseId, lessonId]);
 
   // =========================
@@ -400,8 +413,6 @@ export default function LessonView() {
             "0 4px 15px rgba(0,0,0,0.1)",
         }}
       >
-        {/* HEADER */}
-
         <div
           style={{
             marginBottom: 20,
@@ -444,10 +455,6 @@ export default function LessonView() {
                       quiz
                     );
 
-                    // =========================
-                    // FIXED QUESTIONS
-                    // =========================
-
                     const finalQuestions =
                       Array.isArray(
                         quiz?.questions
@@ -459,6 +466,17 @@ export default function LessonView() {
                       "FINAL QUESTIONS:",
                       finalQuestions
                     );
+
+                    if (
+                      finalQuestions.length ===
+                      0
+                    ) {
+                      alert(
+                        "Quiz has no questions."
+                      );
+
+                      return;
+                    }
 
                     setSelectedQuizIndex(
                       index
@@ -474,8 +492,8 @@ export default function LessonView() {
                       Date.now();
 
                     setTimeLeft(
-                      (finalQuestions.length ||
-                        1) * 120
+                      finalQuestions.length *
+                        120
                     );
                   }}
                   style={{
