@@ -716,9 +716,12 @@ app.post(
           });
       }
 
+      // ✅ FIXED
       const lesson =
-        course.lessons.id(
-          lessonId
+        course.lessons.find(
+          (l) =>
+            String(l._id) ===
+            String(lessonId)
         );
 
       if (!lesson) {
@@ -740,7 +743,16 @@ app.post(
           [];
       }
 
-      // ✅ NEW QUIZ SET
+      console.log(
+        "QUESTIONS RECEIVED:",
+        questions
+      );
+
+      console.log(
+        "QUESTIONS LENGTH:",
+        questions?.length
+      );
+
       lesson.quizzes.push({
         title:
           title ||
