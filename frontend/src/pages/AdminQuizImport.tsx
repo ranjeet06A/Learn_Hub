@@ -11,6 +11,12 @@ export default function AdminQuizImport() {
   const [quizData, setQuizData] =
     useState<any[]>([]);
 
+  // =========================
+  // NEW
+  // =========================
+  const [courseId, setCourseId] =
+    useState("");
+
   const [lessonId, setLessonId] =
     useState("");
 
@@ -46,6 +52,19 @@ export default function AdminQuizImport() {
   const handleImport =
     async () => {
       try {
+        // =========================
+        // VALIDATION
+        // =========================
+        if (
+          !courseId.trim()
+        ) {
+          alert(
+            "⚠️ Enter Course ID"
+          );
+
+          return;
+        }
+
         if (
           !lessonId.trim()
         ) {
@@ -103,7 +122,7 @@ export default function AdminQuizImport() {
 
               correctIndex:
                 Number(
-                  q.correctIndex ||
+                  q.correctIndex ??
                     0
                 ),
             })
@@ -119,7 +138,7 @@ export default function AdminQuizImport() {
         // =========================
         const response =
           await fetch(
-            `${API}/api/lessons/${lessonId}/quiz`,
+            `${API}/courses/${courseId}/lessons/${lessonId}/quizzes`,
             {
               method:
                 "POST",
@@ -168,6 +187,8 @@ export default function AdminQuizImport() {
         setInput("");
 
         setQuizData([]);
+
+        setCourseId("");
 
         setLessonId("");
 
@@ -295,6 +316,28 @@ export default function AdminQuizImport() {
           </div>
 
           <br />
+
+          {/* COURSE ID */}
+          <input
+            placeholder="Enter Course ID"
+            value={
+              courseId
+            }
+            onChange={(e) =>
+              setCourseId(
+                e.target.value
+              )
+            }
+            style={{
+              width:
+                "100%",
+              padding: 12,
+              borderRadius: 8,
+              border:
+                "1px solid #ccc",
+              marginBottom: 15,
+            }}
+          />
 
           {/* LESSON ID */}
           <input
