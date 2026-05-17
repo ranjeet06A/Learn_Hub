@@ -278,16 +278,20 @@ export default function LessonView() {
             return;
           }
 
-          setCourse(foundCourse);
+         const lessonsArray = Array.isArray(foundCourse.lessons)
+  ? foundCourse.lessons
+  : [];
 
-          const foundLesson =
-            foundCourse.lessons?.find(
-              (l: Lesson) =>
-                String(
-                  l._id || l.id
-                ) ===
-                String(lessonId)
-            );
+setCourse({
+  ...foundCourse,
+  lessons: lessonsArray,
+});
+
+const foundLesson = lessonsArray.find(
+  (l: Lesson) =>
+    String(l._id || l.id) ===
+    String(lessonId)
+);
 
           console.log(
             "FOUND LESSON:",
