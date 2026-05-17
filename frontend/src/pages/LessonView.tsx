@@ -42,6 +42,7 @@ type LessonPage = {
 type Lesson = {
   _id?: string;
   id?: string;
+  lessonId?: string;
 
   title?: string;
   name?: string;
@@ -288,9 +289,12 @@ setCourse({
 });
 
 const foundLesson = lessonsArray.find(
-  (l: Lesson) =>
-    String(l._id || l.id) ===
-    String(lessonId)
+  (l: any) =>
+    String(
+      l._id ||
+      l.id ||
+      l.lessonId
+    ) === String(lessonId)
 );
 
           console.log(
