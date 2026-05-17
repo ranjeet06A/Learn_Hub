@@ -1,4 +1,4 @@
-```tsx
+
 import {
   useEffect,
   useState,
@@ -785,4 +785,3 @@ export default function LessonView() {
     </div>
   );
 }
-```
