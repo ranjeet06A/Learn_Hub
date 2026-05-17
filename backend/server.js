@@ -753,17 +753,67 @@ app.post(
         questions?.length
       );
 
-      lesson.quizzes.push({
-        title:
-          title ||
-          `Quiz ${
-            lesson.quizzes
-              .length + 1
-          }`,
+      // ======================
+// CLEAN QUESTIONS
+// ======================
 
-        questions:
-          questions || [],
-      });
+const cleanedQuestions =
+  Array.isArray(questions)
+    ? questions
+        .filter(
+          (q) =>
+            q &&
+            typeof q ===
+              "object"
+        )
+        .map((q) => ({
+          questionTitle:
+            String(
+              q.questionTitle ||
+                ""
+            ),
+
+          statements:
+            Array.isArray(
+              q.statements
+            )
+              ? q.statements.map(
+                  String
+                )
+              : [],
+
+          options:
+            Array.isArray(
+              q.options
+            )
+              ? q.options.map(
+                  String
+                )
+              : [],
+
+          correctIndex:
+            Number(
+              q.correctIndex ??
+                0
+            ),
+        }))
+    : [];
+
+console.log(
+  "CLEANED QUESTIONS:",
+  cleanedQuestions
+);
+
+lesson.quizzes.push({
+  title:
+    title ||
+    `Quiz ${
+      lesson.quizzes.length + 1
+    }`,
+
+  questions:
+    cleanedQuestions,
+});
 
       await course.save();
 
