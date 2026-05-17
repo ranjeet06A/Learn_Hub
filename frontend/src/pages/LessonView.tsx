@@ -444,6 +444,10 @@ export default function LessonView() {
                       quiz
                     );
 
+                    // =========================
+                    // FIXED QUESTIONS
+                    // =========================
+
                     const finalQuestions =
                       Array.isArray(
                         quiz?.questions
@@ -524,150 +528,149 @@ export default function LessonView() {
         {/* QUIZ */}
 
         {selectedQuizIndex !==
-          null &&
-          questions.length > 0 && (
-            <div>
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight:
-                    "bold",
-                  color: "red",
-                  marginBottom: 25,
-                }}
-              >
-                ⏰ {formatTime()}
-              </div>
+          null && (
+          <div>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight:
+                  "bold",
+                color: "red",
+                marginBottom: 25,
+              }}
+            >
+              ⏰ {formatTime()}
+            </div>
 
-              {questions.map(
-                (
-                  question,
-                  index
-                ) => (
+            {questions.map(
+              (
+                question,
+                index
+              ) => (
+                <div
+                  key={index}
+                  style={{
+                    marginBottom: 40,
+                    padding: 20,
+                    border:
+                      "1px solid #ddd",
+                    borderRadius: 10,
+                  }}
+                >
+                  <h2>
+                    Q
+                    {index + 1}
+                    .{" "}
+                    {question.questionTitle ||
+                      question.question}
+                  </h2>
+
+                  {Array.isArray(
+                    question.statements
+                  ) &&
+                    question.statements.map(
+                      (
+                        s,
+                        i
+                      ) => (
+                        <div
+                          key={i}
+                          style={{
+                            marginBottom: 10,
+                          }}
+                        >
+                          <strong>
+                            {String.fromCharCode(
+                              65 +
+                                i
+                            )}
+                            .
+                          </strong>{" "}
+                          {s}
+                        </div>
+                      )
+                    )}
+
                   <div
-                    key={index}
                     style={{
-                      marginBottom: 40,
-                      padding: 20,
-                      border:
-                        "1px solid #ddd",
-                      borderRadius: 10,
+                      marginTop: 20,
                     }}
                   >
-                    <h2>
-                      Q
-                      {index + 1}
-                      .{" "}
-                      {question.questionTitle ||
-                        question.question}
-                    </h2>
-
                     {Array.isArray(
-                      question.statements
+                      question.options
                     ) &&
-                      question.statements.map(
+                      question.options.map(
                         (
-                          s,
-                          i
+                          opt,
+                          optIndex
                         ) => (
-                          <div
-                            key={i}
+                          <button
+                            key={
+                              optIndex
+                            }
+                            onClick={() =>
+                              handleSelect(
+                                index,
+                                optIndex
+                              )
+                            }
                             style={{
+                              display:
+                                "block",
+                              width:
+                                "100%",
+                              textAlign:
+                                "left",
                               marginBottom: 10,
+                              padding: 14,
+                              borderRadius: 10,
+                              border:
+                                answers[
+                                  index
+                                ] ===
+                                optIndex
+                                  ? "2px solid #4338ca"
+                                  : "1px solid #ccc",
+                              background:
+                                answers[
+                                  index
+                                ] ===
+                                optIndex
+                                  ? "#eef2ff"
+                                  : "white",
+                              cursor:
+                                "pointer",
                             }}
                           >
-                            <strong>
-                              {String.fromCharCode(
-                                65 +
-                                  i
-                              )}
-                              .
-                            </strong>{" "}
-                            {s}
-                          </div>
+                            {opt}
+                          </button>
                         )
                       )}
-
-                    <div
-                      style={{
-                        marginTop: 20,
-                      }}
-                    >
-                      {Array.isArray(
-                        question.options
-                      ) &&
-                        question.options.map(
-                          (
-                            opt,
-                            optIndex
-                          ) => (
-                            <button
-                              key={
-                                optIndex
-                              }
-                              onClick={() =>
-                                handleSelect(
-                                  index,
-                                  optIndex
-                                )
-                              }
-                              style={{
-                                display:
-                                  "block",
-                                width:
-                                  "100%",
-                                textAlign:
-                                  "left",
-                                marginBottom: 10,
-                                padding: 14,
-                                borderRadius: 10,
-                                border:
-                                  answers[
-                                    index
-                                  ] ===
-                                  optIndex
-                                    ? "2px solid #4338ca"
-                                    : "1px solid #ccc",
-                                background:
-                                  answers[
-                                    index
-                                  ] ===
-                                  optIndex
-                                    ? "#eef2ff"
-                                    : "white",
-                                cursor:
-                                  "pointer",
-                              }}
-                            >
-                              {opt}
-                            </button>
-                          )
-                        )}
-                    </div>
                   </div>
-                )
-              )}
+                </div>
+              )
+            )}
 
-              <button
-                onClick={
-                  handleSubmit
-                }
-                style={{
-                  padding:
-                    "14px 24px",
-                  border: "none",
-                  borderRadius: 10,
-                  background:
-                    "#4338ca",
-                  color: "white",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                Submit Quiz
-              </button>
-            </div>
-          )}
+            <button
+              onClick={
+                handleSubmit
+              }
+              style={{
+                padding:
+                  "14px 24px",
+                border: "none",
+                borderRadius: 10,
+                background:
+                  "#4338ca",
+                color: "white",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              Submit Quiz
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
