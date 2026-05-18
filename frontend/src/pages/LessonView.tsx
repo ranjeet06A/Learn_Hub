@@ -704,7 +704,7 @@ const page =
 
                     setTimeLeft(
                       finalQuestions.length *
-                        120
+                        60
                     );
                   }}
                   style={{
