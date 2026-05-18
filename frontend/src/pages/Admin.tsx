@@ -926,8 +926,18 @@ export default function Admin() {
   }}
 >
   <div>
-    {q.questionTitle}
+  <strong>
+    {q.title || `Quiz ${index + 1}`}
+  </strong>
+
+  <div style={{ marginTop: 5 }}>
+    Questions:
+    {" "}
+    {Array.isArray(q.questions)
+      ? q.questions.length
+      : 0}
   </div>
+</div>
 
   <div
     style={{
