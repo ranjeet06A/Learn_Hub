@@ -376,9 +376,9 @@ export default function Admin() {
               },
 
               body: JSON.stringify({
-                quizzes:
-                  cleaned,
-              }),
+  title: `Quiz ${Date.now()}`,
+  questions: cleaned,
+}),
             }
           );
 
