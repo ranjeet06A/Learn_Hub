@@ -361,7 +361,13 @@ const foundLesson = lessonsArray.find(
             cleanedQuizzes
           );
 
-          setLesson(foundLesson);
+          setLesson({
+  ...foundLesson,
+  pages: Array.isArray(foundLesson.pages)
+    ? foundLesson.pages
+    : [],
+  quizzes: cleanedQuizzes,
+});
 
           setLoading(false);
         } catch (err) {
@@ -406,23 +412,29 @@ const foundLesson = lessonsArray.find(
   // LESSON PAGES
   // =========================
 
-  const lessonPages =
-    lesson?.pages?.length
-      ? lesson.pages
-      : [
-          {
-            title:
-              lesson?.title ||
-              lesson?.name,
+  const lessonPages: LessonPage[] =
+  Array.isArray(lesson?.pages) &&
+  lesson.pages.length > 0
+    ? lesson.pages
+    : [
+        {
+          title:
+            lesson?.title ||
+            lesson?.name ||
+            "Lesson",
 
-            content:
-              lesson?.content ||
-              "No Content",
-          },
-        ];
+          content:
+            typeof lesson?.content === "string"
+              ? lesson.content
+              : "No Content Available",
+        },
+      ];
 
-  const page =
-    lessonPages[currentPage];
+const page =
+  lessonPages[currentPage] || {
+    title: "Lesson",
+    content: "No Content Available",
+  };
 
   // =========================
   // QUIZZES
