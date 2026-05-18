@@ -11,7 +11,7 @@ import {
 } from "react-router-dom";
 
 const API =
-  "https://learn-hub-backend.onrender.com";
+  "https://learn-hub-backend-g1pi.onrender.com";
 
 // ================= TYPES =================
 
@@ -304,6 +304,10 @@ const foundLesson = lessonsArray.find(
       l.id ||
       l.lessonId
     ) === String(lessonId)
+);
+console.log(
+  "FULL LESSON OBJECT:",
+  JSON.stringify(foundLesson, null, 2)
 );
 
           console.log(
