@@ -65,8 +65,13 @@ type Course = {
 };
 
 export default function LessonView() {
-  const { courseId, lessonId } =
-    useParams();
+  const params = useParams();
+
+const courseId =
+  params.courseId || "";
+
+const lessonId =
+  params.lessonId || "";
 
   const navigate = useNavigate();
 
@@ -244,6 +249,10 @@ export default function LessonView() {
   // =========================
 
   useEffect(() => {
+    if (!courseId || !lessonId) {
+  setLoading(false);
+  return;
+}
     const loadLesson =
       async () => {
         try {
