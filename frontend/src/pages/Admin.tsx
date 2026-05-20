@@ -26,6 +26,9 @@ export default function Admin() {
   const [quizInput, setQuizInput] =
     useState("");
 
+  const [editingQuiz, setEditingQuiz] =
+    useState<any>(null);
+
   const backend =
     "https://learn-hub-backend-g1pi.onrender.com";
 
@@ -61,15 +64,8 @@ export default function Admin() {
         "learn_hub_courses",
         JSON.stringify(fixed)
       );
-
-      console.log(
-        "FINAL COURSES ARRAY:",
-        fixed
-      );
     } catch (err) {
-      console.log(
-        "Backend failed, using local"
-      );
+      console.log(err);
 
       const stored = JSON.parse(
         localStorage.getItem(
@@ -81,9 +77,6 @@ export default function Admin() {
     }
   };
 
-  // =========================
-  // INITIAL LOAD
-  // =========================
   useEffect(() => {
     loadCourses();
 
@@ -246,13 +239,9 @@ export default function Admin() {
           );
 
           await loadCourses();
-        } else {
-          alert(data.message);
         }
       } catch (err) {
         console.log(err);
-
-        alert("Update failed");
       }
     };
 
@@ -279,6 +268,7 @@ export default function Admin() {
                 "Content-Type":
                   "application/json",
               },
+
               body: JSON.stringify({
                 title:
                   lessonTitle,
@@ -376,9 +366,9 @@ export default function Admin() {
               },
 
               body: JSON.stringify({
-  title: `Quiz ${Date.now()}`,
-  questions: cleaned,
-}),
+                title: `Quiz ${Date.now()}`,
+                questions: cleaned,
+              }),
             }
           );
 
@@ -391,11 +381,6 @@ export default function Admin() {
           setQuizInput("");
 
           await loadCourses();
-        } else {
-          alert(
-            data.message ||
-              "Failed to add quiz"
-          );
         }
       } catch (err) {
         console.log(err);
@@ -415,7 +400,7 @@ export default function Admin() {
     ) => {
       const confirmDelete =
         window.confirm(
-          "Are you sure you want to delete this course?"
+          "Delete this course?"
         );
 
       if (!confirmDelete) return;
@@ -439,15 +424,9 @@ export default function Admin() {
           );
 
           await loadCourses();
-        } else {
-          alert(data.message);
         }
       } catch (err) {
         console.log(err);
-
-        alert(
-          "Delete failed"
-        );
       }
     };
 
@@ -455,145 +434,194 @@ export default function Admin() {
   // DELETE LESSON
   // =========================
   const handleDeleteLesson =
-    (
+    async (
+      courseId: string,
       lessonId: string
     ) => {
-      const updated =
-        courses.map((c) => {
-          if (
-            String(c.id) ===
-            String(
-              selectedCourseId
-            )
-          ) {
-            return {
-              ...c,
-              lessons:
-                c.lessons.filter(
-                  (l: any) =>
-                    String(
-                      l.id
-                    ) !==
-                    String(
-                      lessonId
-                    )
-                ),
-            };
-          }
+      const confirmDelete =
+        window.confirm(
+          "Delete this lesson?"
+        );
 
-          return c;
-        });
+      if (!confirmDelete) return;
 
-      setCourses(updated);
+      try {
+        const response =
+          await fetch(
+            `${backend}/courses/${courseId}/lessons/${lessonId}`,
+            {
+              method:
+                "DELETE",
+            }
+          );
 
-      localStorage.setItem(
-        "learn_hub_courses",
-        JSON.stringify(updated)
-      );
+        const data =
+          await response.json();
+
+        if (data.success) {
+          alert(
+            "Lesson Deleted"
+          );
+
+          await loadCourses();
+        }
+      } catch (err) {
+        console.log(err);
+      }
     };
 
-    const handleDeleteQuiz =
-  async (
-    courseId: string,
-    lessonId: string,
-    quizIndex: number
-  ) => {
-    const confirmDelete =
-      window.confirm(
-        "Delete this quiz?"
-      );
-
-    if (!confirmDelete) return;
-
-    try {
-      const response =
-        await fetch(
-          `${backend}/courses/${courseId}/lessons/${lessonId}/quizzes/${quizIndex}`,
-          {
-            method:
-              "DELETE",
-          }
+  // =========================
+  // DELETE QUIZ
+  // =========================
+  const handleDeleteQuiz =
+    async (
+      courseId: string,
+      lessonId: string,
+      quizIndex: number
+    ) => {
+      const confirmDelete =
+        window.confirm(
+          "Delete this quiz?"
         );
 
-      const data =
-        await response.json();
+      if (!confirmDelete) return;
 
-      if (data.success) {
-        alert(
-          "Quiz Deleted"
-        );
+      try {
+        const response =
+          await fetch(
+            `${backend}/courses/${courseId}/lessons/${lessonId}/quizzes/${quizIndex}`,
+            {
+              method:
+                "DELETE",
+            }
+          );
 
-        await loadCourses();
-      } else {
-        alert(data.message);
+        const data =
+          await response.json();
+
+        if (data.success) {
+          alert(
+            "Quiz Deleted"
+          );
+
+          await loadCourses();
+        }
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
+    };
 
-      alert(
-        "Delete failed"
-      );
-    }
-  };
+  // =========================
+  // EDIT QUIZ
+  // =========================
   const handleEditQuiz =
-  async (
-    courseId: string,
-    lessonId: string,
-    quizIndex: number,
-    quiz: any
-  ) => {
-    const newQuestion =
-      prompt(
-        "Edit Question",
-        quiz.questionTitle
-      );
-
-    if (!newQuestion) return;
-
-    try {
-      const updatedQuiz = {
+    (
+      courseId: string,
+      lessonId: string,
+      quizIndex: number,
+      quiz: any
+    ) => {
+      setEditingQuiz({
         ...quiz,
-        questionTitle:
-          newQuestion,
-      };
+        courseId,
+        lessonId,
+        quizIndex,
+      });
+    };
 
-      const response =
-        await fetch(
-          `${backend}/courses/${courseId}/lessons/${lessonId}/quizzes/${quizIndex}`,
-          {
-            method: "PUT",
+  const handleSaveEditedQuiz =
+    async () => {
+      try {
+        const response =
+          await fetch(
+            `${backend}/courses/${editingQuiz.courseId}/lessons/${editingQuiz.lessonId}/quizzes/${editingQuiz.quizIndex}`,
+            {
+              method: "PUT",
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
 
-            body: JSON.stringify(
-              updatedQuiz
-            ),
-          }
-        );
+              body: JSON.stringify(
+                editingQuiz
+              ),
+            }
+          );
 
-      const data =
-        await response.json();
+        const data =
+          await response.json();
 
-      if (data.success) {
-        alert(
-          "Quiz Updated"
-        );
+        if (data.success) {
+          alert(
+            "Quiz Updated"
+          );
 
-        await loadCourses();
-      } else {
-        alert(data.message);
+          setEditingQuiz(
+            null
+          );
+
+          await loadCourses();
+        }
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
+    };
 
-      alert(
-        "Update failed"
-      );
-    }
-  };
+  // =========================
+  // DELETE QUESTION
+  // =========================
+  const handleDeleteQuestion =
+    (
+      questionIndex: number
+    ) => {
+      const updatedQuestions =
+        editingQuiz.questions.filter(
+          (
+            _: any,
+            i: number
+          ) =>
+            i !==
+            questionIndex
+        );
+
+      setEditingQuiz({
+        ...editingQuiz,
+        questions:
+          updatedQuestions,
+      });
+    };
+
+  // =========================
+  // ADD QUESTION
+  // =========================
+  const handleAddQuestion =
+    () => {
+      setEditingQuiz({
+        ...editingQuiz,
+
+        questions: [
+          ...(editingQuiz.questions ||
+            []),
+
+          {
+            questionTitle:
+              "",
+
+            statements: [],
+
+            options: [
+              "",
+              "",
+              "",
+              "",
+            ],
+
+            correctIndex: 0,
+          },
+        ],
+      });
+    };
 
   // =========================
   // UI
@@ -602,7 +630,6 @@ export default function Admin() {
     <div style={{ padding: 20 }}>
       <h2>⚙️ Admin Panel</h2>
 
-      {/* EXAM */}
       <h3>Add Exam</h3>
 
       <input
@@ -622,7 +649,6 @@ export default function Admin() {
         Add Exam
       </button>
 
-      {/* COURSE */}
       <h3>Add Course</h3>
 
       <input
@@ -667,7 +693,6 @@ export default function Admin() {
         Add Course
       </button>
 
-      {/* LESSON */}
       <h3>Add Lesson</h3>
 
       <select
@@ -744,7 +769,6 @@ export default function Admin() {
         Add Lesson
       </button>
 
-      {/* QUIZ */}
       <h3>Add Quiz</h3>
 
       <select
@@ -793,14 +817,6 @@ export default function Admin() {
             e.target.value
           )
         }
-        placeholder={`[
-{
-  "questionTitle":"Question?",
-  "statements":["A","B"],
-  "options":["1","2","3","4"],
-  "correctIndex":0
-}
-]`}
       />
 
       <br />
@@ -814,7 +830,6 @@ export default function Admin() {
         Add Quiz
       </button>
 
-      {/* COURSES */}
       <h3>All Courses</h3>
 
       {courses.map((c) => (
@@ -829,51 +844,25 @@ export default function Admin() {
         >
           <h3>{c.title}</h3>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              marginBottom: 10,
-            }}
+          <button
+            onClick={() =>
+              handleEditCourse(
+                c
+              )
+            }
           >
-            <button
-              onClick={() =>
-                handleEditCourse(
-                  c
-                )
-              }
-              style={{
-                background:
-                  "blue",
-                color: "white",
-                padding:
-                  "6px 12px",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Edit Course
-            </button>
+            Edit Course
+          </button>
 
-            <button
-              onClick={() =>
-                handleDeleteCourse(
-                  c.id
-                )
-              }
-              style={{
-                background:
-                  "red",
-                color: "white",
-                padding:
-                  "6px 12px",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Delete Course
-            </button>
-          </div>
+          <button
+            onClick={() =>
+              handleDeleteCourse(
+                c.id
+              )
+            }
+          >
+            Delete Course
+          </button>
 
           {c.lessons?.map(
             (l: any) => (
@@ -881,9 +870,9 @@ export default function Admin() {
                 key={l.id}
                 style={{
                   marginTop: 20,
-                  padding: 10,
                   borderTop:
                     "1px solid #ddd",
+                  paddingTop: 10,
                 }}
               >
                 <h4>
@@ -893,6 +882,7 @@ export default function Admin() {
                 <button
                   onClick={() =>
                     handleDeleteLesson(
+                      c.id,
                       l.id
                     )
                   }
@@ -917,77 +907,179 @@ export default function Admin() {
                       index: number
                     ) => (
                       <div
-  key={index}
-  style={{
-    border:
-      "1px solid #ddd",
-    padding: 10,
-    marginTop: 10,
-  }}
->
-  <div>
-  <strong>
-    {q.title || `Quiz ${index + 1}`}
-  </strong>
+                        key={index}
+                        style={{
+                          border:
+                            "1px solid #ddd",
+                          padding: 10,
+                          marginTop: 10,
+                        }}
+                      >
+                        <strong>
+                          {q.title ||
+                            `Quiz ${
+                              index + 1
+                            }`}
+                        </strong>
 
-  <div style={{ marginTop: 5 }}>
-    Questions:
-    {" "}
-    {Array.isArray(q.questions)
-      ? q.questions.length
-      : 0}
-  </div>
-</div>
+                        <div>
+                          Questions:
+                          {" "}
+                          {Array.isArray(
+                            q.questions
+                          )
+                            ? q.questions
+                                .length
+                            : 0}
+                        </div>
 
-  <div
-    style={{
-      display: "flex",
-      gap: 10,
-      marginTop: 10,
-    }}
-  >
-    <button
-      onClick={() =>
-        handleEditQuiz(
-          c.id,
-          l.id,
-          index,
-          q
-        )
-      }
-      style={{
-        background:
-          "blue",
-        color: "white",
-        border: "none",
-        padding:
-          "5px 10px",
-      }}
-    >
-      Edit Quiz
-    </button>
+                        <button
+                          onClick={() =>
+                            handleEditQuiz(
+                              c.id,
+                              l.id,
+                              index,
+                              q
+                            )
+                          }
+                        >
+                          Edit Quiz
+                        </button>
 
-    <button
-      onClick={() =>
-        handleDeleteQuiz(
-          c.id,
-          l.id,
-          index
-        )
-      }
-      style={{
-        background:
-          "red",
-        color: "white",
-        border: "none",
-        padding:
-          "5px 10px",
-      }}
-    >
-      Delete Quiz
-    </button>
-  </div>
-</div>
+                        <button
+                          onClick={() =>
+                            handleDeleteQuiz(
+                              c.id,
+                              l.id,
+                              index
+                            )
+                          }
+                        >
+                          Delete Quiz
+                        </button>
+
+                        {editingQuiz &&
+                          editingQuiz._id ===
+                            q._id && (
+                            <div
+                              style={{
+                                marginTop: 20,
+                                border:
+                                  "1px solid #999",
+                                padding: 15,
+                              }}
+                            >
+                              <h4>
+                                Edit Quiz
+                              </h4>
+
+                              {editingQuiz.questions?.map(
+                                (
+                                  ques: any,
+                                  qIndex: number
+                                ) => (
+                                  <div
+                                    key={
+                                      qIndex
+                                    }
+                                  >
+                                    <input
+                                      value={
+                                        ques.questionTitle
+                                      }
+                                      onChange={(
+                                        e
+                                      ) => {
+                                        const updated =
+                                          [
+                                            ...editingQuiz.questions,
+                                          ];
+
+                                        updated[
+                                          qIndex
+                                        ].questionTitle =
+                                          e.target.value;
+
+                                        setEditingQuiz(
+                                          {
+                                            ...editingQuiz,
+                                            questions:
+                                              updated,
+                                          }
+                                        );
+                                      }}
+                                    />
+
+                                    {ques.options?.map(
+                                      (
+                                        opt: string,
+                                        optIndex: number
+                                      ) => (
+                                        <input
+                                          key={
+                                            optIndex
+                                          }
+                                          value={
+                                            opt
+                                          }
+                                          onChange={(
+                                            e
+                                          ) => {
+                                            const updated =
+                                              [
+                                                ...editingQuiz.questions,
+                                              ];
+
+                                            updated[
+                                              qIndex
+                                            ].options[
+                                              optIndex
+                                            ] =
+                                              e.target.value;
+
+                                            setEditingQuiz(
+                                              {
+                                                ...editingQuiz,
+                                                questions:
+                                                  updated,
+                                              }
+                                            );
+                                          }}
+                                        />
+                                      )
+                                    )}
+
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteQuestion(
+                                          qIndex
+                                        )
+                                      }
+                                    >
+                                      Delete Question
+                                    </button>
+                                  </div>
+                                )
+                              )}
+
+                              <button
+                                onClick={
+                                  handleAddQuestion
+                                }
+                              >
+                                Add Question
+                              </button>
+
+                              <button
+                                onClick={
+                                  handleSaveEditedQuiz
+                                }
+                              >
+                                Save Quiz
+                              </button>
+                            </div>
+                          )}
+                      </div>
                     )
                   )}
                 </div>
