@@ -197,53 +197,74 @@ export default function Admin() {
       }
     };
 
-  // =========================
-  // EDIT COURSE
-  // =========================
-  const handleEditCourse =
-    async (course: any) => {
-      const newTitle = prompt(
-        "Enter new course title",
-        course.title
+ // =========================
+// EDIT COURSE
+// =========================
+const handleEditCourse =
+  async (course: any) => {
+    const newTitle = prompt(
+      "Enter new course title",
+      course.title
+    );
+
+    if (!newTitle) return;
+
+    try {
+      const response =
+        await fetch(
+          `${backend}/courses/${course._id || course.id}`,
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              _id:
+                course._id ||
+                course.id,
+
+              title: newTitle,
+
+              examId:
+                course.examId,
+
+              lessons:
+                course.lessons || [],
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(
+        "EDIT COURSE RESPONSE:",
+        data
       );
 
-      if (!newTitle) return;
+      if (data.success) {
+        alert(
+          "Course Updated"
+        );
 
-      try {
-        const response =
-          await fetch(
-            `${backend}/courses/${course.id}`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                title: newTitle,
-                examId:
-                  course.examId,
-                lessons:
-                  course.lessons,
-              }),
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (data.success) {
-          alert(
-            "Course Updated"
-          );
-
-          await loadCourses();
-        }
-      } catch (err) {
-        console.log(err);
+        await loadCourses();
+      } else {
+        alert(
+          data.message ||
+            "Update failed"
+        );
       }
-    };
+    } catch (err) {
+      console.log(err);
+
+      alert(
+        "Update failed"
+      );
+    }
+  };
 
   // =========================
   // ADD LESSON
