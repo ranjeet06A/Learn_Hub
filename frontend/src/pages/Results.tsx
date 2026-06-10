@@ -639,6 +639,164 @@ export default function Results() {
                                       )}
                                       %
                                     </p>
+                                    {Array.isArray(
+  r.responses
+) &&
+  r.responses.length >
+    0 && (
+    <details
+      style={{
+        marginTop: 20,
+      }}
+    >
+      <summary
+        style={{
+          cursor:
+            "pointer",
+          fontWeight:
+            "bold",
+          color:
+            "#4338ca",
+        }}
+      >
+        📄 View Response Sheet
+      </summary>
+
+      <div
+        style={{
+          marginTop: 15,
+        }}
+      >
+        {r.responses.map(
+          (
+            resp: any,
+            respIndex: number
+          ) => (
+            <div
+              key={
+                respIndex
+              }
+              style={{
+                border:
+                  "1px solid #ddd",
+                padding: 15,
+                marginBottom: 15,
+                borderRadius: 8,
+                background:
+                  "#fafafa",
+              }}
+            >
+              <h4>
+                Q
+                {
+                  resp.questionNo
+                }
+                .{" "}
+                {
+                  resp.questionTitle
+                }
+              </h4>
+
+              {Array.isArray(
+                resp.statements
+              ) &&
+                resp.statements.map(
+                  (
+                    st: string,
+                    stIndex: number
+                  ) => (
+                    <p
+                      key={
+                        stIndex
+                      }
+                    >
+                      <strong>
+                        {String.fromCharCode(
+                          65 +
+                            stIndex
+                        )}
+                        .
+                      </strong>{" "}
+                      {st}
+                    </p>
+                  )
+                )}
+
+              <div
+                style={{
+                  marginTop: 10,
+                }}
+              >
+                <strong>
+                  Options
+                </strong>
+
+                {resp.options?.map(
+                  (
+                    opt: string,
+                    optIndex: number
+                  ) => (
+                    <p
+                      key={
+                        optIndex
+                      }
+                    >
+                      {optIndex +
+                        1}
+                      .{" "}
+                      {opt}
+                    </p>
+                  )
+                )}
+              </div>
+
+              <p>
+                <strong>
+                  Selected
+                  Answer:
+                </strong>{" "}
+                {resp.selectedIndex !==
+                null
+                  ? `Option ${
+                      resp.selectedIndex +
+                      1
+                    } → ${
+                      resp.options?.[
+                        resp.selectedIndex
+                      ] || ""
+                    }`
+                  : "Not Attempted"}
+              </p>
+
+              <p>
+                <strong>
+                  Correct
+                  Answer:
+                </strong>{" "}
+                Option{" "}
+                {resp.correctIndex +
+                  1}
+                {" → "}
+                {resp.options?.[
+                  resp.correctIndex
+                ] || ""}
+              </p>
+
+              <p>
+                <strong>
+                  Status:
+                </strong>{" "}
+                {resp.selectedIndex ===
+                resp.correctIndex
+                  ? "✅ Correct"
+                  : "❌ Wrong"}
+              </p>
+            </div>
+          )
+        )}
+      </div>
+    </details>
+)}
                                   </div>
                                 );
                               }

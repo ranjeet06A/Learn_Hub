@@ -515,38 +515,78 @@ const page =
 
     const now = new Date();
 
-    const result = {
-      courseId,
-      lessonId,
+    console.log(
+  "SAVING RESPONSES",
+  questions.length
+);
+const result = {
+  courseId,
+  lessonId,
 
-      quizIndex:
-        selectedQuizIndex || 0,
+  quizIndex:
+    selectedQuizIndex || 0,
 
-      total,
-      correct,
-      wrong,
-      attempted,
-      score,
+  total,
+  correct,
+  wrong,
+  attempted,
+  score,
 
-      timeSpent,
+  timeSpent,
 
-      attemptDate:
-        now.toLocaleDateString(),
+  attemptDate:
+    now.toLocaleDateString(),
 
-      attemptTime:
-        now.toLocaleTimeString(),
+  attemptTime:
+    now.toLocaleTimeString(),
 
-      createdAt:
-        now.toISOString(),
+  createdAt:
+    now.toISOString(),
 
-      courseName:
-        course?.title ||
-        course?.name,
+  courseName:
+    course?.title ||
+    course?.name,
 
-      lessonName:
-        lesson?.title ||
-        lesson?.name,
-    };
+  lessonName:
+    lesson?.title ||
+    lesson?.name,
+
+  responses: questions.map(
+    (q, i) => ({
+      questionNo: i + 1,
+
+      questionTitle:
+        q.questionTitle ||
+        q.question ||
+        "",
+
+      statements:
+        Array.isArray(
+          q.statements
+        )
+          ? q.statements
+          : [],
+
+      options:
+        Array.isArray(
+          q.options
+        )
+          ? q.options
+          : [],
+
+      selectedIndex:
+        answers[i] !==
+        undefined
+          ? answers[i]
+          : null,
+
+      correctIndex:
+        Number(
+          q.correctIndex
+        ),
+    })
+  ),
+};
 
     const old =
       JSON.parse(
@@ -562,7 +602,7 @@ const page =
         result,
       ])
     );
-
+console.log(result);
     navigate("/results");
   };
 
